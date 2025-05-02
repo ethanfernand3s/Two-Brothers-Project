@@ -1,0 +1,21 @@
+# Unreal Engine standard ignore
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+*.VC.db
+*.VC.opendb
+
+# Visual Studio and Rider
+.vscode/
+# Build output folders
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+
+# Visual Studio / Rider project files (safe to exclude)
+.vs/
+*.sln
+*.VC.db
+*.VC.opendb
