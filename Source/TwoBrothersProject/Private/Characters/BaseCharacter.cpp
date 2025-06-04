@@ -5,19 +5,21 @@
 #include "Camera/CameraComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 ABaseCharacter::ABaseCharacter()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	
 	StatusBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("StatusBarWidgetComponent");
 	StatusBarWidgetComponent->SetRelativeLocation(FVector(0, 0, 100));
 	StatusBarWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	StatusBarWidgetComponent->SetDrawSize(FVector2D(500.f,100.f));
 	StatusBarWidgetComponent->SetDrawAtDesiredSize(true);
-	//StatusBarWidgetComponent->SetupAttachment(GetMesh());
 	StatusBarWidgetComponent->SetupAttachment(RootComponent);
+	StatusBarWidgetComponent->SetCastShadow(false);
 
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArmComponent->TargetArmLength = 350.f;
@@ -53,6 +55,36 @@ void ABaseCharacter::OnRep_PlayerState()
 		InitAbilityActorInfo();
 		InitStatusBar(); 
 	}
+}
+
+void ABaseCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	// Skip dedicated servers
+	if (GetNetMode() == NM_DedicatedServer) return;
+
+	// Get this *client’s* camera
+	FVector   CamLoc;
+	FRotator  CamRot;
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	{
+		PC->GetPlayerViewPoint(CamLoc, CamRot);
+
+		const FVector WidgetLoc = StatusBarWidgetComponent->GetComponentLocation();
+		const FRotator LookAt   = UKismetMathLibrary::FindLookAtRotation(WidgetLoc, CamLoc);
+		
+		StatusBarWidgetComponent->SetWorldRotation(LookAt);
+	}
+
+	
+}
+
+void ABaseCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	StatusBarWidgetComponent->SetIsReplicated(false);
+	StatusBarWidgetComponent->SetOwnerNoSee(true);             
 }
 
 void ABaseCharacter::InitStatusBar()

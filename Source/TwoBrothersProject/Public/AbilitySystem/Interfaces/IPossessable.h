@@ -19,5 +19,5 @@ public:
 	 * Returns a percentage chance of possession 0 being 0% and 1 being 100%
 	 */ 
 	UFUNCTION()
-	virtual float CanBePossessedBy() const = 0;
+	virtual bool CanBePossessedBy() const = 0;
 };

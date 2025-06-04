@@ -25,6 +25,8 @@ protected:
 	virtual void InitAbilityActorInfo();
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
+	virtual void Tick(float DeltaSeconds) override;
+	virtual void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<UWidgetComponent> StatusBarWidgetComponent;

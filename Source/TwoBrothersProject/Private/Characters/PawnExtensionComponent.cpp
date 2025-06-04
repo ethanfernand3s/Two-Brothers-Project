@@ -49,7 +49,9 @@ void UPawnExtensionComponent::HandlePlayerUnPossess()
 	if (!CachedASC) return;
 
 	// Remove parasite buff (by tag)
-	CachedASC->RemoveActiveEffectsWithTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag(FName("Effect.Buff.Parasite"))));
+	/* TODO: Create this tag / effect
+	// CachedASC->RemoveActiveEffectsWithTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag(FName("Effect.Buff.Parasite"))));
+	*/
 }
 
 void UPawnExtensionComponent::EnsureInitialAttributeDefaults()

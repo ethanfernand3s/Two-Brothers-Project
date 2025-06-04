@@ -21,6 +21,8 @@ class TWOBROTHERSPROJECT_API UBaseAttributeSet : public UAttributeSet
 	GENERATED_BODY()
 
 public:
+
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
 
@@ -57,6 +59,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxWeight)
 	FGameplayAttributeData MaxWeight;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MovementSpeed)
+	FGameplayAttributeData MovementSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxMovementSpeed)
+	FGameplayAttributeData MaxMovementSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Drowsiness)
+	FGameplayAttributeData Drowsiness;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Type)
 	FGameplayAttributeData Type;
 
@@ -81,6 +92,9 @@ public:
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Type);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Level);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Damage);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MovementSpeed);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxMovementSpeed);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Drowsiness);
 
 	UPROPERTY(BlueprintAssignable)
 	FAttributeChangedEvent OnHealthChanged;
@@ -114,6 +128,12 @@ protected:
 	void OnRep_Weight(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_MaxWeight(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	void OnRep_MovementSpeed(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	void OnRep_MaxMovementSpeed(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	void OnRep_Drowsiness(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_Type(const FGameplayAttributeData& OldValue);
 	UFUNCTION()

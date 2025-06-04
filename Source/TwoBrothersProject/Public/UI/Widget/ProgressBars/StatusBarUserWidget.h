@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/Widget/BaseUserWidget.h"
 #include "StatusBarUserWidget.generated.h"
 
 class UAttributeSet;
@@ -14,7 +14,7 @@ class UTextBlock;
  * 
  */
 UCLASS()
-class TWOBROTHERSPROJECT_API UStatusBarUserWidget : public UUserWidget
+class TWOBROTHERSPROJECT_API UStatusBarUserWidget : public UBaseUserWidget
 {
 	GENERATED_BODY()
 public:

@@ -24,7 +24,8 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(UBaseAttributeSet, MaxThirst);
 	DOREPLIFETIME(UBaseAttributeSet, Weight);
 	DOREPLIFETIME(UBaseAttributeSet, MaxWeight);
-	
+	DOREPLIFETIME(UBaseAttributeSet, MovementSpeed);
+	DOREPLIFETIME(UBaseAttributeSet, MaxMovementSpeed);
 }
 
 void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
@@ -139,6 +140,21 @@ void UBaseAttributeSet::OnRep_Weight(const FGameplayAttributeData& OldValue)
 void UBaseAttributeSet::OnRep_MaxWeight(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxWeight, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_MovementSpeed(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MovementSpeed, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_MaxMovementSpeed(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxMovementSpeed, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_Drowsiness(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Drowsiness, OldValue);
 }
 
 void UBaseAttributeSet::OnRep_Type(const FGameplayAttributeData& OldValue)

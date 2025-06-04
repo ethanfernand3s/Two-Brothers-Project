@@ -10,36 +10,54 @@
 UPossessHostAbility::UPossessHostAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerInitiated;
+	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
 	LineTraceLength = 200.f;
 }
 
-void UPossessHostAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-									  const FGameplayAbilityActorInfo* ActorInfo,
-									  const FGameplayAbilityActivationInfo ActivationInfo,
-									  const FGameplayEventData* TriggerEventData)
+void UPossessHostAbility::ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData* TriggerEventData)
 {
-	if (!CommitAbility(Handle, ActorInfo, ActivationInfo)) return;
+	// Only continue if we have authority (dedicated or listen server).
+	if (!ActorInfo || !ActorInfo->IsNetAuthority() || !CommitAbility(Handle, ActorInfo, ActivationInfo))
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, /*bReplicateEnd=*/false, /*bWasCancelled=*/false);
+		return;
+	}
 
+	// Get server‑side controller and pawn
 	APlayerController* PC = Cast<APlayerController>(ActorInfo->PlayerController);
-	if (!PC) { EndAbility(Handle, ActorInfo, ActivationInfo, true, false); return; }
-	
-	FVector  Start = PC->PlayerCameraManager->GetCameraLocation();
-	FVector  Dir   = PC->PlayerCameraManager->GetCameraRotation().Vector(); // or use ControlRotation
-	FVector  End   = Start + Dir * LineTraceLength;
+	APawn*              Avatar = Cast<APawn>(ActorInfo->AvatarActor.Get());
+	if (!PC || !Avatar)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+		return;
+	}
+
+	// Use a view that EXISTS on the server
+	FVector  Start;
+	FRotator ViewRot;
+	PC->GetPlayerViewPoint(Start, ViewRot);            // replicated control rotation
+	const FVector End = Start + ViewRot.Vector() * LineTraceLength;
+
+	// Line‑trace and attempt possession
 	FHitResult Hit;
-	FCollisionQueryParams Params(TEXT("PossessTrace"), false, PC->GetPawn());
+	FCollisionQueryParams Params{TEXT("PossessTrace"), /*bTraceComplex=*/false, Avatar};
 	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Pawn, Params))
 	{
 		if (AActor* HitActor = Hit.GetActor())
 		{
-			if (HitActor->Implements<UPossessable>() && Cast<IPossessable>(HitActor)->CanBePossessedBy() > 0)
+			if (HitActor->Implements<UPossessable>() &&
+				Cast<IPossessable>(HitActor)->CanBePossessedBy())
 			{
-				// TODO: Add Something chance/mini game based on factors in CanBePossessedBy
-				PC->GetPawn()->Destroy();
+				// Destroy current pawn, then possess the new pawn (server‑side)
+				Avatar->Destroy();
 				PC->Possess(Cast<APawn>(HitActor));
 			}
 		}
 	}
-	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
+
+	EndAbility(Handle, ActorInfo, ActivationInfo, /*bReplicateEnd=*/false, /*bWasCancelled=*/false);
 }

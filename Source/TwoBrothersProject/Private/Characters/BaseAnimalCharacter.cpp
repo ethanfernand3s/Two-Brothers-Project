@@ -15,7 +15,7 @@
 #include "Characters/PawnExtensionComponent.h"
 #include "Player/ParasitePlayerState.h"
 #include "Runtime/AIModule/Classes/AIController.h"
-#include "UI/Widget/StatusBarUserWidget.h"
+#include "UI/Widget/ProgressBars/StatusBarUserWidget.h"
 
 
 
@@ -48,7 +48,11 @@ void ABaseAnimalCharacter::UnPossessed()
 {
 	Super::UnPossessed();
 
-	PawnExt->HandlePlayerUnPossess();
+	if (!HasAuthority())
+	{
+		PawnExt->HandlePlayerUnPossess();
+	}
+	
 
 	if (SavedAIController)
 	{
@@ -133,9 +137,12 @@ UAbilitySystemComponent* ABaseAnimalCharacter::GetAbilitySystemComponent() const
 	return AnimalAbilitySystemComponent;
 }
 
-float ABaseAnimalCharacter::CanBePossessedBy() const
+// Currently return 100% if not being possessed and 0% if being possessed
+bool ABaseAnimalCharacter::CanBePossessedBy() const
 {
 	// TODO: Later on add level checks on player and query enemy and player states / statuses,
 	// and check where the player is coming from hole wise to make sure its possible.
-	return 1.f;
+
+	
+	return !GetOwner();
 }

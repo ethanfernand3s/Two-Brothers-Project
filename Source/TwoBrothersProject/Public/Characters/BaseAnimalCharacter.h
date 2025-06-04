@@ -32,7 +32,7 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	// Possessable Interface
-	virtual float CanBePossessedBy() const override;
+	virtual bool CanBePossessedBy() const override;
 
 	UPROPERTY()
 	TObjectPtr<class AAIController> SavedAIController;
