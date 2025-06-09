@@ -7,17 +7,21 @@
 #include "EnhancedInputSubsystems.h"
 #include "TBGameplayTags.h"
 #include "AbilitySystem/BaseAbilitySystemComponent.h"
+#include "AbilitySystem/Animal/AnimalAttributeSet.h"
 #include "Camera/ParasiteCameraManager.h"
 #include "Characters/BaseAnimalCharacter.h"
 #include "Characters/ParasiteCharacter.h"
 #include "Input/TBInputComponent.h"
 #include "Player/ParasitePlayerState.h"
+#include "UI/HUD/PlayerHUD.h"
 
 
 ATBPlayerController::ATBPlayerController()
 {
 	PlayerCameraManagerClass = AParasiteCameraManager::StaticClass();
+	bIsAnimalPossessed = false;
 }
+
 void ATBPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -29,6 +33,7 @@ void ATBPlayerController::SetupInputComponent()
 	UTBInputComponent* TBInputComponent = CastChecked<UTBInputComponent>(InputComponent);
 	TBInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATBPlayerController::Move);
 	TBInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATBPlayerController::Look);
+	TBInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &ATBPlayerController::Inventory);
 
 	TBInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
 }
@@ -42,6 +47,24 @@ void ATBPlayerController::BeginPlay()
 	{
 		Subsystem->AddMappingContext(InputContext, 0);
 	}
+	OnPossessedPawnChanged.AddDynamic(this, &ATBPlayerController::OnPawnChanged);
+}
+
+void ATBPlayerController::OnPawnChanged(APawn* InOldPawn, APawn* InNewPawn)
+{
+	if (InOldPawn && InOldPawn->IsA(AParasiteCharacter::StaticClass()))
+	{
+		bIsAnimalPossessed = true;
+	}
+	else if (InNewPawn && InNewPawn->IsA(AParasiteCharacter::StaticClass()))
+	{
+		bIsAnimalPossessed = false;
+	}
+}
+
+bool ATBPlayerController::GetIsAnimalPossessed() const
+{
+	return bIsAnimalPossessed;
 }
 
 void ATBPlayerController::Move(const FInputActionValue& InputActionValue)
@@ -68,6 +91,11 @@ void ATBPlayerController::Look(const FInputActionValue& InputActionValue)
 	AddPitchInput(InputAxisVector.Y);
 }
 
+void ATBPlayerController::Inventory()
+{
+	Cast<APlayerHUD>(GetHUD())->Inventory(this);
+}
+
 void ATBPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
 	if (GetASC() == nullptr) return;
@@ -90,14 +118,25 @@ void ATBPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 
 UBaseAbilitySystemComponent* ATBPlayerController::GetASC() 
 {
-	if (GetPawn()->IsA(AParasiteCharacter::StaticClass()))
-	{
-		BaseAbilitySystemComponent = Cast<UBaseAbilitySystemComponent>(GetPlayerState<AParasitePlayerState>()->GetAbilitySystemComponent());
-	}
-	else
+	if (bIsAnimalPossessed)
 	{
 		BaseAbilitySystemComponent = Cast<UBaseAbilitySystemComponent>(Cast<ABaseAnimalCharacter>(GetPawn())->GetAbilitySystemComponent());
 	}
+	else
+	{
+		BaseAbilitySystemComponent = Cast<UBaseAbilitySystemComponent>(GetPlayerState<AParasitePlayerState>()->GetAbilitySystemComponent());
+	}
 	return BaseAbilitySystemComponent;
+}
+
+UAnimalAttributeSet* ATBPlayerController::GetCurrentAnimalsAttributeSet() const
+{
+	if (bIsAnimalPossessed)
+	{
+		return Cast<UAnimalAttributeSet>(Cast<ABaseAnimalCharacter>(GetPawn())->GetAttributeSet());
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Trying to get animal attribute set but there is currently no animal possessed!"));
+
+	return nullptr;
 }
 

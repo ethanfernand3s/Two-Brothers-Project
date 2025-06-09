@@ -4,9 +4,11 @@
 #include "Characters/ParasiteCharacter.h"
 
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
 #include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
 #include "Components/WidgetComponent.h"
 #include "Player/ParasitePlayerState.h"
+#include "UI/HUD/PlayerHUD.h"
 #include "UI/Widget/ProgressBars/StatusBarUserWidget.h"
 
 
@@ -15,6 +17,7 @@ class AParasitePlayerState;
 AParasiteCharacter::AParasiteCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	
 }
 
 void AParasiteCharacter::UnPossessed()
@@ -23,33 +26,28 @@ void AParasiteCharacter::UnPossessed()
 	//Play anim of attaching to host
 }
 
-void AParasiteCharacter::InitStatusBar()
-{
-	if (StatusBarWidgetComponent)
-	{
-		if (UStatusBarUserWidget* StatusBarUserWidget = Cast<UStatusBarUserWidget>(StatusBarWidgetComponent->GetUserWidgetObject()))
-		{
-			if (AParasitePlayerState* PS = GetPlayerState<AParasitePlayerState>())
-			{
-				StatusBarUserWidget->SetAttributeSet(PS->GetParasiteAttributeSet());
-			}
-		}
-	}
-}
-
 void AParasiteCharacter::InitAbilityActorInfo()
 {
 	Super::InitAbilityActorInfo();
 	
 	if (AParasitePlayerState* PS = GetPlayerState<AParasitePlayerState>())
 	{
-		if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+		if (ParasiteAbilitySystemComponent = Cast<UParasiteAbilitySystemComponent>(PS->GetAbilitySystemComponent()))
 		{
-			ASC->InitAbilityActorInfo(PS,this);
+			ParasiteAbilitySystemComponent->InitAbilityActorInfo(PS,this);
+			ParasiteAbilitySystemComponent->AbilityActorInfoSet();
 			if (HasAuthority())
 			{
 				PS->EnsureInitialAttributeDefaults();
 				PS->EnsureAbilitiesAreInitialized();
+			}
+			else
+			{
+				APlayerController* PlayerController = GetController<APlayerController>();
+				if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PlayerController->GetHUD()))
+				{
+					PlayerHUD->InitOverlay(PlayerController);
+				}
 			}
 		}
 	}

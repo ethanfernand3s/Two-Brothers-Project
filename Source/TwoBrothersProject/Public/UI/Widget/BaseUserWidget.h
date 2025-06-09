@@ -15,13 +15,14 @@ class TWOBROTHERSPROJECT_API UBaseUserWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-
-	UFUNCTION()
+	
 	virtual void SetWidgetController(UObject* InWidgetController);
 	
-private:
-
 	UPROPERTY()
 	TObjectPtr<UObject> WidgetController;
+
+protected:
+
+	virtual void OnWidgetControllerSet();
 	
 };

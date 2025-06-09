@@ -6,9 +6,6 @@
 #include "UObject/Object.h"
 #include "BaseWidgetController.generated.h"
 
-
-class AParasitePlayerState;
-class ATBPlayerController;
 class UParasiteAbilitySystemComponent;
 class UParasiteAttributeSet;
 class UAnimalAbilitySystemComponent;
@@ -18,16 +15,16 @@ struct FWidgetControllerParams
 {
 	GENERATED_BODY()
 	FWidgetControllerParams (){};
-	FWidgetControllerParams (ATBPlayerController* PC,AParasitePlayerState* PS,
-		UParasiteAbilitySystemComponent* PASC,UParasiteAttributeSet* ParasiteAS,
-		UAnimalAbilitySystemComponent* AASC,UAnimalAttributeSet* AnimalAS) :
-	TBPlayerController(PC),ParasitePS(PS),ParasiteAsc(PASC),ParasiteAttributeSet(ParasiteAS),AnimalAsc(AASC),AnimalAttributeSet(AnimalAS){};
+	FWidgetControllerParams (APlayerController* InPC,APlayerState* InPS,
+		UParasiteAbilitySystemComponent* InParasiteASC,UParasiteAttributeSet* InParasiteAS,
+		UAnimalAbilitySystemComponent* InAnimalASC = nullptr,UAnimalAttributeSet* InAnimalAS = nullptr) :
+	TBPlayerController(InPC),ParasitePS(InPS),ParasiteAsc(InParasiteASC),ParasiteAttributeSet(InParasiteAS),AnimalAsc(InAnimalASC),AnimalAttributeSet(InAnimalAS){};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<ATBPlayerController> TBPlayerController = nullptr;
+	TObjectPtr<APlayerController> TBPlayerController = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<AParasitePlayerState> ParasitePS = nullptr;
+	TObjectPtr<APlayerState> ParasitePS = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UParasiteAbilitySystemComponent> ParasiteAsc = nullptr;
@@ -41,20 +38,23 @@ struct FWidgetControllerParams
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UAnimalAttributeSet> AnimalAttributeSet = nullptr;
 };
-UCLASS()
+UCLASS(Blueprintable)
 class TWOBROTHERSPROJECT_API UBaseWidgetController : public UObject
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintCallable)
-	void SetWidgetControllerParams(const FWidgetControllerParams& WCParams);
+	
+	void SetWidgetControllerParams(const TUniquePtr<FWidgetControllerParams>& WCParams);
+	virtual void BroadcastInitialValues();
+	virtual void BindCallbacksToDependencies();
 protected:
 
+	
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<ATBPlayerController> TBPlayerController;
+	TObjectPtr<APlayerController> TBPlayerController;
 
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<AParasitePlayerState> ParasitePS;
+	TObjectPtr<APlayerState> ParasitePS;
 
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
 	TObjectPtr<UParasiteAbilitySystemComponent> ParasiteASC;

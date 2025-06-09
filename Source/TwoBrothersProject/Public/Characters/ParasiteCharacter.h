@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "BaseCharacter.h"
 #include "ParasiteCharacter.generated.h"
-
+class UParasiteAbilitySystemComponent;
 UCLASS()
 class TWOBROTHERSPROJECT_API AParasiteCharacter : public ABaseCharacter
 {
@@ -13,8 +13,13 @@ class TWOBROTHERSPROJECT_API AParasiteCharacter : public ABaseCharacter
 public:
 	AParasiteCharacter();
 	
+	
 protected:
 	virtual void UnPossessed() override;
-	virtual void InitStatusBar() override;
 	virtual void InitAbilityActorInfo() override;
+
+
+private:
+	UPROPERTY()
+	TObjectPtr<UParasiteAbilitySystemComponent> ParasiteAbilitySystemComponent;
 };

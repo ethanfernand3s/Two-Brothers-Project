@@ -30,7 +30,7 @@ public:
 
 	// ASC Interface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-
+	UAnimalAttributeSet* GetAttributeSet() const;
 	// Possessable Interface
 	virtual bool CanBePossessedBy() const override;
 
@@ -43,8 +43,6 @@ protected:
 	virtual void UnPossessed() override;
 	virtual void OnRep_Controller() override;
 	
-
-	virtual void InitStatusBar() override;
 	virtual void InitAbilityActorInfo() override;
 
 	// GAS

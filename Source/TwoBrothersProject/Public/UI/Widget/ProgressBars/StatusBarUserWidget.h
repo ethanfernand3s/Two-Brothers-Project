@@ -18,23 +18,22 @@ class TWOBROTHERSPROJECT_API UStatusBarUserWidget : public UBaseUserWidget
 {
 	GENERATED_BODY()
 public:
-	
-	UFUNCTION()
-	void SetAttributeSet(UBaseAttributeSet* InAttributeSet);
 
 	UPROPERTY(EditDefaultsOnly, meta = (BindWidget))
 	TObjectPtr<UProgressBar> ProgressBar_HealthBar;
+	
+protected:
+
+	/*
+	void OnHealthChanged(float NewHealth);
+	void OnMaxHealthChanged(float NewMaxHealth);
+	*/
+
+	UPROPERTY()
+	UBaseAttributeSet* AttributeSet = nullptr;
 
 private:
 	
 	UFUNCTION()
 	void RefreshHealth();
-	
-protected:
-	
-	UFUNCTION()
-	void OnHealthChanged(const UAttributeSet* InAttributeSet, float OldValue, float NewValue);
-
-	UPROPERTY()
-	UBaseAttributeSet* AttributeSet = nullptr;
 };

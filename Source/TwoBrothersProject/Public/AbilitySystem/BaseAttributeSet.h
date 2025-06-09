@@ -13,15 +13,12 @@ GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
 class UBaseAbilitySystemComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FAttributeChangedEvent, const UAttributeSet*, AttributeSet, float, OldValue, float, NewValue);
-
 UCLASS()
 class TWOBROTHERSPROJECT_API UBaseAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
 
 public:
-
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
@@ -53,20 +50,20 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxThirst)
 	FGameplayAttributeData MaxThirst;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Weight)
-	FGameplayAttributeData Weight;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Strength)
+	FGameplayAttributeData Strength;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxWeight)
-	FGameplayAttributeData MaxWeight;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Defense)
+	FGameplayAttributeData Defense;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MovementSpeed)
-	FGameplayAttributeData MovementSpeed;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxMovementSpeed)
-	FGameplayAttributeData MaxMovementSpeed;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Speed)
+	FGameplayAttributeData Speed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Drowsiness)
 	FGameplayAttributeData Drowsiness;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_TemperatureResistance)
+	FGameplayAttributeData TemperatureResistance;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Type)
 	FGameplayAttributeData Type;
@@ -79,25 +76,33 @@ public:
 
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Health);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxHealth);
+	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Stamina);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxStamina);
+	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Oxygen);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxOxygen);
+	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Hunger);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxHunger);
+	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Thirst);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxThirst);
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Weight);
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxWeight);
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Type);
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Level);
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Damage);
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MovementSpeed);
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxMovementSpeed);
+	
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Strength);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Defense);
+	
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Speed);
+	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Drowsiness);
 
-	UPROPERTY(BlueprintAssignable)
-	FAttributeChangedEvent OnHealthChanged;
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, TemperatureResistance);
+	
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Type);
+	
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Level);
+	
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Damage);
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -125,19 +130,19 @@ protected:
 	UFUNCTION()
 	void OnRep_MaxThirst(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	void OnRep_Weight(const FGameplayAttributeData& OldValue);
+	void OnRep_Strength(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	void OnRep_MaxWeight(const FGameplayAttributeData& OldValue);
+	void OnRep_Defense(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	void OnRep_MovementSpeed(const FGameplayAttributeData& OldValue);
-	UFUNCTION()
-	void OnRep_MaxMovementSpeed(const FGameplayAttributeData& OldValue);
+	void OnRep_Speed(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_Drowsiness(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_Type(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_Level(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	void OnRep_TemperatureResistance(const FGameplayAttributeData& OldValue);
 	
 
 private:

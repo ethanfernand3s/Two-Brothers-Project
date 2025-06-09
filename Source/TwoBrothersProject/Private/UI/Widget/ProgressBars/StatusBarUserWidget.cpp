@@ -5,29 +5,6 @@
 #include "AbilitySystem//BaseAttributeSet.h"
 #include "Components/ProgressBar.h"
 
-void UStatusBarUserWidget::SetAttributeSet(UBaseAttributeSet* AttributeSetIn)
-{
-	if (AttributeSet)
-	{
-		// Unbind from old health set
-		AttributeSet->OnHealthChanged.RemoveDynamic(this, &UStatusBarUserWidget::OnHealthChanged);
-	}
-
-	AttributeSet = AttributeSetIn;
-	if (AttributeSet)
-	{
-		AttributeSet->OnHealthChanged.AddDynamic(this, &UStatusBarUserWidget::OnHealthChanged);
-	}
-
-	RefreshHealth();
-}
-
-
-void UStatusBarUserWidget::OnHealthChanged(const UAttributeSet* InAttributeSet, float OldValue, float NewValue)
-{
-	RefreshHealth();
-}
-
 void UStatusBarUserWidget::RefreshHealth()
 {
 	if (!AttributeSet) return;

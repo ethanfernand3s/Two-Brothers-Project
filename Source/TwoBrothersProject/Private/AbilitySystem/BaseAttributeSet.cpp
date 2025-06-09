@@ -22,10 +22,10 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(UBaseAttributeSet, MaxHunger);
 	DOREPLIFETIME(UBaseAttributeSet, Thirst);
 	DOREPLIFETIME(UBaseAttributeSet, MaxThirst);
-	DOREPLIFETIME(UBaseAttributeSet, Weight);
-	DOREPLIFETIME(UBaseAttributeSet, MaxWeight);
-	DOREPLIFETIME(UBaseAttributeSet, MovementSpeed);
-	DOREPLIFETIME(UBaseAttributeSet, MaxMovementSpeed);
+	DOREPLIFETIME(UBaseAttributeSet, Strength);
+	DOREPLIFETIME(UBaseAttributeSet, Speed);
+	DOREPLIFETIME(UBaseAttributeSet, TemperatureResistance);
+	DOREPLIFETIME(UBaseAttributeSet, Drowsiness);
 }
 
 void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
@@ -43,12 +43,8 @@ void UBaseAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute,
 	Super::PostAttributeChange(Attribute, OldValue, NewValue);
 
 	UE_LOG(LogTemp, Warning, TEXT("PostChange: Attribute '%s' changed %.2f -> %.2f"), *Attribute.AttributeName, OldValue, NewValue);
-
-	if (Attribute == GetHealthAttribute())
-	{
-		OnHealthChanged.Broadcast(this, OldValue, NewValue);
-	}
-	else if (Attribute == GetMaxHealthAttribute())
+	
+	if (Attribute == GetMaxHealthAttribute())
 	{
 		if (GetHealth() > NewValue)
 		{
@@ -56,9 +52,6 @@ void UBaseAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute,
 			check(TBAbilitySystem);
 			TBAbilitySystem->ApplyModToAttribute(GetHealthAttribute(), EGameplayModOp::Override, NewValue);
 		}
-
-		const float CurrentHealth = GetHealth();
-		OnHealthChanged.Broadcast(this, CurrentHealth, CurrentHealth);
 	}
 }
 
@@ -75,19 +68,19 @@ UBaseAbilitySystemComponent* UBaseAttributeSet::GetTBAbilitySystemComponent() co
 void UBaseAttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Health, OldValue);
-	const float OldHealth = OldValue.GetCurrentValue();
-	const float NewHealth = GetHealth();
-	OnHealthChanged.Broadcast(this, OldHealth, NewHealth);
 }
 
 void UBaseAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxHealth, OldValue);
-	const float CurrentHealth = GetHealth();
-	OnHealthChanged.Broadcast(this, CurrentHealth, CurrentHealth);
 }
 
 void UBaseAttributeSet::OnRep_Level(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Level, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_TemperatureResistance(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Level, OldValue);
 }
@@ -132,24 +125,19 @@ void UBaseAttributeSet::OnRep_MaxThirst(const FGameplayAttributeData& OldValue)
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxThirst, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_Weight(const FGameplayAttributeData& OldValue)
+void UBaseAttributeSet::OnRep_Strength(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Weight, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Strength, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_MaxWeight(const FGameplayAttributeData& OldValue)
+void UBaseAttributeSet::OnRep_Defense(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxWeight, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Defense, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_MovementSpeed(const FGameplayAttributeData& OldValue)
+void UBaseAttributeSet::OnRep_Speed(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MovementSpeed, OldValue);
-}
-
-void UBaseAttributeSet::OnRep_MaxMovementSpeed(const FGameplayAttributeData& OldValue)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxMovementSpeed, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Speed, OldValue);
 }
 
 void UBaseAttributeSet::OnRep_Drowsiness(const FGameplayAttributeData& OldValue)

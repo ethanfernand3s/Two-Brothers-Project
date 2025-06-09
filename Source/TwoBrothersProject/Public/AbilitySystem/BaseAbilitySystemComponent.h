@@ -13,7 +13,9 @@ class TWOBROTHERSPROJECT_API UBaseAbilitySystemComponent : public UAbilitySystem
 	GENERATED_BODY()
 
 public:
+	void AbilityActorInfoSet();
 	void AbilityInputTagPressed(const FGameplayTag& InputTag);
 	void AbilityInputTagHeld(const FGameplayTag& InputTag);
 	void AbilityInputTagReleased(const FGameplayTag& InputTag);
+	
 };

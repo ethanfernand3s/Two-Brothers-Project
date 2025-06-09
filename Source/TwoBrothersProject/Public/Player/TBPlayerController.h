@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "TBPlayerController.generated.h"
 
+class UAnimalAttributeSet;
 class UBaseAbilitySystemComponent;
 class UAbilityInputConfig;
 struct FInputActionValue;
@@ -25,6 +26,13 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void DamageSelf();
+
+	UFUNCTION()
+	void OnPawnChanged(APawn* InOldPawn, APawn* InNewPawn);
+	
+	bool GetIsAnimalPossessed() const;
+	UBaseAbilitySystemComponent* GetASC ();
+	UAnimalAttributeSet* GetCurrentAnimalsAttributeSet() const;
 	
 protected:
 	virtual void SetupInputComponent() override;
@@ -41,9 +49,12 @@ private:
 	TObjectPtr<UInputAction> MoveAction;
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> LookAction;
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> InventoryAction;
 	
 	void Move(const FInputActionValue& InputActionValue);
 	void Look(const FInputActionValue& InputActionValue);
+	void Inventory();
 
 	void AbilityInputTagPressed(FGameplayTag InputTag);
 	void AbilityInputTagReleased(FGameplayTag InputTag);
@@ -51,5 +62,7 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UBaseAbilitySystemComponent> BaseAbilitySystemComponent;
-	UBaseAbilitySystemComponent* GetASC () ;
+
+	UPROPERTY()
+	bool bIsAnimalPossessed;
 };

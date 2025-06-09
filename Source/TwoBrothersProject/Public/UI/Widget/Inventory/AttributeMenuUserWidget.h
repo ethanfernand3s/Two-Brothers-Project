@@ -3,10 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystem/Data/AttributeInfo.h"
 #include "UI/Widget/BaseUserWidget.h"
 #include "AttributeMenuUserWidget.generated.h"
 
-class UProgressBar;
+class UAttributeRowUserWidget;
+class UAttributeXPBar;
 class UTextBlock;
 /**
  * 
@@ -15,8 +17,9 @@ UCLASS()
 class TWOBROTHERSPROJECT_API UAttributeMenuUserWidget : public UBaseUserWidget
 {
 	GENERATED_BODY()
-
 public:
+
+	virtual void SetWidgetController(UObject* InWidgetController) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo",meta = (BindWidget))
 	TObjectPtr<UTextBlock> TextBlock_PlayerName;
@@ -32,20 +35,43 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo",meta = (BindWidget))
 	TObjectPtr<UTextBlock> TextBlock_Biome;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo",meta = (BindWidget))
-	TObjectPtr<UTextBlock>  TextBlock_PointsAvailable;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttributeStats",meta = (BindWidget))
-	TObjectPtr<UTextBlock>  TextBlock_TextBlock_XpAmount;
+	TObjectPtr<UAttributeXPBar> AttributeXPBar;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttributeStats",meta = (BindWidget))
-	TObjectPtr<UTextBlock>  TextBlock_TextBlock_MaxXpAmount;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttributeStats",meta = (BindWidget))
-	TObjectPtr<UProgressBar> UProgressBar_XpProgressAmount;
-	
+	// Stats
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
+	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Health;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
+	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Stamina;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
+	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Oxygen;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
+	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Hunger;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
+	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Thirst;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
+	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Strength;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
+	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Defense;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
+	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Speed;
+
+	// TODO: Make this into subclass since it doesn't inherently have a button
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
+	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Drowsiness;
+
+protected:
+	virtual void NativeConstruct() override;
+	virtual void OnWidgetControllerSet() override;
+
+private:
+	void SetHealthAttributeRow(const FTBFloatAttributeInfo& CurrentHealthInfo, const FTBFloatAttributeInfo& MaxHealthInfo);
 };

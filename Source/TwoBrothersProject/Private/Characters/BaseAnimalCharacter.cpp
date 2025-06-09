@@ -13,8 +13,10 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/PawnExtensionComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/ParasitePlayerState.h"
 #include "Runtime/AIModule/Classes/AIController.h"
+#include "UI/HUD/PlayerHUD.h"
 #include "UI/Widget/ProgressBars/StatusBarUserWidget.h"
 
 
@@ -36,12 +38,8 @@ void ABaseAnimalCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// TODO: Move to OnPossess
 	InitAbilityActorInfo();
-
-	if (!HasAuthority())
-	{
-		InitStatusBar();
-	}
 }
 
 void ABaseAnimalCharacter::UnPossessed()
@@ -65,7 +63,6 @@ void ABaseAnimalCharacter::OnRep_Controller()
 	Super::OnRep_Controller();
 
 	InitAbilityActorInfo();
-	InitStatusBar();
 
 	if (!HasAuthority())
 	{
@@ -74,17 +71,6 @@ void ABaseAnimalCharacter::OnRep_Controller()
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SERVER: Animal Possessed By Has Ran"));
-	}
-}
-
-void ABaseAnimalCharacter::InitStatusBar()
-{
-	if (StatusBarWidgetComponent)
-	{
-		if (UStatusBarUserWidget* StatusBarUserWidget = Cast<UStatusBarUserWidget>(StatusBarWidgetComponent->GetUserWidgetObject()))
-		{
-			StatusBarUserWidget->SetAttributeSet(AnimalAttributeSet);
-		}
 	}
 }
 
@@ -98,6 +84,7 @@ void ABaseAnimalCharacter::InitAbilityActorInfo()
 	{
 		SavedAIController = AIC;
 		AnimalAbilitySystemComponent->InitAbilityActorInfo(this, this);
+		AnimalAbilitySystemComponent->AbilityActorInfoSet();
 		PawnExt->EnsureInitialAttributeDefaults();
 		SetOwner(nullptr);
 
@@ -118,6 +105,13 @@ void ABaseAnimalCharacter::InitAbilityActorInfo()
 				{
 					PawnExt->HandlePlayerPossess(PS);
 				}
+				else
+				{
+					if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD()))
+					{
+						PlayerHUD->InitOverlay(PC);
+					}
+				}
 			}
 		}
 	}
@@ -135,6 +129,11 @@ void ABaseAnimalCharacter::InitAbilityActorInfo()
 UAbilitySystemComponent* ABaseAnimalCharacter::GetAbilitySystemComponent() const
 {
 	return AnimalAbilitySystemComponent;
+}
+
+UAnimalAttributeSet* ABaseAnimalCharacter::GetAttributeSet() const
+{
+	return AnimalAttributeSet;
 }
 
 // Currently return 100% if not being possessed and 0% if being possessed

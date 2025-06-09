@@ -20,8 +20,7 @@ public:
 	ABaseCharacter();
 
 protected:
-
-	virtual void InitStatusBar();
+	
 	virtual void InitAbilityActorInfo();
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;

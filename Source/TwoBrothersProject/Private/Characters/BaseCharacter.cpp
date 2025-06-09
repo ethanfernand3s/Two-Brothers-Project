@@ -53,7 +53,6 @@ void ABaseCharacter::OnRep_PlayerState()
 	if (IsLocallyControlled())
 	{
 		InitAbilityActorInfo();
-		InitStatusBar(); 
 	}
 }
 
@@ -85,11 +84,6 @@ void ABaseCharacter::BeginPlay()
 
 	StatusBarWidgetComponent->SetIsReplicated(false);
 	StatusBarWidgetComponent->SetOwnerNoSee(true);             
-}
-
-void ABaseCharacter::InitStatusBar()
-{
-	// Implementation in children
 }
 
 void ABaseCharacter::InitAbilityActorInfo()
