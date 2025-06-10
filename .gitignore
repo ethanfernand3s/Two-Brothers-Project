@@ -1,21 +1,54 @@
-# Unreal Engine standard ignore
-Binaries/
-DerivedDataCache/
-Intermediate/
-Saved/
+#################################
+# Unreal Engine Generated Files #
+#################################
+/[Bb]uild
+/[Bb]uilds
+/Binaries
+/DerivedDataCache
+/Intermediate
+/Saved
+
+#################################
+# Visual Studio Generated Files #
+#################################
+# Cache Directory
+.vs
+# User Specific Files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+# CPP Cache Files
 *.VC.db
-*.VC.opendb
-
-# Visual Studio and Rider
-.vscode/
-# Build output folders
-Binaries/
-Intermediate/
-Saved/
-DerivedDataCache/
-
-# Visual Studio / Rider project files (safe to exclude)
-.vs/
+*.opendb
+*.opensdf
+*.sdf
+# Solution Files
 *.sln
-*.VC.db
-*.VC.opendb
+# VSCode Cache Directory
+.vscode
+# VSCode History Files
+**/.history
+
+###################################
+# JetBrains Rider Generated Files #
+###################################
+# Cache Directory
+.idea
+
+# Solution and Project Files
+*.sln
+*.csproj
+*.sln.DotSettings
+*.sln.DotSettings.user
+
+#################################
+# Miscellaneous Generated Files #
+#################################
+# ADD AS NEED BE
+
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
