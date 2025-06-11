@@ -13,12 +13,50 @@ GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
 class UBaseAbilitySystemComponent;
 
+template<class T>
+using TStaticFuncPtr = typename TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
+
+USTRUCT()
+struct FTagAttributeBinding
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FGameplayTag PrimaryTag;
+
+	UPROPERTY()
+	FGameplayTag SecondaryTag; // Optional
+
+	TStaticFuncPtr<FGameplayAttribute()> PrimaryAttributeFunc = nullptr;
+	TStaticFuncPtr<FGameplayAttribute()> SecondaryAttributeFunc = nullptr;
+
+	FTagAttributeBinding() = default;
+	FTagAttributeBinding(
+		const FGameplayTag& InPrimaryTag,
+		TStaticFuncPtr<FGameplayAttribute()> InPrimaryFunc,
+		const FGameplayTag& InSecondaryTag = FGameplayTag(),
+		TStaticFuncPtr<FGameplayAttribute()> InSecondaryFunc = nullptr)
+		: PrimaryTag(InPrimaryTag),
+		  SecondaryTag(InSecondaryTag),
+		  PrimaryAttributeFunc(InPrimaryFunc),
+		  SecondaryAttributeFunc(InSecondaryFunc)
+	{
+	}
+	
+	bool HasSecondary() const { return SecondaryTag.IsValid(); }
+};
+
 UCLASS()
 class TWOBROTHERSPROJECT_API UBaseAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
 
 public:
+
+	UBaseAttributeSet();
+
+	
+	TArray<FTagAttributeBinding> TagsToAttributes;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;

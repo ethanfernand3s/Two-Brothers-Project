@@ -3,9 +3,77 @@
 #include "AbilitySystem/BaseAttributeSet.h"
 
 #include "GameplayEffectExtension.h"
+#include "TBGameplayTags.h"
 #include "AbilitySystem/BaseAbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/ParasitePlayerState.h"
+
+UBaseAttributeSet::UBaseAttributeSet()
+{
+	const FTBGameplayTags& GameplayTags = FTBGameplayTags::Get();
+	
+	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_Health,
+		&UBaseAttributeSet::GetHealthAttribute,
+		GameplayTags.Attributes_MaxHealth,
+		&UBaseAttributeSet::GetMaxHealthAttribute
+	));
+
+	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_Stamina,
+		&UBaseAttributeSet::GetStaminaAttribute,
+		GameplayTags.Attributes_MaxStamina,
+		&UBaseAttributeSet::GetMaxStaminaAttribute
+	));
+
+	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_Oxygen,
+		&UBaseAttributeSet::GetOxygenAttribute,
+		GameplayTags.Attributes_MaxOxygen,
+		&UBaseAttributeSet::GetMaxOxygenAttribute
+	));
+
+	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_Hunger,
+		&UBaseAttributeSet::GetHungerAttribute,
+		GameplayTags.Attributes_MaxHunger,
+		&UBaseAttributeSet::GetMaxHungerAttribute
+	));
+
+	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_Thirst,
+		&UBaseAttributeSet::GetThirstAttribute,
+		GameplayTags.Attributes_MaxThirst,
+		&UBaseAttributeSet::GetMaxThirstAttribute
+	));
+
+	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_Drowsiness,
+		&UBaseAttributeSet::GetDrowsinessAttribute,
+		GameplayTags.Attributes_MaxDrowsiness,
+		&UBaseAttributeSet::GetMaxDrowsinessAttribute
+	));
+
+	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_Strength,
+		&UBaseAttributeSet::GetStrengthAttribute
+	));
+
+	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_Defense,
+		&UBaseAttributeSet::GetDefenseAttribute
+	));
+
+	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_Speed,
+		&UBaseAttributeSet::GetSpeedAttribute
+	));
+
+	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_TemperatureResistance,
+		&UBaseAttributeSet::GetTemperatureResistanceAttribute
+	));
+}
 
 void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -22,6 +90,7 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(UBaseAttributeSet, Thirst);
 	DOREPLIFETIME(UBaseAttributeSet, MaxThirst);
 	DOREPLIFETIME(UBaseAttributeSet, Strength);
+	DOREPLIFETIME(UBaseAttributeSet, Defense);
 	DOREPLIFETIME(UBaseAttributeSet, Speed);
 	DOREPLIFETIME(UBaseAttributeSet, TemperatureResistance);
 	DOREPLIFETIME(UBaseAttributeSet, Drowsiness);

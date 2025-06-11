@@ -51,8 +51,8 @@ void UAttributeMenuUserWidget::Single_SetAttributeRow(const FTBAttributeInfo& At
 		if (auto* AttributeRowCur = *PtrOfAttributeRow)
 		{
 			AttributeRowCur->TextBlock_AttributeRatio->SetText(
-				FText::Format(FText::FromString(TEXT("/{0} %")), FText::AsNumber(AttributeInfo.AttributeValue))
-			);
+				//FText::Format(FText::FromString(TEXT("{0} %")), FText::AsNumber(AttributeInfo.AttributeValue)));
+				FText::AsNumber(AttributeInfo.AttributeValue));
 		}
 	}
 }
@@ -65,14 +65,21 @@ void UAttributeMenuUserWidget::CurrentAndMax_SetAttributeRow(const FTBAttributeI
 		{
 			if (auto* AttributeRowCur = *PtrOfAttributeRow)
 			{
-				const float CurrentAttribute{CurrentAttributeInfo.AttributeValue}, MaxAttribute{MaxAttributeInfo.AttributeValue};
+				const float CurrentAttribute{CurrentAttributeInfo.AttributeValue};
+				const float MaxAttribute{MaxAttributeInfo.AttributeValue};
+
 				if (MaxAttribute != 0)
 				{
+					FNumberFormattingOptions Format;
+					Format.MinimumFractionalDigits = 1;
+					Format.MaximumFractionalDigits = 1;
+
 					FText FormattedAttributeValue = FText::Format(
-				NSLOCTEXT("AttributeUI", "AttributeFormat", "{0} / {1}"),
-					FText::AsNumber(CurrentAttribute),
-					FText::AsNumber(MaxAttribute));
-				
+						NSLOCTEXT("AttributeUI", "AttributeFormat", "{0} / {1}"),
+						FText::AsNumber(CurrentAttribute, &Format),
+						FText::AsNumber(MaxAttribute, &Format)
+					);
+
 					const float AttributePercent = CurrentAttribute / MaxAttribute;
 					AttributeRowCur->TextBlock_AttributeRatio->SetText(FormattedAttributeValue);
 					AttributeRowCur->ProgressBar_Attribute->SetPercent(AttributePercent);
