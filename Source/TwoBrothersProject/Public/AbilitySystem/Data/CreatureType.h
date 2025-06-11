@@ -7,13 +7,13 @@
 /**
  * 
  */
-UENUM()
+UENUM(BlueprintType)
 enum class ECreatureType : uint8
 {
-	Parasite,
-	Fire,
-	Water,
-	Earth,
-	Wind,
-	Spirit
+	Parasite	UMETA(DisplayName = "Parasite"),
+	Fire		UMETA(DisplayName = "Fire"),
+	Water		UMETA(DisplayName = "Water"),
+	Earth		UMETA(DisplayName = "Earth"),
+	Wind		UMETA(DisplayName = "Wind"),
+	Spirit		UMETA(DisplayName = "Spirit")
 };

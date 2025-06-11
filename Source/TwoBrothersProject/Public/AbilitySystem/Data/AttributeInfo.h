@@ -10,10 +10,13 @@
 
 
 USTRUCT()
-struct FTBFloatAttributeInfo
+struct FTBAttributeInfo
 {
 	GENERATED_BODY()
 
+	UPROPERTY()
+	FGameplayTag AttributeTag;
+	
 	UPROPERTY()
 	FText AttributeName;
 
@@ -23,37 +26,18 @@ struct FTBFloatAttributeInfo
 	UPROPERTY()
 	float AttributeValue = 0.0f;
 
-	FTBFloatAttributeInfo() = default;
-	FTBFloatAttributeInfo(const FText& InName, const FText& InDesc, float InValue)
-		: AttributeName(InName), AttributeDescription(InDesc), AttributeValue(InValue){}
-};
-
-USTRUCT()
-struct FTBCreatureTypeAttributeInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	FText AttributeName = FText::FromString(TEXT("Creature Type"));
-
-	UPROPERTY()
-	FText AttributeDescription = FText::FromString(TEXT("Current creature type"));
-
-	// Default type for the moment adjust if needed later
-	UPROPERTY()
-	ECreatureType AttributeValue = ECreatureType::Parasite;
-
-	FTBCreatureTypeAttributeInfo() = default;
+	FTBAttributeInfo() = default;
+	FTBAttributeInfo(const FGameplayTag& InAttributeTag, const FText& InName, const FText& InDesc, float InValue)
+		: AttributeTag(InAttributeTag), AttributeName(InName), AttributeDescription(InDesc), AttributeValue(InValue){}
 };
 
 class TWOBROTHERSPROJECT_API AttributeInfoLibrary
 {
 public:
-	static FTBFloatAttributeInfo FindFloatAttributeInfo(const FGameplayTag& Tag);
-	static FTBCreatureTypeAttributeInfo GetCreatureTypeAttribute();
+	static FTBAttributeInfo FindAttributeInfo(const FGameplayTag& Tag);
 
 private:
-	static const TMap<FGameplayTag, FTBFloatAttributeInfo>& GetFloatAttributeMap();
+	static const TMap<FGameplayTag, FTBAttributeInfo>& GetAttributeMap();
 };
 
 

@@ -12,7 +12,7 @@
 #include "AI/AnimalAIController.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "Characters/PawnExtensionComponent.h"
+#include "Characters/AnimalExtensionComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/ParasitePlayerState.h"
 #include "Runtime/AIModule/Classes/AIController.h"
@@ -31,7 +31,7 @@ ABaseAnimalCharacter::ABaseAnimalCharacter()
 	AnimalAttributeSet = CreateDefaultSubobject<UAnimalAttributeSet>(TEXT("AnimalAttributeSet"));
 	AnimalAbilitySystemComponent->AddAttributeSetSubobject(AnimalAttributeSet);
 
-	PawnExt = CreateDefaultSubobject<UPawnExtensionComponent>(TEXT("PawnExtensionComponent"));
+	PawnExt = CreateDefaultSubobject<UAnimalExtensionComponent>(TEXT("PawnExtensionComponent"));
 }
 
 void ABaseAnimalCharacter::BeginPlay()
@@ -40,6 +40,10 @@ void ABaseAnimalCharacter::BeginPlay()
 
 	// TODO: Move to OnPossess
 	InitAbilityActorInfo();
+	if (PawnExt)
+	{
+		PawnExt->InitializePossessionWidgets(SocketChances, WidgetClass, GetMesh());
+	}
 }
 
 void ABaseAnimalCharacter::UnPossessed()

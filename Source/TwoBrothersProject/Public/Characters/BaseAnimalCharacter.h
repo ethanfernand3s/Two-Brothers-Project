@@ -8,12 +8,24 @@
 #include "AbilitySystem/Interfaces/IPossessable.h"
 #include "BaseAnimalCharacter.generated.h"
 
+class UPossessionChanceUserWidget;
 class AAnimalAIController;
 class UBehaviorTree;
-class UPawnExtensionComponent;
+class UAnimalExtensionComponent;
 class UAnimalAttributeSet;
 class UAnimalAbilitySystemComponent;
 
+USTRUCT(BlueprintType)
+struct FPossessionSocketData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	FName SocketName;
+
+	UPROPERTY(EditAnywhere)
+	float PossessionChance = 0.f;
+};
 
 UCLASS()
 class TWOBROTHERSPROJECT_API ABaseAnimalCharacter : public ABaseCharacter, public IAbilitySystemInterface, public IPossessable
@@ -36,7 +48,8 @@ public:
 
 	UPROPERTY()
 	TObjectPtr<class AAIController> SavedAIController;
-	
+	//UPROPERTY(EditDefaultsOnly)
+	//TMap<FName, UPossessionChanceUserWidget*> PossessedSocketMap;
 protected:
 
 	virtual void BeginPlay() override;
@@ -47,7 +60,7 @@ protected:
 
 	// GAS
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
-	TObjectPtr<UPawnExtensionComponent> PawnExt;
+	TObjectPtr<UAnimalExtensionComponent> PawnExt;
 	
 	UPROPERTY()
 	TObjectPtr<UAnimalAbilitySystemComponent> AnimalAbilitySystemComponent;
@@ -61,4 +74,13 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<AAnimalAIController> AnimalAIController;
+
+	UPROPERTY(EditAnywhere)
+	TArray<FPossessionSocketData> SocketChances;
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UPossessionChanceUserWidget> WidgetClass;
+
+
+	
 };

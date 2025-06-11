@@ -73,5 +73,11 @@ protected:
 	virtual void OnWidgetControllerSet() override;
 
 private:
-	void SetHealthAttributeRow(const FTBFloatAttributeInfo& CurrentHealthInfo, const FTBFloatAttributeInfo& MaxHealthInfo);
+	void Single_SetAttributeRow(const FTBAttributeInfo& AttributeInfo);
+	void CurrentAndMax_SetAttributeRow(const FTBAttributeInfo& CurrentAttributeInfo, const FTBAttributeInfo& MaxAttributeInfo);
+	void SetType(const FTBAttributeInfo& TypeAttributeInfo);
+	void SetupAttributeRowTags();
+
+	UPROPERTY()
+	TMap<FGameplayTagContainer, UAttributeRowUserWidget*> MappedAttributeRows;
 };

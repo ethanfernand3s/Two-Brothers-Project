@@ -85,7 +85,12 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 
 	GameplayTags.Attributes_Drowsiness = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attributes.Drowsiness"),
-		FString("Affects damage")
+		FString("Current drowsiness value")
+		);
+
+	GameplayTags.Attributes_MaxDrowsiness = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.MaxDrowsiness"),
+		FString("Maximum drowsiness level")
 		);
 
 #pragma endregion Attributes

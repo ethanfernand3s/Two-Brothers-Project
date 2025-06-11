@@ -62,17 +62,20 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Drowsiness)
 	FGameplayAttributeData Drowsiness;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxDrowsiness)
+	FGameplayAttributeData MaxDrowsiness;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_TemperatureResistance)
 	FGameplayAttributeData TemperatureResistance;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Type)
 	FGameplayAttributeData Type;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Level)
-	FGameplayAttributeData Level;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Meta Attributes")
+	FGameplayAttributeData IncomingXP;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	FGameplayAttributeData Damage;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Meta Attributes")
+	FGameplayAttributeData IncomingDamage;
 
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Health);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxHealth);
@@ -95,14 +98,15 @@ public:
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Speed);
 	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Drowsiness);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxDrowsiness);
 
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, TemperatureResistance);
 	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Type);
 	
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Level);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, IncomingXP);
 	
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Damage);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, IncomingDamage);
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -138,9 +142,9 @@ protected:
 	UFUNCTION()
 	void OnRep_Drowsiness(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	void OnRep_Type(const FGameplayAttributeData& OldValue);
+	void OnRep_MaxDrowsiness(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	void OnRep_Level(const FGameplayAttributeData& OldValue);
+	void OnRep_Type(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_TemperatureResistance(const FGameplayAttributeData& OldValue);
 	

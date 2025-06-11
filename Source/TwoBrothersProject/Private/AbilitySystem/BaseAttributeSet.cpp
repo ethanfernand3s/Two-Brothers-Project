@@ -13,7 +13,6 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(UBaseAttributeSet, Health);
 	DOREPLIFETIME(UBaseAttributeSet, MaxHealth);
 	DOREPLIFETIME(UBaseAttributeSet, Type);
-	DOREPLIFETIME(UBaseAttributeSet, Level);
 	DOREPLIFETIME(UBaseAttributeSet, Stamina);
 	DOREPLIFETIME(UBaseAttributeSet, MaxStamina);
 	DOREPLIFETIME(UBaseAttributeSet, Oxygen);
@@ -26,15 +25,16 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(UBaseAttributeSet, Speed);
 	DOREPLIFETIME(UBaseAttributeSet, TemperatureResistance);
 	DOREPLIFETIME(UBaseAttributeSet, Drowsiness);
+	DOREPLIFETIME(UBaseAttributeSet, MaxDrowsiness);
 }
 
 void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
-	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
+	if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
 	{
-		SetHealth(FMath::Clamp(GetHealth() - GetDamage(), 0, GetMaxHealth()));
-		SetDamage(0.0f);
+		SetHealth(FMath::Clamp(GetHealth() - GetIncomingDamage(), 0, GetMaxHealth()));
+		SetIncomingDamage(0.0f);
 	}
 }
 
@@ -75,14 +75,9 @@ void UBaseAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxHealth, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_Level(const FGameplayAttributeData& OldValue)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Level, OldValue);
-}
-
 void UBaseAttributeSet::OnRep_TemperatureResistance(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Level, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, TemperatureResistance, OldValue);
 }
 
 void UBaseAttributeSet::OnRep_Stamina(const FGameplayAttributeData& OldValue)
@@ -143,6 +138,11 @@ void UBaseAttributeSet::OnRep_Speed(const FGameplayAttributeData& OldValue)
 void UBaseAttributeSet::OnRep_Drowsiness(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Drowsiness, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_MaxDrowsiness(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxDrowsiness, OldValue);
 }
 
 void UBaseAttributeSet::OnRep_Type(const FGameplayAttributeData& OldValue)

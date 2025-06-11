@@ -21,8 +21,9 @@ class TWOBROTHERSPROJECT_API UAttributeRowUserWidget : public UBaseUserWidget
 	GENERATED_BODY()
 	
 public:
-		UPROPERTY(EditDefaultsOnly)
-	FGameplayTag GameplayTag;
+	
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FGameplayTag> AttributeGameplayTag;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttributeStats",meta = (BindWidget))
 	TObjectPtr<UTextBlock>  TextBlock_AttributeRatio;
