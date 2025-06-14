@@ -8,6 +8,7 @@
 #include "GameFramework/PlayerState.h"
 #include "ParasitePlayerState.generated.h"
 
+class UCharacterContextComponent;
 class UParasiteAbilitySet;
 class UParasiteAttributeSet;
 class UParasiteAbilitySystemComponent;
@@ -36,13 +37,18 @@ public:
 	
 	UPROPERTY(Replicated)
 	bool bAttributesInitialised;
+
+	UPROPERTY()
+	TObjectPtr<UCharacterContextComponent> CharacterContextComponent;
+	
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	UPROPERTY(EditAnywhere,Category="Ability System")
 	TObjectPtr<UParasiteAbilitySet> ParasiteAbilitySet;
 private:
-	
+
+	// GAS
 	UPROPERTY(VisibleAnywhere,Category="Ability System")
 	TObjectPtr<UParasiteAbilitySystemComponent> ParasiteAbilitySystem;
 	

@@ -46,8 +46,6 @@ void ABaseCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	Super::OnRep_PlayerState();
-
 	// Only bother on owning client (skip for simulated proxies
 	// if you keep ASC in Mixed replication mode)
 	if (IsLocallyControlled())
@@ -83,7 +81,12 @@ void ABaseCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	StatusBarWidgetComponent->SetIsReplicated(false);
-	StatusBarWidgetComponent->SetOwnerNoSee(true);             
+	StatusBarWidgetComponent->SetOwnerNoSee(true);
+}
+
+void ABaseCharacter::LoadProgress()
+{
+	// Implementation in children
 }
 
 void ABaseCharacter::InitAbilityActorInfo()

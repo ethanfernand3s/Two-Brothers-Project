@@ -7,10 +7,11 @@
 #include "AbilitySystem/Parasite/ParasiteAbilitySet.h"
 #include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
 #include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
+#include "Characters/CharacterContextComponent.h"
 #include "Net/UnrealNetwork.h"
 
 AParasitePlayerState::AParasitePlayerState()
-{
+{ 
 	ParasiteAbilitySystem =	CreateDefaultSubobject<UParasiteAbilitySystemComponent>(TEXT("AnimalAbilitySystemComponent"));
 	ParasiteAttributeSet = CreateDefaultSubobject<UParasiteAttributeSet>(TEXT("AnimalAttributeSet"));
 
@@ -18,6 +19,8 @@ AParasitePlayerState::AParasitePlayerState()
 	ParasiteAbilitySystem->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 	ParasiteAbilitySystem->AddAttributeSetSubobject(ParasiteAttributeSet);
 
+	CharacterContextComponent = CreateDefaultSubobject<UCharacterContextComponent>(TEXT("CharacterContextComponent"));
+	
 	bAttributesInitialised = false;
 }
 

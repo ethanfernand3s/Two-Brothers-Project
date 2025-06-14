@@ -9,26 +9,9 @@
 #include "UI/Widget/Inventory/AttributeMenuUserWidget.h"
 #include "UI/WidgetController/InventoryWidgetController.h"
 
-void UInventoryUserWidget::NativeConstruct()
+void UInventoryUserWidget::SetWidgetController(UObject* InWidgetController)
 {
-	Super::NativeConstruct();
+	Super::SetWidgetController(InWidgetController);
 
-	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-	{
-		if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD()))
-		{
-			auto* InventoryWidgetController = PlayerHUD->GetInventoryWidgetController(PC);
-			AttributeMenu->SetWidgetController(InventoryWidgetController);
-			SetWidgetController(InventoryWidgetController);
-			InventoryWidgetController->BroadcastInitialValues();
-		}
-	}
-	if (!(WidgetController == nullptr))
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "NOT NULL");
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "TRASH");
-	}
+	AttributeMenu->SetWidgetController(InWidgetController);
 }

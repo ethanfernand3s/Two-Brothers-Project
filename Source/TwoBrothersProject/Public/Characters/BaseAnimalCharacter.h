@@ -8,6 +8,7 @@
 #include "AbilitySystem/Interfaces/IPossessable.h"
 #include "BaseAnimalCharacter.generated.h"
 
+class UCharacterContextComponent;
 class UPossessionChanceUserWidget;
 class AAnimalAIController;
 class UBehaviorTree;
@@ -43,20 +44,23 @@ public:
 	// ASC Interface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAnimalAttributeSet* GetAttributeSet() const;
+	
 	// Possessable Interface
 	virtual bool CanBePossessedBy() const override;
 
 	UPROPERTY()
 	TObjectPtr<class AAIController> SavedAIController;
+	
 	//UPROPERTY(EditDefaultsOnly)
 	//TMap<FName, UPossessionChanceUserWidget*> PossessedSocketMap;
+	
 protected:
 
 	virtual void BeginPlay() override;
 	virtual void UnPossessed() override;
 	virtual void OnRep_Controller() override;
-	
 	virtual void InitAbilityActorInfo() override;
+	virtual void LoadProgress() override;
 
 	// GAS
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
@@ -75,12 +79,14 @@ protected:
 	UPROPERTY()
 	TObjectPtr<AAnimalAIController> AnimalAIController;
 
+	// Possession
 	UPROPERTY(EditAnywhere)
 	TArray<FPossessionSocketData> SocketChances;
 	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UPossessionChanceUserWidget> WidgetClass;
 
-
-	
+	// Additional Components
+	UPROPERTY()
+	TObjectPtr<UCharacterContextComponent> CharacterContextComponent;
 };

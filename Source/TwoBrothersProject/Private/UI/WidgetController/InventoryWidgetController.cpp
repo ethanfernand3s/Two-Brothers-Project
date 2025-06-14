@@ -7,6 +7,10 @@
 #include "AbilitySystem/Data/AttributeInfo.h"
 #include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
 #include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
+#include "Characters/CharacterContextComponent.h"
+#include "Characters/Data/LevelInfo.h"
+#include "GameFramework/PlayerState.h"
+#include "Player/ParasitePlayerState.h"
 
 void UInventoryWidgetController::BroadcastInitialValues()
 {
@@ -41,8 +45,49 @@ void UInventoryWidgetController::BroadcastInitialValues()
 	Type_AttributeInfoDelegate.Broadcast(CreatureInfo);
 }
 
+void UInventoryWidgetController::OnXPChanged(int NewXP)
+{
+	const float XPBarPercent = LevelInfoLibrary::GetProgressToNextLevel(NewXP);
+	OnXpPercentChangedDelegate.Broadcast(XPBarPercent);
+}
+void UInventoryWidgetController::OnAttributePointsChanged(int NewAttributePoints)
+{
+	OnAttributePointsChangedDelegate.Broadcast(NewAttributePoints);
+}
+
+void UInventoryWidgetController::OnBiomeChanged(const UBiomeDataAsset* NewBiomeData)
+{
+	OnBiomeChangedDelegate.Broadcast(NewBiomeData);
+}
+
+void UInventoryWidgetController::OnCharacterNameChanged(const FText& NewCharacterName)
+{
+	OnCharacterNameChangedDelegate.Broadcast(NewCharacterName);
+}
+
+void UInventoryWidgetController::OnLevelChanged(int NewLevel)
+{
+	OnLevelChangedDelegate.Broadcast(NewLevel);
+}
+
+void UInventoryWidgetController::OnTribeDataChanged(const FTribeData& NewTribeData)
+{
+	OnTribeDataChangedDelegate.Broadcast(NewTribeData);
+}
+
 void UInventoryWidgetController::BindCallbacksToDependencies()
 {
+	// Bind Character Context
+	auto* ParasitePlayerState = Cast<AParasitePlayerState>(ParasitePS);
+	check(ParasitePlayerState);	
+	ParasitePlayerState->CharacterContextComponent->OnXPChanged.AddUObject(this, &UInventoryWidgetController::OnXPChanged);
+	ParasitePlayerState->CharacterContextComponent->OnAttributePointsChanged.AddUObject(this, &UInventoryWidgetController::OnAttributePointsChanged);
+	ParasitePlayerState->CharacterContextComponent->OnBiomeChanged.AddUObject(this, &UInventoryWidgetController::OnBiomeChanged);
+	ParasitePlayerState->CharacterContextComponent->OnCharacterNameChanged.AddUObject(this, &UInventoryWidgetController::OnCharacterNameChanged);
+	ParasitePlayerState->CharacterContextComponent->OnLevelChanged.AddUObject(this, &UInventoryWidgetController::OnLevelChanged);
+	ParasitePlayerState->CharacterContextComponent->OnTribeDataChanged.AddUObject(this, &UInventoryWidgetController::OnTribeDataChanged);
+
+	// Bind Attributes
 	for (const FTagAttributeBinding& Binding : ParasiteAttributeSet->TagsToAttributes)
 	{
 		const FGameplayAttribute PrimaryAttribute = Binding.PrimaryAttributeFunc();

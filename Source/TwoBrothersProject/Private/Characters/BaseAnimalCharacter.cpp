@@ -13,6 +13,8 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/AnimalExtensionComponent.h"
+#include "Characters/CharacterContextComponent.h"
+#include "Characters/Data/Gender.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/ParasitePlayerState.h"
 #include "Runtime/AIModule/Classes/AIController.h"
@@ -31,6 +33,7 @@ ABaseAnimalCharacter::ABaseAnimalCharacter()
 	AnimalAttributeSet = CreateDefaultSubobject<UAnimalAttributeSet>(TEXT("AnimalAttributeSet"));
 	AnimalAbilitySystemComponent->AddAttributeSetSubobject(AnimalAttributeSet);
 
+	CharacterContextComponent = CreateDefaultSubobject<UCharacterContextComponent>(TEXT("CharacterContextComponent"));
 	PawnExt = CreateDefaultSubobject<UAnimalExtensionComponent>(TEXT("PawnExtensionComponent"));
 }
 
@@ -40,6 +43,8 @@ void ABaseAnimalCharacter::BeginPlay()
 
 	// TODO: Move to OnPossess
 	InitAbilityActorInfo();
+	LoadProgress();
+	
 	if (PawnExt)
 	{
 		PawnExt->InitializePossessionWidgets(SocketChances, WidgetClass, GetMesh());
@@ -54,7 +59,6 @@ void ABaseAnimalCharacter::UnPossessed()
 	{
 		PawnExt->HandlePlayerUnPossess();
 	}
-	
 
 	if (SavedAIController)
 	{
@@ -128,6 +132,25 @@ void ABaseAnimalCharacter::InitAbilityActorInfo()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SERVER: Animal Possessed By Has Ran"));
 	}
+}
+
+void ABaseAnimalCharacter::LoadProgress()
+{
+	// Test
+	CharacterContextComponent->InitializeCharacterContext(
+	FText::FromString("Neo"),                      // Name
+	1,                                             // Level
+	0,                                             // XP
+	FTribeData(
+		FText::FromString("NONE"),					// Tribe Name
+		FText::FromString(""),						// Tribe Desc
+		nullptr,									// Icon (null for now)
+		FLinearColor::Gray							// Tribe Color
+	),
+	ECharacterGender::Male,									// Gender
+	BiomeDataAsset,									// UBiomeDataAsset* reference
+	0												// Attribute Points
+	);
 }
 
 UAbilitySystemComponent* ABaseAnimalCharacter::GetAbilitySystemComponent() const

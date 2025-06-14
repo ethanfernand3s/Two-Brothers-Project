@@ -7,8 +7,6 @@
 void UBaseAbilitySystemComponent::AbilityActorInfoSet()
 {
 	const FTBGameplayTags& GameplayTags = FTBGameplayTags::Get();
-
-	GEngine->AddOnScreenDebugMessage(-1,10.f,FColor::Orange,FString::Printf(TEXT("dadaddadadyyyyy %s"),*GameplayTags.InputTag_E.ToString()));
 }
 
 void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
