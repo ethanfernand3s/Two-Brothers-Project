@@ -4,6 +4,7 @@
 #include "UI/Widget/Inventory/AttributeMenuUserWidget.h"
 
 #include "TBGameplayTags.h"
+#include "AbilitySystem/Data/CreatureType.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "UI/Widget/Inventory/AttributeRowUserWidget.h"
@@ -41,6 +42,13 @@ void UAttributeMenuUserWidget::OnWidgetControllerSet()
 		InventoryWidgetController->CurrentAndMax_AttributeInfoDelegate.AddUObject(this,&UAttributeMenuUserWidget::CurrentAndMax_SetAttributeRow);
 		InventoryWidgetController->Single_AttributeInfoDelegate.AddUObject(this,&UAttributeMenuUserWidget::Single_SetAttributeRow);
 		InventoryWidgetController->Type_AttributeInfoDelegate.AddUObject(this,&UAttributeMenuUserWidget::SetType);
+
+		InventoryWidgetController->OnAttributePointsChangedDelegate.AddUObject(this,&UAttributeMenuUserWidget::OnAttributePointsChanged);
+		InventoryWidgetController->OnBiomeChangedDelegate.AddUObject(this,&UAttributeMenuUserWidget::OnBiomeChanged);
+		InventoryWidgetController->OnCharacterNameChangedDelegate.AddUObject(this,&UAttributeMenuUserWidget::OnCharacterNameChanged);
+		InventoryWidgetController->OnLevelChangedDelegate.AddUObject(this,&UAttributeMenuUserWidget::OnLevelChanged);
+		InventoryWidgetController->OnTribeDataChangedDelegate.AddUObject(this,&UAttributeMenuUserWidget::OnTribeDataChanged);
+		InventoryWidgetController->OnXpPercentChangedDelegate.AddUObject(this,&UAttributeMenuUserWidget::OnXPPercentChanged);
 	}
 }
 
@@ -134,4 +142,34 @@ void UAttributeMenuUserWidget::SetupAttributeRowTags()
 
 	AttributeRow_Speed->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_Speed);
 	MappedAttributeRows.Add(FGameplayTagContainer(AttributeRow_Speed->AttributeGameplayTag[0]), AttributeRow_Speed);
+}
+
+void UAttributeMenuUserWidget::OnAttributePointsChanged(int NewAttributePoints)
+{
+	AttributeXPBar->TextBlock_PointsAvailable->SetText(FText::AsNumber(NewAttributePoints));
+}
+
+void UAttributeMenuUserWidget::OnBiomeChanged(const UBiomeDataAsset* NewBiomeData)
+{
+	TextBlock_Biome->SetText(NewBiomeData->BiomeName);
+}
+
+void UAttributeMenuUserWidget::OnCharacterNameChanged(const FText& NewCharacterName)
+{
+	TextBlock_PlayerName->SetText(NewCharacterName);
+}
+
+void UAttributeMenuUserWidget::OnLevelChanged(int NewLevel)
+{
+	TextBlock_Level->SetText(FText::AsNumber(NewLevel));
+}
+
+void UAttributeMenuUserWidget::OnTribeDataChanged(const FTribeData& NewTribeData)
+{
+	TextBlock_Tribe->SetText(NewTribeData.TribeName);
+}
+
+void UAttributeMenuUserWidget::OnXPPercentChanged(float NewXPPercent)
+{
+	AttributeXPBar->ProgressBar_XP->SetPercent(NewXPPercent);
 }

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "BaseCharacter.h"
 #include "ParasiteCharacter.generated.h"
+class AParasitePlayerState;
 class UParasiteAbilitySystemComponent;
 UCLASS()
 class TWOBROTHERSPROJECT_API AParasiteCharacter : public ABaseCharacter
@@ -12,11 +13,14 @@ class TWOBROTHERSPROJECT_API AParasiteCharacter : public ABaseCharacter
 	GENERATED_BODY()
 public:
 	AParasiteCharacter();
-	
-	
+
+	// TODO: Move back to protected
+	virtual void LoadProgress() override;
 protected:
 	virtual void UnPossessed() override;
 	virtual void InitAbilityActorInfo() override;
+	
+	virtual void OnRep_PlayerState() override;
 
 
 private:

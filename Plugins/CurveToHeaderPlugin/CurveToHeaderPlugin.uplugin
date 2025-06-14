@@ -1,0 +1,16 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0",
+  "FriendlyName": "Curve To Header Exporter",
+  "Description": "Exports a UCurveFloat into a constexpr XP array header for compile-time lookup.",
+  "Category": "Utility",
+  "CreatedBy": "Dylan Fernandes",
+  "Modules": [
+    {
+      "Name": "CurveToHeaderPlugin",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ]
+}

@@ -19,7 +19,6 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menus",meta = (BindWidget))
 	TObjectPtr<UAttributeMenuUserWidget>  AttributeMenu;
-
-protected:
-	virtual void NativeConstruct() override;
+	
+	virtual void SetWidgetController(UObject* InWidgetController) override;
 };

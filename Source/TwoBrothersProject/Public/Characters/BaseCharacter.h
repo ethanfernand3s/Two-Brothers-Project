@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
+class UBiomeDataAsset;
 class UWidgetComponent;
 class UCameraComponent;
 class USpringArmComponent;
@@ -26,6 +27,7 @@ protected:
 	virtual void OnRep_PlayerState() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void BeginPlay() override;
+	virtual void LoadProgress();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<UWidgetComponent> StatusBarWidgetComponent;
@@ -35,4 +37,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<UCameraComponent> CameraComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	UBiomeDataAsset* BiomeDataAsset;
 };

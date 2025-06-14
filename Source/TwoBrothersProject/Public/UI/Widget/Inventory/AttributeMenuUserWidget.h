@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Data/AttributeInfo.h"
+#include "Characters/Data/BiomeDataAsset.h"
+#include "Characters/Data/TribeData.h"
 #include "UI/Widget/BaseUserWidget.h"
 #include "AttributeMenuUserWidget.generated.h"
 
@@ -77,6 +79,13 @@ private:
 	void CurrentAndMax_SetAttributeRow(const FTBAttributeInfo& CurrentAttributeInfo, const FTBAttributeInfo& MaxAttributeInfo);
 	void SetType(const FTBAttributeInfo& TypeAttributeInfo);
 	void SetupAttributeRowTags();
+
+	void OnAttributePointsChanged(int NewAttributePoints);
+	void OnBiomeChanged(const UBiomeDataAsset* NewBiomeData);
+	void OnCharacterNameChanged(const FText& NewCharacterName);
+	void OnLevelChanged(int NewLevel);
+	void OnTribeDataChanged(const FTribeData& NewTribeData);
+	void OnXPPercentChanged(float NewXPPercent);
 
 	UPROPERTY()
 	TMap<FGameplayTagContainer, UAttributeRowUserWidget*> MappedAttributeRows;
