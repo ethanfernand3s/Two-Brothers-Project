@@ -6,6 +6,7 @@
 #include "AbilitySystem/BaseGameplayAbility.h"
 #include "PossessHostAbility.generated.h"
 
+class APossessMiniGame;
 /**
  * 
  */
@@ -21,7 +22,14 @@ public:
 								 const FGameplayAbilityActorInfo* ActorInfo,
 								 const FGameplayAbilityActivationInfo ActivationInfo,
 								 const FGameplayEventData* TriggerEventData) override;
+	
+	void OnPossessResultReceived(bool bSuccess);
 
+	UFUNCTION(Server, Reliable)
+	void Server_OnPossessResultReceived(bool bSuccess);
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<APossessMiniGame> PossessMiniGameClass;
 	UPROPERTY(EditDefaultsOnly)
 	float LineTraceLength;
 };

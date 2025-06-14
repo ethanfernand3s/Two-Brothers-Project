@@ -7,6 +7,7 @@
 #include "UI/WidgetController/BaseWidgetController.h"
 #include "PlayerHUD.generated.h"
 
+class UPossessMiniGameUserWidget;
 class ATBPlayerController;
 class AParasitePlayerState;
 class UParasiteAttributeSet;
@@ -38,6 +39,8 @@ public:
 
 	void ConfigureUIForInventory(APlayerController* PC, bool bIsInViewport);
 	
+	void PossessMiniGame();
+
 protected:
 	
 	virtual void BeginPlay() override;
@@ -65,6 +68,11 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widget Classes", meta = (AllowPrivateAccess))
 	TSubclassOf<UInventoryWidgetController>  InventoryWidgetControllerClass;
-	
+
+	UPROPERTY()
+	TObjectPtr<UPossessMiniGameUserWidget> PossessMiniGameUserWidget;
+
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess))
+	TSubclassOf<UPossessMiniGameUserWidget> PossessMiniGameUserWidgetClass;
 	TUniquePtr<FWidgetControllerParams> WCParams;
 };

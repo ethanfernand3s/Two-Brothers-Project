@@ -11,6 +11,7 @@
 #include "Player/TBPlayerController.h"
 #include "UI/Widget/OverlayUserWidget.h"
 #include "UI/Widget/Inventory/InventoryUserWidget.h"
+#include "UI/Widget/MiniGames/PossessMiniGameUserWidget.h"
 #include "UI/WidgetController/InventoryWidgetController.h"
 #include "UI/WidgetController/OverlayWidgetController.h"
 
@@ -138,6 +139,16 @@ void APlayerHUD::ConfigureUIForInventory(APlayerController* PC, bool bIsInViewpo
 	}
 }
 
+void APlayerHUD::PossessMiniGame()
+{
+	if (PossessMiniGameUserWidget == nullptr)
+	{
+		PossessMiniGameUserWidget = CreateWidget<UPossessMiniGameUserWidget>(GetWorld(),PossessMiniGameUserWidgetClass);
+		PossessMiniGameUserWidget->AddToViewport();
+	}
+		
+	
+}
 void APlayerHUD::BeginPlay()
 {
 	Super::BeginPlay();

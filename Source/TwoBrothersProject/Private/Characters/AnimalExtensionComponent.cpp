@@ -33,11 +33,13 @@ void UAnimalExtensionComponent::InitializePossessionWidgets(const TArray<FPosses
 
 		UWidgetComponent* WidgetComp = NewObject<UWidgetComponent>(GetOwner());
 		WidgetComp->RegisterComponent();
+		WidgetComp->SetActive(false);
 		WidgetComp->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetIncludingScale, Data.SocketName);
 		WidgetComp->SetWidgetClass(WidgetClass);
 		WidgetComp->SetDrawAtDesiredSize(true);
-		WidgetComp->SetWidgetSpace(EWidgetSpace::World);
-		WidgetComp->SetTwoSided(true);
+		WidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
+
+		
 
 		if (UPossessionChanceUserWidget* Widget = Cast<UPossessionChanceUserWidget>(WidgetComp->GetUserWidgetObject()))
 		{

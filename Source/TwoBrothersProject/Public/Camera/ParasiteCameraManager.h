@@ -6,6 +6,7 @@
 #include "Camera/PlayerCameraManager.h"
 #include "ParasiteCameraManager.generated.h"
 
+class UPostProcessComponent;
 class ABaseAnimalCharacter;
 /**
  * 
@@ -19,4 +20,8 @@ public:
 private:
 	void UpdateParasiteCam(float DT);
 	void UpdateHostCam(float DT, ABaseAnimalCharacter* Host);
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FX")
+	TObjectPtr<UPostProcessComponent> ParasiteVisionPostProcess;
 };
