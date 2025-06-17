@@ -64,8 +64,7 @@ void UAnimalExtensionComponent::HandlePlayerPossess(AParasitePlayerState* OwnerP
 {
 	CachedASC = GetOwner<IAbilitySystemInterface>()->GetAbilitySystemComponent();
 	if (!CachedASC) return;
-
-	// Ensure parasite and animal initial attributes
+	
 	OwnerPS->EnsureInitialAttributeDefaults();
 	EnsureInitialAttributeDefaults();
 	
@@ -106,6 +105,8 @@ void UAnimalExtensionComponent::EnsureInitialAttributeDefaults()
 	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults
 	(CachedASC, "Animal", /*Level=*/1, /*IsInitialLoad=*/true);
 	bAttributesInitialised = true;
+
+	Cast<ABaseAnimalCharacter>(GetOwner())->LoadProgress();
 }
 
 void UAnimalExtensionComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

@@ -74,5 +74,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess))
 	TSubclassOf<UPossessMiniGameUserWidget> PossessMiniGameUserWidgetClass;
+	
 	TUniquePtr<FWidgetControllerParams> WCParams;
 };

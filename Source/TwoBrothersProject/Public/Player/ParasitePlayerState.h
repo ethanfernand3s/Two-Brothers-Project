@@ -13,8 +13,6 @@ class UParasiteAbilitySet;
 class UParasiteAttributeSet;
 class UParasiteAbilitySystemComponent;
 
-
-
 /**
  * 
  */
@@ -41,11 +39,14 @@ public:
 	UPROPERTY()
 	TObjectPtr<UCharacterContextComponent> CharacterContextComponent;
 	
+	void LoadProgress();
+	
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	UPROPERTY(EditAnywhere,Category="Ability System")
 	TObjectPtr<UParasiteAbilitySet> ParasiteAbilitySet;
+
 private:
 
 	// GAS

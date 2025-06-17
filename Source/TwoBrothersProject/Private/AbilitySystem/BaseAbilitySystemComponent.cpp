@@ -6,7 +6,7 @@
 #include "TBGameplayTags.h"
 void UBaseAbilitySystemComponent::AbilityActorInfoSet()
 {
-	const FTBGameplayTags& GameplayTags = FTBGameplayTags::Get();
+	
 }
 
 void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)

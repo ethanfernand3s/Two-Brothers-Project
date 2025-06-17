@@ -5,13 +5,9 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
-#include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
 #include "Characters/CharacterContextComponent.h"
-#include "Characters/Data/Gender.h"
-#include "Components/WidgetComponent.h"
 #include "Player/ParasitePlayerState.h"
 #include "UI/HUD/PlayerHUD.h"
-#include "UI/Widget/ProgressBars/StatusBarUserWidget.h"
 
 
 class AParasitePlayerState;
@@ -64,33 +60,5 @@ void AParasiteCharacter::InitAbilityActorInfo()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SERVER: Parasites Possessed By Has Ran"));
 	}
-}
-
-void AParasiteCharacter::LoadProgress()
-{
-	// Test
-	const AParasitePlayerState* ParasitePlayerState = GetPlayerState<AParasitePlayerState>();
-	check(ParasitePlayerState);
-	ParasitePlayerState->CharacterContextComponent->InitializeCharacterContext(
-	FText::FromString("Jaim"),                     // Name
-	1,                                             // Level
-	0,                                             // XP
-	FTribeData(
-		FText::FromString("Pinto Basto"),          // Tribe Name
-		FText::FromString("The Royal Family Of Portugal"), // Tribe Desc
-		nullptr,                                   // Icon (null for now)
-		FLinearColor::Red                          // Tribe Color
-	),
-	ECharacterGender::Male,                                 // Gender
-	BiomeDataAsset,                                // UBiomeDataAsset* reference
-	0                                              // Attribute Points
-	);
-}
-
-void AParasiteCharacter::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	LoadProgress();
 }
 

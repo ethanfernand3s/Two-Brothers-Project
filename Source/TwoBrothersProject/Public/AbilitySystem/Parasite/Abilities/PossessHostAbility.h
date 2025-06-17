@@ -16,20 +16,21 @@ class TWOBROTHERSPROJECT_API UPossessHostAbility : public UBaseGameplayAbility
 	GENERATED_BODY()
 
 public:
-	UPossessHostAbility();
+    UPossessHostAbility();
 
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-								 const FGameplayAbilityActorInfo* ActorInfo,
-								 const FGameplayAbilityActivationInfo ActivationInfo,
-								 const FGameplayEventData* TriggerEventData) override;
-	
-	void OnPossessResultReceived(bool bSuccess);
+    virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+                                 const FGameplayAbilityActorInfo* ActorInfo,
+                                 const FGameplayAbilityActivationInfo ActivationInfo,
+                                 const FGameplayEventData* TriggerEventData) override;
 
-	UFUNCTION(Server, Reliable)
-	void Server_OnPossessResultReceived(bool bSuccess);
+protected:
+    void PerformPossessionTrace();
+    void StartMiniGame(AActor* TargetAnimal, FName ClosestSocket);
+    void OnMiniGameCompleted(bool bSuccess, float ExecutionBonus);
+    
+    UPROPERTY(EditDefaultsOnly)
+    TSubclassOf<APossessMiniGame> PossessMiniGameClass;
 
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<APossessMiniGame> PossessMiniGameClass;
-	UPROPERTY(EditDefaultsOnly)
-	float LineTraceLength;
+    UPROPERTY(EditDefaultsOnly)
+    float SocketHitRange = 100.f;
 };

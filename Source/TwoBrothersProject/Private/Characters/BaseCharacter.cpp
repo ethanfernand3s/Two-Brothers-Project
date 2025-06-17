@@ -84,10 +84,7 @@ void ABaseCharacter::BeginPlay()
 	StatusBarWidgetComponent->SetOwnerNoSee(true);
 }
 
-void ABaseCharacter::LoadProgress()
-{
-	// Implementation in children
-}
+
 
 void ABaseCharacter::InitAbilityActorInfo()
 {

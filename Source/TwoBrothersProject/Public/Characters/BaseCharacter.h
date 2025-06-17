@@ -27,7 +27,6 @@ protected:
 	virtual void OnRep_PlayerState() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void BeginPlay() override;
-	virtual void LoadProgress();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<UWidgetComponent> StatusBarWidgetComponent;
@@ -35,9 +34,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<USpringArmComponent> SpringArmComponent;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly ,Category = "Components")
 	TObjectPtr<UCameraComponent> CameraComponent;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Components")
-	UBiomeDataAsset* BiomeDataAsset;
 };

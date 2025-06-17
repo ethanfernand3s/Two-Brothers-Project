@@ -5,6 +5,7 @@
 
 const UInputAction* UAbilityInputConfig::FindAbilityInputActionForTag(const FGameplayTag& InputAbilityTag, bool bLogNotFound) const
 {
+	// TODO: Get rid of literally not being used
 	for (const FAbilityInputAction& Action: AbilityInputActions)
 	{
 		if (Action.InputAction && Action.InputTag == InputAbilityTag)

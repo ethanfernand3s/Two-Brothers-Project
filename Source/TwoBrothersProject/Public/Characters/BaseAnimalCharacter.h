@@ -31,10 +31,6 @@ struct FPossessionSocketData
 UCLASS()
 class TWOBROTHERSPROJECT_API ABaseAnimalCharacter : public ABaseCharacter, public IAbilitySystemInterface, public IPossessable
 {
-public:
-	
-
-private:
 	GENERATED_BODY()
 
 public:
@@ -47,10 +43,15 @@ public:
 	
 	// Possessable Interface
 	virtual bool CanBePossessedBy() const override;
-
-	UPROPERTY()
-	TObjectPtr<class AAIController> SavedAIController;
 	
+	FName FindClosestPossessionSocket(const FVector& TraceImpactPoint) const;
+	FVector GetSocketLocation(FName SocketName) const;
+	bool CanBePossessedAtSocket(FName SocketName) const;
+	
+	// Put into interface so that animal and parasite both have defined set of rules for having character context
+		virtual void LoadProgress();
+	//
+		
 	//UPROPERTY(EditDefaultsOnly)
 	//TMap<FName, UPossessionChanceUserWidget*> PossessedSocketMap;
 	
@@ -60,7 +61,7 @@ protected:
 	virtual void UnPossessed() override;
 	virtual void OnRep_Controller() override;
 	virtual void InitAbilityActorInfo() override;
-	virtual void LoadProgress() override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	// GAS
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
@@ -89,4 +90,7 @@ protected:
 	// Additional Components
 	UPROPERTY()
 	TObjectPtr<UCharacterContextComponent> CharacterContextComponent;
+
+	UPROPERTY()
+	TObjectPtr<class AAIController> SavedAIController;
 };

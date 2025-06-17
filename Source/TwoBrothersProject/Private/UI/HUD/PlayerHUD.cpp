@@ -6,6 +6,7 @@
 #include "AbilitySystem/Animal/AnimalAbilitySystemComponent.h"
 #include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "Characters/ParasiteCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/ParasitePlayerState.h"
 #include "Player/TBPlayerController.h"
@@ -94,27 +95,35 @@ void APlayerHUD::Inventory(APlayerController* PC)
 	checkf(InventoryUserWidgetClass, TEXT("Inventory Widget Class uninitialized, fill out BP_PlayerHUD"));
 
 	if (InventoryUserWidget == nullptr)
-	{
-		InventoryUserWidget = CreateWidget<UInventoryUserWidget>(GetWorld(), InventoryUserWidgetClass);
-		InventoryWidgetController = Cast<UInventoryWidgetController>(InventoryUserWidget->WidgetController);
-		
-		InventoryUserWidget->AddToViewport();
-		ConfigureUIForInventory(PC, false);
-	}
-	else
-	{
-		if (bool bIsInInventory = InventoryUserWidget->IsInViewport())
-		{
-			InventoryUserWidget->RemoveFromParent();
-			ConfigureUIForInventory(PC, bIsInInventory);
-		}
-		else
-		{
-			InventoryUserWidget->AddToViewport();
-			ConfigureUIForInventory(PC, bIsInInventory);
-		}
-		
-	}
+    	{
+    		InventoryUserWidget = CreateWidget<UInventoryUserWidget>(GetWorld(), InventoryUserWidgetClass);
+    
+    		InventoryWidgetController = GetInventoryWidgetController(PC);
+    		InventoryUserWidget->SetWidgetController(InventoryWidgetController);
+    		InventoryWidgetController->BroadcastInitialValues();
+    		
+    		InventoryUserWidget->AddToViewport();
+    		ConfigureUIForInventory(PC, false);
+    		
+    		// TODO: Remove this TEST !!!
+    		Cast<AParasitePlayerState>(UGameplayStatics::GetPlayerState(this, 0))->LoadProgress();
+    	}
+    	else
+    	{
+    		if (InventoryUserWidget->IsInViewport())
+    		{
+    			InventoryUserWidget->RemoveFromParent();
+    			ConfigureUIForInventory(PC, false);
+    		}
+    		else
+    		{
+    			InventoryUserWidget->AddToViewport();
+    			ConfigureUIForInventory(PC, true);
+    		}
+    		
+    	}
+    
+
 	
 }
 

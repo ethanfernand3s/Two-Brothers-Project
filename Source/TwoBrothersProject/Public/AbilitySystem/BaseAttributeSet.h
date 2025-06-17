@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
 #include "AbilitySystemComponent.h"
+#include "Data/IvSet.h"
 #include "BaseAttributeSet.generated.h"
 
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
@@ -103,9 +104,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxDrowsiness)
 	FGameplayAttributeData MaxDrowsiness;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_TemperatureResistance)
-	FGameplayAttributeData TemperatureResistance;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Type)
 	FGameplayAttributeData Type;
 
@@ -137,8 +135,6 @@ public:
 	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Drowsiness);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxDrowsiness);
-
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, TemperatureResistance);
 	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Type);
 	
@@ -183,8 +179,6 @@ protected:
 	void OnRep_MaxDrowsiness(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_Type(const FGameplayAttributeData& OldValue);
-	UFUNCTION()
-	void OnRep_TemperatureResistance(const FGameplayAttributeData& OldValue);
 	
 
 private:

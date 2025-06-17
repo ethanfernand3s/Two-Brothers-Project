@@ -4,17 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "AbilitySystem/Data/IvSet.h"
 #include "Data/TribeData.h"
+#include "Rarity/Data/Rarity.h"
 #include "CharacterContextComponent.generated.h"
 
 
+struct FBiomeInfo;
 enum class ECharacterGender : uint8;
 class UBiomeDataAsset;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnInt32ValueChangedSignature, int32);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnTextValueChangedSignature, const FText&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnTribeDataChangedSignature, const FTribeData&);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnBiomeDataChangedSignature, const UBiomeDataAsset*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBiomeDataChangedSignature, const FBiomeInfo&);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TWOBROTHERSPROJECT_API UCharacterContextComponent : public UActorComponent
@@ -25,16 +28,32 @@ public:
 	
 	UCharacterContextComponent();
 
+	/** 
+	 *  Used to initialize character stats outside the gameplay ability system.
+	 *
+	 * @note WeightedBST (Base Stat Total) should be calculated using the stats after IVs have been applied. Attributes
+	 * should have high weights on combat related stats.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Character Context")
-	void InitializeCharacterContext(
+	 void InitializeCharacterContext(
 		const FText& InName,
-		int32 InLevel,
-		int32 InXP,
+		const int32 InLevel,
+		const int32 InXP,
 		const FTribeData& InTribeData,
-		ECharacterGender InGender,
-		UBiomeDataAsset* InBiomeData,
-		int32 InAttributePoints
+		const ECharacterGender InGender,
+		const int32 InAttributePoints,
+		const ERarity InRarity,
+		const float WeightedBST
 	);
+
+	 /**
+	  * One time call for setting up the base xp that will be used in future xp reward calculations.
+	  * 
+	 * @note WeightedBST (Base Stat Total) should be calculated using the stats after IVs have been applied. Attributes
+	 * should have high weights on combat related stats.
+	 */
+	void InitializeBaseXP(const float WeightedBST);
+	FORCEINLINE void InitializeRandomIVs() { IVSet.SetIVs(); }
 	
 	// Setters
 	FORCEINLINE void SetCharacterName(FText InName) { CharacterName = MoveTemp(InName); }
@@ -44,6 +63,7 @@ public:
 	FORCEINLINE void SetGender(ECharacterGender NewGender) { Gender = NewGender; }
 	FORCEINLINE void SetBiomeData(UBiomeDataAsset* NewBiomeData) { BiomeData = NewBiomeData; }
 	FORCEINLINE void SetAttributePoints(int32 NewPoints) { AttributePoints = NewPoints; }
+	FORCEINLINE void SetRarity(ERarity NewRarity) { Rarity = NewRarity; }
 	
 	// Getters
 	FORCEINLINE FText GetCharacterName() const { return CharacterName; }
@@ -53,6 +73,9 @@ public:
 	FORCEINLINE const ECharacterGender& GetGender() const { return Gender; }
 	FORCEINLINE const UBiomeDataAsset* GetBiomeData() const { return BiomeData; }
 	FORCEINLINE int32 GetAttributePoints() const { return AttributePoints; }
+	FORCEINLINE ERarity GetRarity() const { return Rarity; }
+	FORCEINLINE int32 GetBaseXP() const { return BaseXP; }
+	FORCEINLINE const FCharacterIVSet& GetIVSet() const { return IVSet; }
 
 
 	// Add To
@@ -82,17 +105,26 @@ private:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_XP)
 	int32 XP = 0.f;
 
+	UPROPERTY(VisibleAnywhere, Replicated)
+	int32 BaseXP = 0.f;
+
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_TribeData)
 	FTribeData TribeData;
 
 	UPROPERTY(VisibleAnywhere, Replicated)
 	ECharacterGender Gender;
 
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_BiomeData)
+	UPROPERTY(VisibleAnywhere, Replicated)
+	ERarity Rarity;
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_BiomeData, meta = (AllowPrivateAccess))
 	TObjectPtr<UBiomeDataAsset> BiomeData;
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_AttributePoints)
 	int32 AttributePoints = 0;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stats", Replicated)
+	FCharacterIVSet IVSet;
 
 	UFUNCTION()
 	void OnRep_CharacterName();

@@ -19,7 +19,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeValueChangedSignature, const FTB
 // Character Context Delegates
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnFloatValueChangedSignature, float);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributePointsChangedSignature, int32);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnBiomeChangedSignature, const UBiomeDataAsset*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBiomeChangedSignature, const FBiomeInfo&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnCharacterNameChangedSignature, const FText&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnLevelChangedSignature, int32);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnTribeDataChangedSignature, const FTribeData&);
@@ -35,7 +35,7 @@ public:
 	
 	void OnXPChanged(int NewXP);
 	void OnAttributePointsChanged(int NewAttributePoints);
-	void OnBiomeChanged(const UBiomeDataAsset* NewBiomeData);
+	void OnBiomeChanged(const FBiomeInfo& NewBiomeInfo);
 	void OnCharacterNameChanged(const FText& NewCharacterName);
 	void OnLevelChanged(int NewLevel);
 	void OnTribeDataChanged(const FTribeData& NewTribeData);

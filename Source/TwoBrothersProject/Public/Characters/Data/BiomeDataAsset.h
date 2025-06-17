@@ -6,9 +6,19 @@
 #include "Engine/DataAsset.h"
 #include "BiomeDataAsset.generated.h"
 
-/**
- * 
- */
+USTRUCT(BlueprintType)
+struct FBiomeInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Biome")
+	FText BiomeName;
+
+	//TODO: Need to change from a Biome DA because changing vals like this
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Biome")
+	float Temperature = 70.f;
+};
+
 UCLASS(BlueprintType)
 class TWOBROTHERSPROJECT_API UBiomeDataAsset : public UDataAsset
 {
@@ -16,9 +26,5 @@ class TWOBROTHERSPROJECT_API UBiomeDataAsset : public UDataAsset
 
 public:
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Biome")
-	FText BiomeName;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Biome")
-	float Temperature = 70.f;
+	FBiomeInfo BiomeInfo;
 };

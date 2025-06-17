@@ -8,6 +8,7 @@
 #include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
 #include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
 #include "Characters/CharacterContextComponent.h"
+#include "Characters/Data/Gender.h"
 #include "Net/UnrealNetwork.h"
 
 AParasitePlayerState::AParasitePlayerState()
@@ -41,6 +42,8 @@ void AParasitePlayerState::EnsureInitialAttributeDefaults()
 	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults
 	(ParasiteAbilitySystem, "Parasite", /*Level=*/1, /*IsInitialLoad=*/true);
 	bAttributesInitialised = true;
+
+	LoadProgress();
 }
 
 void AParasitePlayerState::EnsureAbilitiesAreInitialized()
@@ -53,7 +56,7 @@ void AParasitePlayerState::EnsureAbilitiesAreInitialized()
 
 const TArray<UGameplayEffect*> AParasitePlayerState::GetBuffForHost()
 {
-	// Add Buffs Later
+	// TODO: Add Buffs Later
 	return TArray<UGameplayEffect*>();
 }
 
@@ -61,4 +64,23 @@ void AParasitePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AParasitePlayerState,bAttributesInitialised);
+}
+
+void AParasitePlayerState::LoadProgress()
+{
+	CharacterContextComponent->InitializeCharacterContext(
+	FText::FromString("Jaim"),                     // Name
+	1,                                             // Level
+	0,                                             // XP
+	FTribeData(
+		FText::FromString("Pinto Basto"),          // Tribe Name
+		FText::FromString("The Royal Family Of Portugal"), // Tribe Desc
+		nullptr,                                   // Icon (null for now)
+		FLinearColor::Red                          // Tribe Color
+	),
+	ECharacterGender::Male,                        // Gender
+	0,                                             // Attribute Points
+	ERarity::Rare,
+	428
+	);
 }

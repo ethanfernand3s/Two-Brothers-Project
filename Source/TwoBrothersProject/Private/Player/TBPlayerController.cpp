@@ -107,6 +107,7 @@ void ATBPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
 	if (GetASC() == nullptr) return;
 		GetASC()->AbilityInputTagReleased(InputTag);
+	GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Emerald, *InputTag.ToString());
 	
 }
 
@@ -114,6 +115,7 @@ void ATBPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
 	if (GetASC() == nullptr) return;
 	GetASC()->AbilityInputTagHeld(InputTag);
+	GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Cyan, *InputTag.ToString());
 }
 
 UBaseAbilitySystemComponent* ATBPlayerController::GetASC() 

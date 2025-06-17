@@ -55,9 +55,9 @@ void UInventoryWidgetController::OnAttributePointsChanged(int NewAttributePoints
 	OnAttributePointsChangedDelegate.Broadcast(NewAttributePoints);
 }
 
-void UInventoryWidgetController::OnBiomeChanged(const UBiomeDataAsset* NewBiomeData)
+void UInventoryWidgetController::OnBiomeChanged(const FBiomeInfo& BiomeInfo)
 {
-	OnBiomeChangedDelegate.Broadcast(NewBiomeData);
+	OnBiomeChangedDelegate.Broadcast(BiomeInfo);
 }
 
 void UInventoryWidgetController::OnCharacterNameChanged(const FText& NewCharacterName)

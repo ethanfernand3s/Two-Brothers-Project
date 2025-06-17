@@ -38,3 +38,12 @@ float LevelInfoLibrary::GetProgressToNextLevel(float CurrentXP)
 		: 1.f;
 }
 
+int32 LevelInfoLibrary::GetXPReward(int32 VictimBaseXP, int32 VictimLevel, bool bIsCurrentlyInhabited,
+	float AdditionalModiferMultiplier)
+{
+	float InhabitedMultiplier{1.f};
+	if (bIsCurrentlyInhabited) InhabitedMultiplier = 1.5f;
+
+	return (VictimBaseXP * VictimLevel * InhabitedMultiplier * AdditionalModiferMultiplier);
+}
+

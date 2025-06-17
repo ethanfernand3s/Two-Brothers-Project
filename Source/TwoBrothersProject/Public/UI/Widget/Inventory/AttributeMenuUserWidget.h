@@ -81,7 +81,7 @@ private:
 	void SetupAttributeRowTags();
 
 	void OnAttributePointsChanged(int NewAttributePoints);
-	void OnBiomeChanged(const UBiomeDataAsset* NewBiomeData);
+	void OnBiomeChanged(const FBiomeInfo& NewBiomeInfo);
 	void OnCharacterNameChanged(const FText& NewCharacterName);
 	void OnLevelChanged(int NewLevel);
 	void OnTribeDataChanged(const FTribeData& NewTribeData);

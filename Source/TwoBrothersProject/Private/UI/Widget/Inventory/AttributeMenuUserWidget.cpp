@@ -149,9 +149,9 @@ void UAttributeMenuUserWidget::OnAttributePointsChanged(int NewAttributePoints)
 	AttributeXPBar->TextBlock_PointsAvailable->SetText(FText::AsNumber(NewAttributePoints));
 }
 
-void UAttributeMenuUserWidget::OnBiomeChanged(const UBiomeDataAsset* NewBiomeData)
+void UAttributeMenuUserWidget::OnBiomeChanged(const FBiomeInfo& NewBiomeInfo)
 {
-	TextBlock_Biome->SetText(NewBiomeData->BiomeName);
+	TextBlock_Biome->SetText(NewBiomeInfo.BiomeName);
 }
 
 void UAttributeMenuUserWidget::OnCharacterNameChanged(const FText& NewCharacterName)

@@ -136,6 +136,8 @@ void ABaseAnimalCharacter::InitAbilityActorInfo()
 
 void ABaseAnimalCharacter::LoadProgress()
 {
+	
+	
 	// Test
 	CharacterContextComponent->InitializeCharacterContext(
 	FText::FromString("Neo"),                      // Name
@@ -147,10 +149,16 @@ void ABaseAnimalCharacter::LoadProgress()
 		nullptr,									// Icon (null for now)
 		FLinearColor::Gray							// Tribe Color
 	),
-	ECharacterGender::Male,									// Gender
-	BiomeDataAsset,									// UBiomeDataAsset* reference
-	0												// Attribute Points
+	ECharacterGender::Male,							// Gender
+	0,												// Attribute Points
+	ERarity::Mythical,
+	369
 	);
+}
+
+void ABaseAnimalCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
 UAbilitySystemComponent* ABaseAnimalCharacter::GetAbilitySystemComponent() const
@@ -171,4 +179,44 @@ bool ABaseAnimalCharacter::CanBePossessedBy() const
 
 	
 	return !GetOwner();
+}
+
+FName ABaseAnimalCharacter::FindClosestPossessionSocket(const FVector& TraceImpactPoint) const
+{
+	float ClosestDistSqr = TNumericLimits<float>::Max();
+	FName ClosestSocketName;
+
+	for (const FPossessionSocketData& SocketData : SocketChances)
+	{
+		const FVector SocketLocation = GetMesh()->GetSocketLocation(SocketData.SocketName);
+		const float DistSqr = FVector::DistSquared(TraceImpactPoint, SocketLocation);
+		if (DistSqr < ClosestDistSqr)
+		{
+			ClosestDistSqr = DistSqr;
+			ClosestSocketName = SocketData.SocketName;
+		}
+	}
+
+	return ClosestSocketName;
+}
+
+FVector ABaseAnimalCharacter::GetSocketLocation(FName SocketName) const
+{
+	return GetMesh()->GetSocketLocation(SocketName);
+}
+
+bool ABaseAnimalCharacter::CanBePossessedAtSocket(FName SocketName) const
+{
+	return true;
+
+	//TODO: fix later...
+	/*
+	const FPossessionSocketData* SocketData = SocketChances.FindByPredicate(
+		[&SocketName](const FPossessionSocketData& Data)
+		{
+			return Data.SocketName == SocketName && Data.PossessionChance > 0.f;
+		});
+
+	return SocketData != nullptr && HasAuthority();
+	*/
 }

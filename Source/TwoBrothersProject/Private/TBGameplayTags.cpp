@@ -102,15 +102,40 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 		FString("Input Tag for Left Mouse Button")
 	);
 
-	GameplayTags.InputTag_Space = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("InputTag.Space"),
-		FString("Input Tag for SpaceBar")
+	GameplayTags.Input_Jump = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Input.Jump"),
+		FString("Input Tag Associated for the Jump")
 	);
 
-	GameplayTags.InputTag_E = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("InputTag.E"),
-		FString("Input Tag for E key")
+	GameplayTags.Input_SeekingHost = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Input.SeekingHost"),
+		FString("Input Tag Associated for the EnterSeekingHostAbility")
 	);
+
+	GameplayTags.Input_TryPossess = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Input.TryPossess"),
+		FString("Input Tag Associated for the PossessAbility")
+		);
 
 #pragma endregion Input
+
+#pragma region States
+
+	GameplayTags.State_Parasite_SeekingHost = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("State.Parasite.SeekingHost"),
+		FString("State for seeking a new inhabitant"));
+	
+#pragma endregion States
+
+#pragma region Gameplay Cues
+
+	GameplayTags.GameplayCue_State_Parasite_SeekingHost = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("GameplayCue.State.Parasite.SeekingHost"),
+		FString("Gameplay Cue when starting to seek a new inhabitant"));
+
+	GameplayTags.GameplayCue_State_Parasite_FinishSeekingHost = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("GameplayCue.State.Parasite.ExitSeekingHost"),
+	FString("Gameplay Cue when finished seeking a new inhabitant"));
+	
+#pragma endregion Gameplay Cues
 }

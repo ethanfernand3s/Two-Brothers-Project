@@ -1,5 +1,6 @@
 #include "Characters/CharacterContextComponent.h"
 
+#include "Characters/Data/BiomeDataAsset.h"
 #include "Characters/Data/Gender.h"
 #include "Net/UnrealNetwork.h"
 
@@ -10,24 +11,61 @@ UCharacterContextComponent::UCharacterContextComponent()
 	SetIsReplicatedByDefault(true);
 }
 
-void UCharacterContextComponent::InitializeCharacterContext(const FText& InName, int32 InLevel, int32 InXP,
-	const FTribeData& InTribeData, ECharacterGender InGender, UBiomeDataAsset* InBiomeData, int32 InAttributePoints)
+void UCharacterContextComponent::InitializeCharacterContext(const FText& InName,
+		const int32 InLevel,
+		const int32 InXP,
+		const FTribeData& InTribeData,
+		const ECharacterGender InGender,
+		const int32 InAttributePoints,
+		const ERarity InRarity,
+		const float WeightedBST)
 {
 	SetCharacterName(InName);
 	SetLevel(InLevel);
 	SetXP(InXP);
 	SetTribeData(InTribeData);
 	SetGender(InGender);
-	SetBiomeData(InBiomeData);
 	SetAttributePoints(InAttributePoints);
+	SetRarity(InRarity);
+
+	InitializeRandomIVs();
+	InitializeBaseXP(WeightedBST);
 
 	// Optionally trigger delegates if you want UI to refresh immediately on load
 	OnCharacterNameChanged.Broadcast(CharacterName);
 	OnLevelChanged.Broadcast(Level);
 	OnXPChanged.Broadcast(XP);
 	OnTribeDataChanged.Broadcast(TribeData);
-	OnBiomeChanged.Broadcast(BiomeData);
+	if (BiomeData != nullptr)
+	{
+		OnBiomeChanged.Broadcast(BiomeData->BiomeInfo);
+	}
+	
 	OnAttributePointsChanged.Broadcast(AttributePoints);
+}
+
+void UCharacterContextComponent::InitializeBaseXP(const float WeightedBST)
+{
+	float RarityMultiplier{0.f};
+	switch (Rarity)
+	{
+		case ERarity::Common:
+			RarityMultiplier = .18f;
+		case ERarity::Uncommon:
+			RarityMultiplier = .22f;
+	case ERarity::Rare:
+		RarityMultiplier = .31f;
+	case ERarity::Epic:
+		RarityMultiplier = .40f;
+	case ERarity::Legendary:
+		RarityMultiplier = .50f;
+	case ERarity::Mythical:
+		RarityMultiplier = .60f;
+	default:
+		RarityMultiplier = .18f;
+	}
+
+	BaseXP = WeightedBST * RarityMultiplier;
 }
 
 void UCharacterContextComponent::AddToXP(int32 InXP)
@@ -59,6 +97,9 @@ void UCharacterContextComponent::GetLifetimeReplicatedProps(TArray<class FLifeti
 	DOREPLIFETIME(UCharacterContextComponent, Gender);
 	DOREPLIFETIME(UCharacterContextComponent, BiomeData);
 	DOREPLIFETIME(UCharacterContextComponent, AttributePoints);
+	DOREPLIFETIME(UCharacterContextComponent, Rarity);
+	DOREPLIFETIME(UCharacterContextComponent, BaseXP);
+	DOREPLIFETIME(UCharacterContextComponent, IVSet);
 }
 
 void UCharacterContextComponent::OnRep_CharacterName()
@@ -83,7 +124,10 @@ void UCharacterContextComponent::OnRep_TribeData()
 
 void UCharacterContextComponent::OnRep_BiomeData()
 {
-	OnBiomeChanged.Broadcast(BiomeData);
+	if (BiomeData != nullptr)
+	{
+		OnBiomeChanged.Broadcast(BiomeData->BiomeInfo);
+	}
 }
 
 void UCharacterContextComponent::OnRep_AttributePoints()

@@ -49,11 +49,24 @@ struct FTBGameplayTags
 #pragma region Input
 	
 	FGameplayTag InputTag_LMB;
-	FGameplayTag InputTag_Space;
-	FGameplayTag InputTag_E;
+	FGameplayTag Input_Jump;
+	FGameplayTag Input_SeekingHost;
+	FGameplayTag Input_TryPossess;
 
 #pragma endregion Input
+	
+#pragma region States
 
+	FGameplayTag State_Parasite_SeekingHost;
+	
+#pragma endregion States
+
+#pragma region Gameplay Cues
+
+	FGameplayTag GameplayCue_State_Parasite_SeekingHost;
+	FGameplayTag GameplayCue_State_Parasite_FinishSeekingHost;
+	
+#pragma endregion Gameplay Cues
 private:
 	
 	static FTBGameplayTags GameplayTags;

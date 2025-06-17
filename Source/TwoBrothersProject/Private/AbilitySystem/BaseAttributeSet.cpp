@@ -68,11 +68,6 @@ UBaseAttributeSet::UBaseAttributeSet()
 		GameplayTags.Attributes_Speed,
 		&UBaseAttributeSet::GetSpeedAttribute
 	));
-
-	TagsToAttributes.Add(FTagAttributeBinding(
-		GameplayTags.Attributes_TemperatureResistance,
-		&UBaseAttributeSet::GetTemperatureResistanceAttribute
-	));
 }
 
 void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -92,7 +87,6 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(UBaseAttributeSet, Strength);
 	DOREPLIFETIME(UBaseAttributeSet, Defense);
 	DOREPLIFETIME(UBaseAttributeSet, Speed);
-	DOREPLIFETIME(UBaseAttributeSet, TemperatureResistance);
 	DOREPLIFETIME(UBaseAttributeSet, Drowsiness);
 	DOREPLIFETIME(UBaseAttributeSet, MaxDrowsiness);
 }
@@ -142,11 +136,6 @@ void UBaseAttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
 void UBaseAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxHealth, OldValue);
-}
-
-void UBaseAttributeSet::OnRep_TemperatureResistance(const FGameplayAttributeData& OldValue)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, TemperatureResistance, OldValue);
 }
 
 void UBaseAttributeSet::OnRep_Stamina(const FGameplayAttributeData& OldValue)
