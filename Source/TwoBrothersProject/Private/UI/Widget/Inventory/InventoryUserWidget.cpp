@@ -11,7 +11,7 @@
 
 void UInventoryUserWidget::SetWidgetController(UObject* InWidgetController)
 {
-	Super::SetWidgetController(InWidgetController);
-
 	AttributeMenu->SetWidgetController(InWidgetController);
+	
+	Super::SetWidgetController(InWidgetController);
 }

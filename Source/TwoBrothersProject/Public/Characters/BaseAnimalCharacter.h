@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "BaseCharacter.h"
+#include "GameplayTagContainer.h"
 #include "AbilitySystem/Interfaces/IPossessable.h"
 #include "BaseAnimalCharacter.generated.h"
+
 
 class UCharacterContextComponent;
 class UPossessionChanceUserWidget;
@@ -22,7 +24,7 @@ struct FPossessionSocketData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
-	FName SocketName;
+	FGameplayTag SocketGameplayTag;
 
 	UPROPERTY(EditAnywhere)
 	float PossessionChance = 0.f;
@@ -44,9 +46,8 @@ public:
 	// Possessable Interface
 	virtual bool CanBePossessedBy() const override;
 	
-	FName FindClosestPossessionSocket(const FVector& TraceImpactPoint) const;
-	FVector GetSocketLocation(FName SocketName) const;
-	bool CanBePossessedAtSocket(FName SocketName) const;
+	FPossessionSocketData FindClosestPossessionSocket(const FVector& TraceImpactPoint) const;
+	FVector GetCurrentSocketLocation(FGameplayTag SocketName) const;
 	
 	// Put into interface so that animal and parasite both have defined set of rules for having character context
 		virtual void LoadProgress();
@@ -62,7 +63,7 @@ protected:
 	virtual void OnRep_Controller() override;
 	virtual void InitAbilityActorInfo() override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
-
+		
 	// GAS
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	TObjectPtr<UAnimalExtensionComponent> PawnExt;

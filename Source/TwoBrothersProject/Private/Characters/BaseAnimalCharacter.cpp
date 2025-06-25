@@ -4,9 +4,6 @@
 #include "TwoBrothersProject/Public/Characters/BaseAnimalCharacter.h"
 
 
-#include "Components/WidgetComponent.h"
-
-#include "AbilitySystem/BaseAttributeSet.h"
 #include "AbilitySystem/Animal/AnimalAbilitySystemComponent.h"
 #include "AbilitySystem/Animal/AnimalAttributeSet.h"
 #include "AI/AnimalAIController.h"
@@ -15,11 +12,10 @@
 #include "Characters/AnimalExtensionComponent.h"
 #include "Characters/CharacterContextComponent.h"
 #include "Characters/Data/Gender.h"
-#include "Kismet/GameplayStatics.h"
+#include "Characters/Data/GrowthRate.h"
 #include "Player/ParasitePlayerState.h"
 #include "Runtime/AIModule/Classes/AIController.h"
 #include "UI/HUD/PlayerHUD.h"
-#include "UI/Widget/ProgressBars/StatusBarUserWidget.h"
 
 
 
@@ -94,12 +90,18 @@ void ABaseAnimalCharacter::InitAbilityActorInfo()
 		AnimalAbilitySystemComponent->InitAbilityActorInfo(this, this);
 		AnimalAbilitySystemComponent->AbilityActorInfoSet();
 		PawnExt->EnsureInitialAttributeDefaults();
+		
 		SetOwner(nullptr);
 
 		if (!HasAuthority()) return;
+		
 		AnimalAIController = Cast<AAnimalAIController>(NewController);
 		AnimalAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
 		AnimalAIController->RunBehaviorTree(BehaviorTree);
+
+		// TODO: Add Loading From Save!!
+		LoadProgress();
+		AddIvsToAttributes(AnimalAbilitySystemComponent, CharacterContextComponent->GetIVSet());
 	}
 	else
 	{
@@ -136,9 +138,10 @@ void ABaseAnimalCharacter::InitAbilityActorInfo()
 
 void ABaseAnimalCharacter::LoadProgress()
 {
+	// TODO: Add Loading From Save!!
+	// TODO: Determine Rarity and Growth Rate by difficulty and slight chance
 	
-	
-	// Test
+	// Initial Load logic
 	CharacterContextComponent->InitializeCharacterContext(
 	FText::FromString("Neo"),                      // Name
 	1,                                             // Level
@@ -152,7 +155,8 @@ void ABaseAnimalCharacter::LoadProgress()
 	ECharacterGender::Male,							// Gender
 	0,												// Attribute Points
 	ERarity::Mythical,
-	369
+	AnimalAttributeSet->CalculateCombatBaseStatTotal(),
+	EGrowthRate::Fluctuating
 	);
 }
 
@@ -181,42 +185,28 @@ bool ABaseAnimalCharacter::CanBePossessedBy() const
 	return !GetOwner();
 }
 
-FName ABaseAnimalCharacter::FindClosestPossessionSocket(const FVector& TraceImpactPoint) const
+FPossessionSocketData ABaseAnimalCharacter::FindClosestPossessionSocket(const FVector& TraceImpactPoint) const
 {
+	//TODO: Could Optimize Move Semantics and Find Faster Algo
 	float ClosestDistSqr = TNumericLimits<float>::Max();
-	FName ClosestSocketName;
+	FPossessionSocketData ClosestSocket;
 
 	for (const FPossessionSocketData& SocketData : SocketChances)
 	{
-		const FVector SocketLocation = GetMesh()->GetSocketLocation(SocketData.SocketName);
+		const FVector SocketLocation = GetCurrentSocketLocation(SocketData.SocketGameplayTag);
 		const float DistSqr = FVector::DistSquared(TraceImpactPoint, SocketLocation);
 		if (DistSqr < ClosestDistSqr)
 		{
 			ClosestDistSqr = DistSqr;
-			ClosestSocketName = SocketData.SocketName;
+			ClosestSocket = SocketData;
 		}
 	}
 
-	return ClosestSocketName;
+	return ClosestSocket;
 }
 
-FVector ABaseAnimalCharacter::GetSocketLocation(FName SocketName) const
+FVector ABaseAnimalCharacter::GetCurrentSocketLocation(FGameplayTag SocketName) const
 {
-	return GetMesh()->GetSocketLocation(SocketName);
-}
-
-bool ABaseAnimalCharacter::CanBePossessedAtSocket(FName SocketName) const
-{
-	return true;
-
-	//TODO: fix later...
-	/*
-	const FPossessionSocketData* SocketData = SocketChances.FindByPredicate(
-		[&SocketName](const FPossessionSocketData& Data)
-		{
-			return Data.SocketName == SocketName && Data.PossessionChance > 0.f;
-		});
-
-	return SocketData != nullptr && HasAuthority();
-	*/
+	FName FNameSocket  = SocketName.GetTagName();
+	return GetMesh()->GetSocketLocation(FNameSocket);
 }

@@ -9,6 +9,7 @@
 #include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
 #include "Characters/CharacterContextComponent.h"
 #include "Characters/Data/Gender.h"
+#include "Characters/Data/GrowthRate.h"
 #include "Net/UnrealNetwork.h"
 
 AParasitePlayerState::AParasitePlayerState()
@@ -42,8 +43,6 @@ void AParasitePlayerState::EnsureInitialAttributeDefaults()
 	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults
 	(ParasiteAbilitySystem, "Parasite", /*Level=*/1, /*IsInitialLoad=*/true);
 	bAttributesInitialised = true;
-
-	LoadProgress();
 }
 
 void AParasitePlayerState::EnsureAbilitiesAreInitialized()
@@ -81,6 +80,7 @@ void AParasitePlayerState::LoadProgress()
 	ECharacterGender::Male,                        // Gender
 	0,                                             // Attribute Points
 	ERarity::Rare,
-	428
+	ParasiteAttributeSet->CalculateCombatBaseStatTotal(),
+	EGrowthRate::MediumSlow
 	);
 }

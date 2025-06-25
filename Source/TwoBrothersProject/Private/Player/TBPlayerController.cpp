@@ -8,12 +8,15 @@
 #include "TBGameplayTags.h"
 #include "AbilitySystem/BaseAbilitySystemComponent.h"
 #include "AbilitySystem/Animal/AnimalAttributeSet.h"
+#include "AbilitySystem/Parasite/Abilities/PossessHostAbility.h"
+#include "Blueprint/UserWidget.h"
 #include "Camera/ParasiteCameraManager.h"
 #include "Characters/BaseAnimalCharacter.h"
 #include "Characters/ParasiteCharacter.h"
 #include "Input/TBInputComponent.h"
 #include "Player/ParasitePlayerState.h"
 #include "UI/HUD/PlayerHUD.h"
+#include "UI/Widget/Possession/PossessMiniGameUserWidget.h"
 
 
 ATBPlayerController::ATBPlayerController()
@@ -21,6 +24,8 @@ ATBPlayerController::ATBPlayerController()
 	PlayerCameraManagerClass = AParasiteCameraManager::StaticClass();
 	bIsAnimalPossessed = false;
 }
+
+
 
 void ATBPlayerController::SetupInputComponent()
 {
@@ -45,7 +50,7 @@ void ATBPlayerController::BeginPlay()
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
 	if (Subsystem)
 	{
-		Subsystem->AddMappingContext(InputContext, 0);
+		Subsystem->AddMappingContext(DefaultInputMappingContext, 0);
 	}
 	OnPossessedPawnChanged.AddDynamic(this, &ATBPlayerController::OnPawnChanged);
 }

@@ -7,5 +7,5 @@
 
 void UPossessionChanceUserWidget::SetPossessionChance(float InChance)
 {
-	PossessionChance->SetText(FText::FromString(FString::Printf(TEXT("%.0f%%"), InChance)));
+	PossessionChance->SetText(FText::FromString(FString::Printf(TEXT("%.0f%%"), InChance * 100.f)));
 }

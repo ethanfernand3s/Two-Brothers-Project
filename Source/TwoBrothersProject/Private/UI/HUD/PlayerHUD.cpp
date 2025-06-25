@@ -12,7 +12,7 @@
 #include "Player/TBPlayerController.h"
 #include "UI/Widget/OverlayUserWidget.h"
 #include "UI/Widget/Inventory/InventoryUserWidget.h"
-#include "UI/Widget/MiniGames/PossessMiniGameUserWidget.h"
+#include "UI/Widget/Possession/PossessMiniGameUserWidget.h"
 #include "UI/WidgetController/InventoryWidgetController.h"
 #include "UI/WidgetController/OverlayWidgetController.h"
 
@@ -97,7 +97,6 @@ void APlayerHUD::Inventory(APlayerController* PC)
 	if (InventoryUserWidget == nullptr)
     	{
     		InventoryUserWidget = CreateWidget<UInventoryUserWidget>(GetWorld(), InventoryUserWidgetClass);
-    
     		InventoryWidgetController = GetInventoryWidgetController(PC);
     		InventoryUserWidget->SetWidgetController(InventoryWidgetController);
     		InventoryWidgetController->BroadcastInitialValues();
@@ -113,17 +112,15 @@ void APlayerHUD::Inventory(APlayerController* PC)
     		if (InventoryUserWidget->IsInViewport())
     		{
     			InventoryUserWidget->RemoveFromParent();
-    			ConfigureUIForInventory(PC, false);
+    			ConfigureUIForInventory(PC, true);
     		}
     		else
     		{
     			InventoryUserWidget->AddToViewport();
-    			ConfigureUIForInventory(PC, true);
+    			ConfigureUIForInventory(PC, false);
     		}
     		
     	}
-    
-
 	
 }
 
@@ -155,9 +152,59 @@ void APlayerHUD::PossessMiniGame()
 		PossessMiniGameUserWidget = CreateWidget<UPossessMiniGameUserWidget>(GetWorld(),PossessMiniGameUserWidgetClass);
 		PossessMiniGameUserWidget->AddToViewport();
 	}
-		
-	
 }
+
+void APlayerHUD::OnPossessMiniGameComplete()
+{
+	if (PossessMiniGameUserWidget)
+	{
+		PossessMiniGameUserWidget->RemoveFromParent();
+	}
+}
+
+
+void APlayerHUD::ShowPossessMiniGame(float StartingChance, ATBPlayerController* OwningPC)
+{
+	if (!MiniGameWidgetClass || !OwningPC) return;
+
+	// destroy previous widget if any
+	if (MiniGameWidget) MiniGameWidget->RemoveFromParent();
+
+	MiniGameWidget = CreateWidget<UPossessMiniGameUserWidget>(OwningPC, MiniGameWidgetClass);
+	if (!MiniGameWidget) return;
+
+	MiniGameWidget->Init(StartingChance,
+						10.f,           // duration
+					   0.06f,          // tap increment
+					   0.05f);         // enemy drain
+
+	MiniGameWidget->OnFinished.AddDynamic(this, &APlayerHUD::HandleMiniGameFinished);
+	MiniGameWidget->AddToViewport();
+
+	// UI-only input so widget gets Space
+	FInputModeUIOnly Mode;
+	Mode.SetWidgetToFocus(MiniGameWidget->TakeWidget());
+	OwningPC->SetInputMode(Mode);
+	OwningPC->SetShowMouseCursor(true);
+}
+
+void APlayerHUD::HandleMiniGameFinished(bool bBarWon, float PercentTimeLeft)
+{
+	// restore input
+	ATBPlayerController* PC = Cast<ATBPlayerController>(GetOwningPlayerController());
+	if (PC)
+	{
+		PC->SetInputMode(FInputModeGameOnly());
+		PC->SetShowMouseCursor(false);
+	}
+
+	if (MiniGameWidget)
+	{
+		MiniGameWidget->RemoveFromParent();
+		MiniGameWidget = nullptr;
+	}
+}
+
 void APlayerHUD::BeginPlay()
 {
 	Super::BeginPlay();

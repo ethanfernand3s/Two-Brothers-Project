@@ -40,6 +40,10 @@ void AParasiteCharacter::InitAbilityActorInfo()
 			{
 				ParasitePlayerState->EnsureInitialAttributeDefaults();
 				ParasitePlayerState->EnsureAbilitiesAreInitialized();
+
+				// TODO: Add Loading From Save!!
+				ParasitePlayerState->LoadProgress();
+				AddIvsToAttributes(ParasiteAbilitySystemComponent, ParasitePlayerState->CharacterContextComponent->GetIVSet());
 			}
 			else
 			{

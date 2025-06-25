@@ -18,7 +18,8 @@ void UCharacterContextComponent::InitializeCharacterContext(const FText& InName,
 		const ECharacterGender InGender,
 		const int32 InAttributePoints,
 		const ERarity InRarity,
-		const float WeightedBST)
+		const float InWeightedBST,
+		const EGrowthRate InGrowthRate)
 {
 	SetCharacterName(InName);
 	SetLevel(InLevel);
@@ -27,11 +28,12 @@ void UCharacterContextComponent::InitializeCharacterContext(const FText& InName,
 	SetGender(InGender);
 	SetAttributePoints(InAttributePoints);
 	SetRarity(InRarity);
+	SetGrowthRate(InGrowthRate);
 
 	InitializeRandomIVs();
-	InitializeBaseXP(WeightedBST);
+	InitializeBaseXP(InWeightedBST);
 
-	// Optionally trigger delegates if you want UI to refresh immediately on load
+
 	OnCharacterNameChanged.Broadcast(CharacterName);
 	OnLevelChanged.Broadcast(Level);
 	OnXPChanged.Broadcast(XP);
@@ -100,6 +102,7 @@ void UCharacterContextComponent::GetLifetimeReplicatedProps(TArray<class FLifeti
 	DOREPLIFETIME(UCharacterContextComponent, Rarity);
 	DOREPLIFETIME(UCharacterContextComponent, BaseXP);
 	DOREPLIFETIME(UCharacterContextComponent, IVSet);
+	DOREPLIFETIME(UCharacterContextComponent, LevelGrowthRate);
 }
 
 void UCharacterContextComponent::OnRep_CharacterName()

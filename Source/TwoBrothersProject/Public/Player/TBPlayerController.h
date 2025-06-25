@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "InputMappingContext.h"
 #include "TBPlayerController.generated.h"
 
+
+struct FInputBindingHandle;
 class UAnimalAttributeSet;
 class UBaseAbilitySystemComponent;
 class UAbilityInputConfig;
@@ -15,7 +18,7 @@ class UInputAction;
 struct FGameplayTag;
 /**
  * 
- */
+*/
 UCLASS()
 class TWOBROTHERSPROJECT_API ATBPlayerController : public APlayerController
 {
@@ -23,9 +26,6 @@ class TWOBROTHERSPROJECT_API ATBPlayerController : public APlayerController
 public:
 	
 	ATBPlayerController();
-	
-	UFUNCTION(BlueprintImplementableEvent)
-	void DamageSelf();
 
 	UFUNCTION()
 	void OnPawnChanged(APawn* InOldPawn, APawn* InNewPawn);
@@ -41,7 +41,8 @@ protected:
 private:
 
 	UPROPERTY(EditAnywhere, Category="Input")
-	TObjectPtr<UInputMappingContext> InputContext;
+	TObjectPtr<UInputMappingContext> DefaultInputMappingContext;
+	
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	TObjectPtr<UAbilityInputConfig> InputConfig;
 	
@@ -51,6 +52,7 @@ private:
 	TObjectPtr<UInputAction> LookAction;
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> InventoryAction;
+	
 	
 	void Move(const FInputActionValue& InputActionValue);
 	void Look(const FInputActionValue& InputActionValue);

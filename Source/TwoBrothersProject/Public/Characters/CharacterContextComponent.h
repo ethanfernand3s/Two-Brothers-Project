@@ -10,6 +10,7 @@
 #include "CharacterContextComponent.generated.h"
 
 
+enum class EGrowthRate : uint8;
 struct FBiomeInfo;
 enum class ECharacterGender : uint8;
 class UBiomeDataAsset;
@@ -43,7 +44,8 @@ public:
 		const ECharacterGender InGender,
 		const int32 InAttributePoints,
 		const ERarity InRarity,
-		const float WeightedBST
+		const float WeightedBST,
+		const EGrowthRate InGrowthRate
 	);
 
 	 /**
@@ -64,7 +66,7 @@ public:
 	FORCEINLINE void SetBiomeData(UBiomeDataAsset* NewBiomeData) { BiomeData = NewBiomeData; }
 	FORCEINLINE void SetAttributePoints(int32 NewPoints) { AttributePoints = NewPoints; }
 	FORCEINLINE void SetRarity(ERarity NewRarity) { Rarity = NewRarity; }
-	
+	FORCEINLINE void SetGrowthRate(EGrowthRate NewGrowthRate) { LevelGrowthRate = NewGrowthRate; }
 	// Getters
 	FORCEINLINE FText GetCharacterName() const { return CharacterName; }
 	FORCEINLINE int32 GetLevel() const { return Level; }
@@ -76,7 +78,7 @@ public:
 	FORCEINLINE ERarity GetRarity() const { return Rarity; }
 	FORCEINLINE int32 GetBaseXP() const { return BaseXP; }
 	FORCEINLINE const FCharacterIVSet& GetIVSet() const { return IVSet; }
-
+	FORCEINLINE EGrowthRate GetGrowthRate() const {  return LevelGrowthRate; }
 
 	// Add To
 	void AddToXP(int32 InXP);
@@ -116,6 +118,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Replicated)
 	ERarity Rarity;
+
+	UPROPERTY(VisibleAnywhere, Replicated)
+	EGrowthRate LevelGrowthRate;
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_BiomeData, meta = (AllowPrivateAccess))
 	TObjectPtr<UBiomeDataAsset> BiomeData;

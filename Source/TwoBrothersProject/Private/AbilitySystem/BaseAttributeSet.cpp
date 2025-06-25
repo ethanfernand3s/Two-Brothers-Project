@@ -208,3 +208,7 @@ void UBaseAttributeSet::OnRep_Type(const FGameplayAttributeData& OldValue)
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Type, OldValue);
 }
 
+float UBaseAttributeSet::CalculateCombatBaseStatTotal() const
+{
+	return (GetMaxHealth() + GetMaxStamina() + GetDefense() + GetSpeed());
+}

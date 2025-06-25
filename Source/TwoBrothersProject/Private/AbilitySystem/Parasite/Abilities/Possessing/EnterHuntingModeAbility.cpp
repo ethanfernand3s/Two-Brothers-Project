@@ -1,17 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "AbilitySystem/Parasite/Abilities/Possessing/EnterHuntingModeAbility.h"
-
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "TBGameplayTags.h"
-
 
 UEnterHuntingModeAbility::UEnterHuntingModeAbility()
 {
-    InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-    NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
+	InstancingPolicy   = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
 }
 
 void UEnterHuntingModeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -19,38 +14,54 @@ void UEnterHuntingModeAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
                                                const FGameplayAbilityActivationInfo ActivationInfo,
                                                const FGameplayEventData* TriggerEventData)
 {
-    Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-    if (!CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo))
-    {
-        EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-        return;
-    }
-    EnterHuntingMode();
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (!CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo))
+	{
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, /*bRep=*/true, /*bWasCancelled=*/false);
+		return;
+	}
+	
+	EnterHuntingMode();
 }
+
 void UEnterHuntingModeAbility::EnterHuntingMode()
 {
-    UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (!ASC || !HuntingVisionEffect)
+	{
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo,
+				   /*bRep=*/true, /*bCancelled=*/true);
+		return;
+	}
+	
+	FGameplayEffectContextHandle Ctx = ASC->MakeEffectContext();
+	FGameplayEffectSpecHandle     SpecHandle =
+		ASC->MakeOutgoingSpec(HuntingVisionEffect, GetAbilityLevel(), Ctx);
 
-    if (HuntingVisionEffect)
-    {
-        FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
-        HuntingEffectSpec = MakeOutgoingGameplayEffectSpec(HuntingVisionEffect, 1.f);
-        HuntingEffectSpec.Data->SetContext(Context);
-        ASC->ApplyGameplayEffectSpecToSelf(*HuntingEffectSpec.Data);
-    }
-    
-    ASC->ExecuteGameplayCue(FTBGameplayTags::Get().GameplayCue_State_Parasite_SeekingHost);
-    ASC->AddReplicatedLooseGameplayTag(FTBGameplayTags::Get().State_Parasite_SeekingHost);
-
-    
+	HuntingEffectHandle = ApplyGameplayEffectSpecToOwner(CurrentSpecHandle,
+								   CurrentActorInfo,
+								   CurrentActivationInfo,
+								   SpecHandle);
 }
 
 void UEnterHuntingModeAbility::ExitHuntingMode()
 {
-    UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-    
-    ASC->ExecuteGameplayCue(FTBGameplayTags::Get().GameplayCue_State_Parasite_FinishSeekingHost);
-    ASC->RemoveLooseGameplayTag(FTBGameplayTags::Get().State_Parasite_SeekingHost);
-    
-    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+	if (!HuntingEffectHandle.IsValid()) return;
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (!ASC) return; 
+
+	ASC->RemoveActiveGameplayEffect(HuntingEffectHandle);
+
+	HuntingEffectHandle.Invalidate();
+}
+
+void UEnterHuntingModeAbility::EndAbilityCleanup(const FGameplayAbilitySpecHandle /*Handle*/,
+                                                 const FGameplayAbilityActorInfo* /*ActorInfo*/,
+                                                 const FGameplayAbilityActivationInfo /*ActivationInfo*/,
+                                                 bool /*bReplicateEndAbility*/,
+                                                 bool /*bWasCancelled*/)
+{
+	ExitHuntingMode();
 }

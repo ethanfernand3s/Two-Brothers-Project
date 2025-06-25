@@ -15,15 +15,22 @@ class TWOBROTHERSPROJECT_API UEnterHuntingModeAbility : public UBaseGameplayAbil
 	GENERATED_BODY()
 public:
 	UEnterHuntingModeAbility();
-
+	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-							   const FGameplayAbilityActorInfo* ActorInfo,
-							   const FGameplayAbilityActivationInfo ActivationInfo,
-							   const FGameplayEventData* TriggerEventData) override;
+								 const FGameplayAbilityActorInfo* ActorInfo,
+								 const FGameplayAbilityActivationInfo ActivationInfo,
+								 const FGameplayEventData* TriggerEventData) override;
+	
+	virtual void EndAbilityCleanup(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
+	
+	UPROPERTY()
+	FActiveGameplayEffectHandle HuntingEffectHandle;
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> HuntingVisionEffect;
-	
+
+	UPROPERTY()
 	FGameplayEffectSpecHandle HuntingEffectSpec;
 	
 	void EnterHuntingMode();

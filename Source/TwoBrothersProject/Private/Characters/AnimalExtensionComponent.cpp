@@ -29,12 +29,24 @@ void UAnimalExtensionComponent::InitializePossessionWidgets(const TArray<FPosses
 
 	for (const FPossessionSocketData& Data : SocketData)
 	{
-		if (!MeshComp->DoesSocketExist(Data.SocketName)) continue;
+		const FString FullTag = Data.SocketGameplayTag.ToString();   // "Socket.Head"
+
+		// Grab the part after the final '.'
+		FString Leaf;
+		FullTag.Split(TEXT("."),       // delimiter
+					  nullptr,         // throw away left part
+					  &Leaf,           // keep right part
+					  ESearchCase::IgnoreCase,
+					  ESearchDir::FromEnd);
+
+		// Now Leaf == "Head"
+		const FName SocketName(*Leaf);
+		if (!MeshComp->DoesSocketExist(SocketName)) continue;
 
 		UWidgetComponent* WidgetComp = NewObject<UWidgetComponent>(GetOwner());
 		WidgetComp->RegisterComponent();
 		WidgetComp->SetActive(false);
-		WidgetComp->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetIncludingScale, Data.SocketName);
+		WidgetComp->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 		WidgetComp->SetWidgetClass(WidgetClass);
 		WidgetComp->SetDrawAtDesiredSize(true);
 		WidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
@@ -46,7 +58,7 @@ void UAnimalExtensionComponent::InitializePossessionWidgets(const TArray<FPosses
 			Widget->SetPossessionChance(Data.PossessionChance);
 		}
 
-		SocketWidgetMap.Add(Data.SocketName, WidgetComp);
+		SocketWidgetMap.Add(SocketName, WidgetComp);
 	}
 }
 

@@ -47,7 +47,8 @@ void UInventoryWidgetController::BroadcastInitialValues()
 
 void UInventoryWidgetController::OnXPChanged(int NewXP)
 {
-	const float XPBarPercent = LevelInfoLibrary::GetProgressToNextLevel(NewXP);
+	// TODO: Change this to call a GetGrowthRate From either PS or AnimalPawn Automatically with Interface
+	const float XPBarPercent = LevelInfoLibrary::GetProgressToNextLevel(NewXP, Cast<AParasitePlayerState>(ParasitePS)->CharacterContextComponent->GetGrowthRate());
 	OnXpPercentChangedDelegate.Broadcast(XPBarPercent);
 }
 void UInventoryWidgetController::OnAttributePointsChanged(int NewAttributePoints)

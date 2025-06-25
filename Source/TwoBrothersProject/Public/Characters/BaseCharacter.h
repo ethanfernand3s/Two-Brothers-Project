@@ -6,6 +6,9 @@
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
+struct FCharacterIVSet;
+class UAbilitySystemComponent;
+class UGameplayEffect;
 class UBiomeDataAsset;
 class UWidgetComponent;
 class UCameraComponent;
@@ -27,6 +30,7 @@ protected:
 	virtual void OnRep_PlayerState() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void BeginPlay() override;
+	virtual void AddIvsToAttributes(UAbilitySystemComponent* ASC, const FCharacterIVSet& CharIvSet);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<UWidgetComponent> StatusBarWidgetComponent;
@@ -36,4 +40,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly ,Category = "Components")
 	TObjectPtr<UCameraComponent> CameraComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> ApplyIvsGameplayEffect;
 };

@@ -2,38 +2,57 @@
 
 
 #include "Characters/Data/LevelInfo.h"
-#include "PrecomputedValues/PrecomputedXP.h"
+#include "PrecomputedValues/PrecomputedXPTable.h"
+#include "Characters/Data/GrowthRate.h"
 
-// Binary search to determine current level from XP
-int32 LevelInfoLibrary::GetLevelFromXP(float CurrentXP)
+static constexpr const float* GetXPTable(EGrowthRate Rate)
 {
-	int32 Low = 0, High = XPLevelCount - 1;
+	switch (Rate)
+	{
+	case EGrowthRate::Fast:          return PrecomputedXP_Fast;
+	case EGrowthRate::MediumFast:    return PrecomputedXP_MediumFast;
+	case EGrowthRate::MediumSlow:    return PrecomputedXP_MediumSlow;
+	case EGrowthRate::Slow:          return PrecomputedXP_Slow;
+	case EGrowthRate::Erratic:       return PrecomputedXP_Erratic;
+	case EGrowthRate::Fluctuating:   return PrecomputedXP_Fluctuating;
+	default:                         return PrecomputedXP_MediumFast; // safe fallback
+	}
+}
+// Binary search to determine current level from XP and growth rate
+int32 LevelInfoLibrary::GetLevelFromXP(float CurrentXP, EGrowthRate Rate)
+{
+	const float* Table = GetXPTable(Rate);
+
+	int32 Low = 0;
+	int32 High = XPLevelCount - 1;
 	int32 Level = 0;
 
 	while (Low <= High)
 	{
 		int32 Mid = (Low + High) / 2;
-		if (PrecomputedXP[Mid] <= CurrentXP)
+		if (Table[Mid] <= CurrentXP)
 		{
 			Level = Mid;
-			Low = Mid + 1;
+			Low   = Mid + 1;
 		}
 		else
 		{
 			High = Mid - 1;
 		}
 	}
-
-	return Level + 1;
+	return Level + 1;             // human-friendly level (starts at 1)
 }
 
-float LevelInfoLibrary::GetProgressToNextLevel(float CurrentXP)
+// 0-1 progress bar showing how close we are to next level
+float LevelInfoLibrary::GetProgressToNextLevel(float CurrentXP, EGrowthRate Rate)
 {
-	int32 Level = GetLevelFromXP(CurrentXP);
-	float XPCurrent = PrecomputedXP[Level - 1];
-	float XPNext = (Level < XPLevelCount) ? PrecomputedXP[Level] : XPCurrent;
+	const float* Table = GetXPTable(Rate);
 
-	return (XPNext - XPCurrent > 0.f)
+	const int32 Level      = GetLevelFromXP(CurrentXP, Rate);
+	const float XPCurrent  = Table[Level - 1];
+	const float XPNext     = (Level < XPLevelCount) ? Table[Level] : XPCurrent;
+
+	return (XPNext > XPCurrent)
 		? (CurrentXP - XPCurrent) / (XPNext - XPCurrent)
 		: 1.f;
 }

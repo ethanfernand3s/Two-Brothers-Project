@@ -55,7 +55,7 @@ class TWOBROTHERSPROJECT_API UBaseAttributeSet : public UAttributeSet
 public:
 
 	UBaseAttributeSet();
-
+	float CalculateCombatBaseStatTotal() const;
 	
 	TArray<FTagAttributeBinding> TagsToAttributes;
 	

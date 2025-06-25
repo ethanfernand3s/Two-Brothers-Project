@@ -26,7 +26,6 @@ const TMap<FGameplayTag, FTBAttributeInfo>& AttributeInfoLibrary::GetAttributeMa
 		{ GameplayTags.Attributes_MaxOxygen, FTBAttributeInfo(GameplayTags.Attributes_MaxOxygen, FText::FromString("Max Oxygen"), FText::FromString("Maximum oxygen level"), 0.f) },
 		{ GameplayTags.Attributes_Strength, FTBAttributeInfo(GameplayTags.Attributes_Strength, FText::FromString("Strength"), FText::FromString("Affects melee damage"), 0.f) },
 		{ GameplayTags.Attributes_Speed, FTBAttributeInfo(GameplayTags.Attributes_Speed, FText::FromString("Speed"), FText::FromString("Affects movement speed"), 0.f) },
-		{ GameplayTags.Attributes_TemperatureResistance, FTBAttributeInfo(GameplayTags.Attributes_TemperatureResistance, FText::FromString("Temperature Resistance"), FText::FromString("Resists environmental temperature effects"), 0.f) },
 		{ GameplayTags.Attributes_Drowsiness, FTBAttributeInfo(GameplayTags.Attributes_Drowsiness, FText::FromString("Drowsiness"), FText::FromString("Current drowsiness value"), 0.f) },
 		{ GameplayTags.Attributes_MaxDrowsiness, FTBAttributeInfo(GameplayTags.Attributes_MaxDrowsiness, FText::FromString("MaxDrowsiness"), FText::FromString("Maximum drowsiness value"), 0.f) },
 	};

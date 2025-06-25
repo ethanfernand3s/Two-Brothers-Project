@@ -14,7 +14,6 @@
 void UAttributeMenuUserWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	SetupAttributeRowTags();
 }
 
 void UAttributeMenuUserWidget::SetWidgetController(UObject* InWidgetController)
@@ -37,6 +36,8 @@ void UAttributeMenuUserWidget::SetWidgetController(UObject* InWidgetController)
 
 void UAttributeMenuUserWidget::OnWidgetControllerSet()
 {
+	SetupAttributeRowTags();
+	
 	if(auto* InventoryWidgetController = Cast<UInventoryWidgetController>(WidgetController))
 	{
 		InventoryWidgetController->CurrentAndMax_AttributeInfoDelegate.AddUObject(this,&UAttributeMenuUserWidget::CurrentAndMax_SetAttributeRow);
@@ -54,12 +55,12 @@ void UAttributeMenuUserWidget::OnWidgetControllerSet()
 
 void UAttributeMenuUserWidget::Single_SetAttributeRow(const FTBAttributeInfo& AttributeInfo)
 {
-	if (const auto* PtrOfAttributeRow = MappedAttributeRows.Find(FGameplayTagContainer(AttributeInfo.AttributeTag)))
+	if (UAttributeRowUserWidget ** PtrOfAttributeRow = MappedAttributeRows.Find(FGameplayTagContainer(AttributeInfo.AttributeTag)))
 	{
-		if (auto* AttributeRowCur = *PtrOfAttributeRow)
+		if (UAttributeRowUserWidget* AttributeRowCur = *PtrOfAttributeRow)
 		{
 			AttributeRowCur->TextBlock_AttributeRatio->SetText(
-				//FText::Format(FText::FromString(TEXT("{0} %")), FText::AsNumber(AttributeInfo.AttributeValue)));
+				//FText::Format(FText::FromString(TEXT("{0} %")), FText::AsNumber(AttributeInfo.AttributeValue))); // For # % formatting
 				FText::AsNumber(AttributeInfo.AttributeValue));
 		}
 	}
@@ -69,9 +70,9 @@ void UAttributeMenuUserWidget::Single_SetAttributeRow(const FTBAttributeInfo& At
 void UAttributeMenuUserWidget::CurrentAndMax_SetAttributeRow(const FTBAttributeInfo& CurrentAttributeInfo,
                                                              const FTBAttributeInfo& MaxAttributeInfo)
 {
-		if (const auto* PtrOfAttributeRow = MappedAttributeRows.Find(FGameplayTagContainer::CreateFromArray(TArray{CurrentAttributeInfo.AttributeTag, MaxAttributeInfo.AttributeTag})))
+		if (UAttributeRowUserWidget ** PtrOfAttributeRow = MappedAttributeRows.Find(FGameplayTagContainer::CreateFromArray(TArray{CurrentAttributeInfo.AttributeTag, MaxAttributeInfo.AttributeTag})))
 		{
-			if (auto* AttributeRowCur = *PtrOfAttributeRow)
+			if (UAttributeRowUserWidget* AttributeRowCur = *PtrOfAttributeRow)
 			{
 				const float CurrentAttribute{CurrentAttributeInfo.AttributeValue};
 				const float MaxAttribute{MaxAttributeInfo.AttributeValue};
