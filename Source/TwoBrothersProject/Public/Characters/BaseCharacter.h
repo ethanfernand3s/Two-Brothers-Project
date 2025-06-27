@@ -25,12 +25,11 @@ public:
 
 protected:
 	
-	virtual void InitAbilityActorInfo();
+	virtual void InitActorInfo();
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void BeginPlay() override;
-	virtual void AddIvsToAttributes(UAbilitySystemComponent* ASC, const FCharacterIVSet& CharIvSet);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<UWidgetComponent> StatusBarWidgetComponent;
@@ -40,7 +39,4 @@ protected:
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly ,Category = "Components")
 	TObjectPtr<UCameraComponent> CameraComponent;
-
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UGameplayEffect> ApplyIvsGameplayEffect;
 };

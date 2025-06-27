@@ -24,23 +24,21 @@ class TWOBROTHERSPROJECT_API AParasitePlayerState : public APlayerState, public 
 public:
 	
 	AParasitePlayerState();
+	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UParasiteAttributeSet* GetParasiteAttributeSet() const;
 	
-
-	void EnsureInitialAttributeDefaults();
+	void LoadProgress();
 	void EnsureAbilitiesAreInitialized();
-
+	
 	const TArray<UGameplayEffect*> GetBuffForHost();
 	
 	UPROPERTY(Replicated)
-	bool bAttributesInitialised;
+	bool bIsInitialised;
 
 	UPROPERTY()
 	TObjectPtr<UCharacterContextComponent> CharacterContextComponent;
-	
-	void LoadProgress();
-	
+
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	

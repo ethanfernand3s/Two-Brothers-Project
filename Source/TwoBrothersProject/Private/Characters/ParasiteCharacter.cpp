@@ -24,9 +24,8 @@ void AParasiteCharacter::UnPossessed()
 	//Play anim of attaching to host
 }
 
-void AParasiteCharacter::InitAbilityActorInfo()
+void AParasiteCharacter::InitActorInfo()
 {
-	Super::InitAbilityActorInfo();
 	const TObjectPtr<AParasitePlayerState> ParasitePlayerState = GetPlayerState<AParasitePlayerState>();
 	check(ParasitePlayerState);
 	
@@ -35,17 +34,13 @@ void AParasiteCharacter::InitAbilityActorInfo()
 		if (ParasiteAbilitySystemComponent = Cast<UParasiteAbilitySystemComponent>(ParasitePlayerState->GetAbilitySystemComponent()))
 		{
 			ParasiteAbilitySystemComponent->InitAbilityActorInfo(ParasitePlayerState,this);
-			ParasiteAbilitySystemComponent->AbilityActorInfoSet();
+			
 			if (HasAuthority())
 			{
-				ParasitePlayerState->EnsureInitialAttributeDefaults();
-				ParasitePlayerState->EnsureAbilitiesAreInitialized();
-
-				// TODO: Add Loading From Save!!
 				ParasitePlayerState->LoadProgress();
-				AddIvsToAttributes(ParasiteAbilitySystemComponent, ParasitePlayerState->CharacterContextComponent->GetIVSet());
 			}
-			else
+			
+			if (IsLocallyControlled())
 			{
 				APlayerController* PlayerController = GetController<APlayerController>();
 				if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PlayerController->GetHUD()))

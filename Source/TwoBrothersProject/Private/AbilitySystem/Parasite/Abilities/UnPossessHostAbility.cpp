@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AbilitySystem/Parasite/Abilities/UnPossessHostAbility.h"
+#include "AbilitySystem/Parasite/Abilities/Possessing/UnPossessHostAbility.h"
 
 #include "Characters/ParasiteCharacter.h"
 

@@ -2,6 +2,7 @@
 
 #include "Characters/Data/BiomeDataAsset.h"
 #include "Characters/Data/Gender.h"
+#include "Characters/Data/GrowthRate.h"
 #include "Net/UnrealNetwork.h"
 
 UCharacterContextComponent::UCharacterContextComponent()
@@ -11,33 +12,26 @@ UCharacterContextComponent::UCharacterContextComponent()
 	SetIsReplicatedByDefault(true);
 }
 
-void UCharacterContextComponent::InitializeCharacterContext(const FText& InName,
+void UCharacterContextComponent::InitializeCharacterContext(
+		const FText& InName,
 		const int32 InLevel,
 		const int32 InXP,
 		const FTribeData& InTribeData,
-		const ECharacterGender InGender,
-		const int32 InAttributePoints,
-		const ERarity InRarity,
-		const float InWeightedBST,
-		const EGrowthRate InGrowthRate)
+		const ECharacterGender InGender
+	)
 {
 	SetCharacterName(InName);
 	SetLevel(InLevel);
 	SetXP(InXP);
 	SetTribeData(InTribeData);
 	SetGender(InGender);
-	SetAttributePoints(InAttributePoints);
-	SetRarity(InRarity);
-	SetGrowthRate(InGrowthRate);
-
-	InitializeRandomIVs();
-	InitializeBaseXP(InWeightedBST);
-
-
+	SetAttributePoints(0);
+	
 	OnCharacterNameChanged.Broadcast(CharacterName);
 	OnLevelChanged.Broadcast(Level);
 	OnXPChanged.Broadcast(XP);
 	OnTribeDataChanged.Broadcast(TribeData);
+	
 	if (BiomeData != nullptr)
 	{
 		OnBiomeChanged.Broadcast(BiomeData->BiomeInfo);
@@ -46,28 +40,116 @@ void UCharacterContextComponent::InitializeCharacterContext(const FText& InName,
 	OnAttributePointsChanged.Broadcast(AttributePoints);
 }
 
-void UCharacterContextComponent::InitializeBaseXP(const float WeightedBST)
+void UCharacterContextComponent::InitializeCombatRelatedVars(float CustomBaseCombatPower)
 {
-	float RarityMultiplier{0.f};
-	switch (Rarity)
-	{
-		case ERarity::Common:
-			RarityMultiplier = .18f;
-		case ERarity::Uncommon:
-			RarityMultiplier = .22f;
-	case ERarity::Rare:
-		RarityMultiplier = .31f;
-	case ERarity::Epic:
-		RarityMultiplier = .40f;
-	case ERarity::Legendary:
-		RarityMultiplier = .50f;
-	case ERarity::Mythical:
-		RarityMultiplier = .60f;
-	default:
-		RarityMultiplier = .18f;
-	}
+	// Add IV's to BaseCombatPower
+	InitializeRandomIVs();
+	BaseCombatPower += IVSet.GetTotal();
 
-	BaseXP = WeightedBST * RarityMultiplier;
+	
+	if (CustomBaseCombatPower == -1.f)
+	{
+		// === Randomly roll rarity and base CP ===
+		float Roll = FMath::FRand();
+	
+		// Leave the rest to chance
+		if (Roll < 0.4f)
+		{
+			BaseCombatPower = FMath::RandRange(200, 300);
+			Rarity = ERarity::Common;
+			BaseXP = BaseCombatPower * 0.18f;
+			LevelGrowthRate = EGrowthRate::Fast;
+			
+			AuraColor = FColor::White;
+		}
+		else if (Roll < 0.65f)
+		{
+			BaseCombatPower = FMath::RandRange(300, 400);
+			Rarity = ERarity::Uncommon;
+			BaseXP = BaseCombatPower * 0.22f;
+			LevelGrowthRate = EGrowthRate::MediumFast;
+			
+			AuraColor = FColor::Silver;
+		}
+		else if (Roll < 0.80f)
+		{
+			BaseCombatPower = FMath::RandRange(400, 500);
+			Rarity = ERarity::Rare;
+			BaseXP = BaseCombatPower * 0.31f;
+			LevelGrowthRate = EGrowthRate::MediumSlow;
+			
+			AuraColor = FColor::Blue;
+		}
+		else if (Roll < 0.95f)
+		{
+			BaseCombatPower = FMath::RandRange(500, 600);
+			Rarity = ERarity::Epic;
+			BaseXP = BaseCombatPower * 0.40f;
+			LevelGrowthRate = EGrowthRate::Slow;
+			
+			AuraColor = FColor::Purple;
+		}
+		else if (Roll < 0.99f)
+		{
+			BaseCombatPower = FMath::RandRange(650, 750);
+			Rarity = ERarity::Legendary;
+			BaseXP = BaseCombatPower * 0.50f;
+			LevelGrowthRate = EGrowthRate::Fluctuating;
+			
+			AuraColor = FColor::Orange;
+		}
+		else
+		{
+			BaseCombatPower = FMath::RandRange(800, 1000);
+			Rarity = ERarity::Mythical;
+			BaseXP = BaseCombatPower * 0.60f;
+			LevelGrowthRate = EGrowthRate::Erratic;
+
+			AuraColor = FColor::Red;
+		}
+	}
+	else
+	{
+		// === Use passed-in base CP to determine category ===
+		BaseCombatPower = CustomBaseCombatPower;
+
+		if (BaseCombatPower < 300.f)
+		{
+			Rarity = ERarity::Common;
+			BaseXP = BaseCombatPower * 0.18f;
+			LevelGrowthRate = EGrowthRate::Fast;
+		}
+		else if (BaseCombatPower < 400.f)
+		{
+			Rarity = ERarity::Uncommon;
+			BaseXP = BaseCombatPower * 0.22f;
+			LevelGrowthRate = EGrowthRate::MediumFast;
+		}
+		else if (BaseCombatPower < 500.f)
+		{
+			Rarity = ERarity::Rare;
+			BaseXP = BaseCombatPower * 0.31f;
+			LevelGrowthRate = EGrowthRate::MediumSlow;
+		}
+		else if (BaseCombatPower < 650.f)
+		{
+			Rarity = ERarity::Epic;
+			BaseXP = BaseCombatPower * 0.40f;
+			LevelGrowthRate = EGrowthRate::Slow;
+		}
+		else if (BaseCombatPower < 800.f)
+		{
+			Rarity = ERarity::Legendary;
+			BaseXP = BaseCombatPower * 0.50f;
+			LevelGrowthRate = EGrowthRate::Fluctuating;
+		}
+		else
+		{
+			Rarity = ERarity::Mythical;
+			BaseXP = BaseCombatPower * 0.60f;
+			LevelGrowthRate = EGrowthRate::Erratic;
+		}
+	}
 }
 
 void UCharacterContextComponent::AddToXP(int32 InXP)
@@ -103,6 +185,7 @@ void UCharacterContextComponent::GetLifetimeReplicatedProps(TArray<class FLifeti
 	DOREPLIFETIME(UCharacterContextComponent, BaseXP);
 	DOREPLIFETIME(UCharacterContextComponent, IVSet);
 	DOREPLIFETIME(UCharacterContextComponent, LevelGrowthRate);
+	DOREPLIFETIME(UCharacterContextComponent, AuraColor);
 }
 
 void UCharacterContextComponent::OnRep_CharacterName()

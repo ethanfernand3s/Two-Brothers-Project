@@ -1,14 +1,19 @@
-#include "AbilitySystem/Parasite/Abilities/PossessHostAbility.h"
+#include "AbilitySystem/Parasite/Abilities/Possessing/PossessHostAbility.h"
 #include "UI/Widget/Possession/PossessMiniGameUserWidget.h"
 #include "TBGameplayTags.h"
 #include "Characters/BaseAnimalCharacter.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-#include "AbilitySystem/Parasite/Abilities/Possessing/EnterHuntingModeAbility.h"
+#include "AbilitySystem/Animal/AnimalAttributeSet.h"
+#include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
+#include "AbilitySystem/Parasite/Abilities/Possessing/SeekHostAbility.h"
 #include "AbilitySystem/TargetData/PossessResultTargetData.h"
 #include "GameFramework/Character.h"
 #include "Blueprint/UserWidget.h"
+#include "Characters/CharacterContextComponent.h"
+#include "GameFramework/PlayerState.h"
+#include "Player/ParasitePlayerState.h"
 
 using FTBTags = FTBGameplayTags;
 
@@ -98,7 +103,7 @@ void UPossessHostAbility::OnActorHit(
     bool bBadRange   = Dist > SocketRange;
     bool bNoChance   = SocketData.PossessionChance == 0.f;
     bool bHasOwner   = TargetAnimalPtr->GetOwner() != nullptr;
-
+    
     if (bBadRange || bNoChance || bHasOwner)
     {
         EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
@@ -106,6 +111,8 @@ void UPossessHostAbility::OnActorHit(
     }
 
     CachedSocketData = SocketData;
+    CachedAnimalCombatPower = TargetAnimalPtr->GetAttributeSet()->CalculateCombatPower();
+    CachedAnimalAuraColor = TargetAnimalPtr->CharacterContextComponent->GetAuraColor();
 
     // Send start minigame to client
     FGameplayEventData StartMiniGameEvent;
@@ -127,7 +134,22 @@ void UPossessHostAbility::HandleMiniGameStart(FGameplayEventData /*Unused*/)
 
     if (!W) return;
 
-    W->Init(10.f);
+    const AParasitePlayerState* PlayerState = Cast<AParasitePlayerState>(GetOwningActorFromActorInfo());
+    if (PlayerState == nullptr)
+    {
+        EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+        return;
+    }
+    
+    const float ParasiteCombatPower = PlayerState->GetParasiteAttributeSet()->CalculateCombatPower();
+
+    const float Scale = 0.0025f;
+    const float Base  = 0.04f;
+
+    const float TapInc = FMath::Clamp(Base + (ParasiteCombatPower - CachedAnimalCombatPower) * Scale, 0.01f, 0.07f);
+    const float EnemyPerSec = FMath::Clamp(Base + (CachedAnimalCombatPower - ParasiteCombatPower) * Scale, 0.01f, 0.07f);
+
+    W->Init(CachedSocketData.PossessionChance, TapInc, EnemyPerSec, PlayerState->CharacterContextComponent->GetAuraColor(), CachedAnimalAuraColor);
     W->OnFinished.AddDynamic(this, &UPossessHostAbility::OnMiniGameWidgetFinished);
     W->AddToViewport();
 

@@ -8,7 +8,7 @@
 #include "Characters/BaseAnimalCharacter.h"
 #include "PossessHostAbility.generated.h"
 
-class UEnterHuntingModeAbility;
+class USeekHostAbility;
 class ABaseAnimalCharacter;
 class UPossessMiniGameUserWidget;
 
@@ -73,11 +73,14 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "Possess|Classes")
     TSubclassOf<UPossessMiniGameUserWidget> MiniGameWidgetClass;
     UPROPERTY(EditDefaultsOnly, Category = "Possess|Classes")
-    TSubclassOf<UEnterHuntingModeAbility> SeekHostClass;
+    TSubclassOf<USeekHostAbility> SeekHostClass;
     
     UPROPERTY()
     TWeakObjectPtr<ABaseAnimalCharacter> TargetAnimalPtr;
 
     FPossessionSocketData CachedSocketData;
+    float CachedAnimalCombatPower = 0.f;
+    FColor CachedAnimalAuraColor = FColor::White;
+    
     bool bFinishHandled = false;
 };

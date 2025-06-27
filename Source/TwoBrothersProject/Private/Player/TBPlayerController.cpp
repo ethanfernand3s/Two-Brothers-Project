@@ -8,7 +8,7 @@
 #include "TBGameplayTags.h"
 #include "AbilitySystem/BaseAbilitySystemComponent.h"
 #include "AbilitySystem/Animal/AnimalAttributeSet.h"
-#include "AbilitySystem/Parasite/Abilities/PossessHostAbility.h"
+#include "AbilitySystem/Parasite/Abilities/Possessing/PossessHostAbility.h"
 #include "Blueprint/UserWidget.h"
 #include "Camera/ParasiteCameraManager.h"
 #include "Characters/BaseAnimalCharacter.h"

@@ -77,9 +77,6 @@ void UAnimalExtensionComponent::HandlePlayerPossess(AParasitePlayerState* OwnerP
 	CachedASC = GetOwner<IAbilitySystemInterface>()->GetAbilitySystemComponent();
 	if (!CachedASC) return;
 	
-	OwnerPS->EnsureInitialAttributeDefaults();
-	EnsureInitialAttributeDefaults();
-	
 	// Apply parasite buff GE to host
 	for (const UGameplayEffect* ParasiteBuff : OwnerPS->GetBuffForHost()) // implement helper
 	{
@@ -103,22 +100,6 @@ void UAnimalExtensionComponent::HandlePlayerUnPossess()
 	/* TODO: Create this tag / effect
 	// CachedASC->RemoveActiveEffectsWithTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag(FName("Effect.Buff.Parasite"))));
 	*/
-}
-
-void UAnimalExtensionComponent::EnsureInitialAttributeDefaults()
-{
-	if (!CachedASC)
-	{
-		CachedASC = GetOwner<IAbilitySystemInterface>()->GetAbilitySystemComponent();
-	}
-	
-	if (bAttributesInitialised || !CachedASC) return;
-
-	IGameplayAbilitiesModule::Get().GetAbilitySystemGlobals()->GetAttributeSetInitter()->InitAttributeSetDefaults
-	(CachedASC, "Animal", /*Level=*/1, /*IsInitialLoad=*/true);
-	bAttributesInitialised = true;
-
-	Cast<ABaseAnimalCharacter>(GetOwner())->LoadProgress();
 }
 
 void UAnimalExtensionComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

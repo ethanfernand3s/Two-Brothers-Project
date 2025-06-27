@@ -23,15 +23,9 @@ struct FTBGameplayTags
 	// Double
 	FGameplayTag Attributes_Health;
 	FGameplayTag Attributes_MaxHealth;
-	
-	FGameplayTag Attributes_Thirst;
-	FGameplayTag Attributes_MaxThirst;
 
-	FGameplayTag Attributes_Hunger;
-	FGameplayTag Attributes_MaxHunger;
-
-	FGameplayTag Attributes_Stamina;
-	FGameplayTag Attributes_MaxStamina;
+	FGameplayTag Attributes_Energy;
+	FGameplayTag Attributes_MaxEnergy;
 
 	FGameplayTag Attributes_Oxygen;
 	FGameplayTag Attributes_MaxOxygen;
@@ -42,6 +36,8 @@ struct FTBGameplayTags
 	// Single 
 	FGameplayTag Attributes_Defense;
 	FGameplayTag Attributes_Strength;
+	FGameplayTag Attributes_AuraDefense;
+	FGameplayTag Attributes_AuraStrength;
 	FGameplayTag Attributes_Speed;
 	
 #pragma endregion Attributes

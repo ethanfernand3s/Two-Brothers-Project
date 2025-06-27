@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
 #include "AbilitySystemComponent.h"
-#include "Data/IvSet.h"
+#include "Data/CharacterCombatValues.h"
 #include "BaseAttributeSet.generated.h"
 
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
@@ -55,7 +55,7 @@ class TWOBROTHERSPROJECT_API UBaseAttributeSet : public UAttributeSet
 public:
 
 	UBaseAttributeSet();
-	float CalculateCombatBaseStatTotal() const;
+	float CalculateCombatPower() const;
 	
 	TArray<FTagAttributeBinding> TagsToAttributes;
 	
@@ -65,11 +65,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Stamina)
-	FGameplayAttributeData Stamina;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Energy)
+	FGameplayAttributeData Energy;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxStamina)
-	FGameplayAttributeData MaxStamina;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxEnergy)
+	FGameplayAttributeData MaxEnergy;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Oxygen)
 	FGameplayAttributeData Oxygen;
@@ -77,24 +77,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxOxygen)
 	FGameplayAttributeData MaxOxygen;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Hunger)
-	FGameplayAttributeData Hunger;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHunger)
-	FGameplayAttributeData MaxHunger;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Thirst)
-	FGameplayAttributeData Thirst;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxThirst)
-	FGameplayAttributeData MaxThirst;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Strength)
 	FGameplayAttributeData Strength;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_AuraStrength)
+	FGameplayAttributeData AuraStrength;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Defense)
 	FGameplayAttributeData Defense;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_AuraDefense)
+	FGameplayAttributeData AuraDefense;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Speed)
 	FGameplayAttributeData Speed;
 
@@ -116,20 +110,17 @@ public:
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Health);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxHealth);
 	
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Stamina);
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxStamina);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Energy);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxEnergy);
 	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Oxygen);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxOxygen);
 	
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Hunger);
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxHunger);
-	
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Thirst);
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxThirst);
-	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Strength);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, AuraStrength);
+	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Defense);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, AuraDefense);
 	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Speed);
 	
@@ -152,25 +143,21 @@ protected:
 	UFUNCTION()
 	void OnRep_MaxHealth(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	void OnRep_Stamina(const FGameplayAttributeData& OldValue);
+	void OnRep_Energy(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	void OnRep_MaxStamina(const FGameplayAttributeData& OldValue);
+	void OnRep_MaxEnergy(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_Oxygen(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_MaxOxygen(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	void OnRep_Hunger(const FGameplayAttributeData& OldValue);
-	UFUNCTION()
-	void OnRep_MaxHunger(const FGameplayAttributeData& OldValue);
-	UFUNCTION()
-	void OnRep_Thirst(const FGameplayAttributeData& OldValue);
-	UFUNCTION()
-	void OnRep_MaxThirst(const FGameplayAttributeData& OldValue);
-	UFUNCTION()
 	void OnRep_Strength(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
+	void OnRep_AuraStrength(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
 	void OnRep_Defense(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	void OnRep_AuraDefense(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_Speed(const FGameplayAttributeData& OldValue);
 	UFUNCTION()

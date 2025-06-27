@@ -1,56 +1,66 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UI/Widget/BaseUserWidget.h"
+#include "Blueprint/UserWidget.h"
 #include "PossessMiniGameUserWidget.generated.h"
 
-class UTextBlock;
 class UProgressBar;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
-	FMiniGameFinishedSig, bool, bBarWon, float, PercentTimeLeft);
+class UTextBlock;
+class UNiagaraComponent;
+class UNiagaraSystem;
+class UWidgetAnimation;
 
-/**
- * 
- */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMiniGameFinishedDelegate, bool, bWon, float, NormalizedTimeLeft);
+
 UCLASS()
-class TWOBROTHERSPROJECT_API UPossessMiniGameUserWidget : public UBaseUserWidget
+class TWOBROTHERSPROJECT_API UPossessMiniGameUserWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
-public:
-	void Init(float InStartingChance,
-		      float InDuration = 10.f,
-			  float InTapInc   = 0.06f,
-			  float InEnemyPerSec = 0.05f);
 
-	UPROPERTY(BlueprintAssignable, Category="MiniGame")
-	FMiniGameFinishedSig OnFinished;
+public:
+	void Init(float InStartingChance, float InTapInc, float InEnemyPerSec,
+			  const FColor& InPlayerColor, const FColor& InEnemyColor);
+
+	UPROPERTY(BlueprintAssignable)
+	FMiniGameFinishedDelegate OnFinished;
 
 protected:
 	virtual void NativeConstruct() override;
-	virtual void NativeTick(const FGeometry& Geo, float Dt) override;
-	virtual FReply NativeOnKeyDown(const FGeometry& Geo,
-								   const FKeyEvent& KE) override;
+	virtual void NativeTick(const FGeometry& Geometry, float DeltaTime) override;
+	virtual FReply NativeOnKeyDown(const FGeometry& Geometry, const FKeyEvent& KeyEvent) override;
 	virtual void NativeDestruct() override;
 
 private:
-	void Finish(bool bWonIn);
+	void Finish(bool bWon);
 
-	UPROPERTY(meta=(BindWidget)) UProgressBar* Bar = nullptr;
-	UPROPERTY(meta=(BindWidget)) UTextBlock* Textblock_PossessChance = nullptr;
-	UPROPERTY(Transient, meta=(BindWidgetAnim)) UWidgetAnimation* CalculatePossessionChance = nullptr;
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* Bar;
 
-	float Dur          = 10.f;     // seconds
-	float TapInc       = 0.06f;    // percent / space
-	float EnemyPerSec  = 0.05f;    // percent / sec
-	float Elapsed      = 0.f;
-	float Percent      = 0.5f;
-	bool  bDone        = false;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ResultText;
 
-	float PercentLeft = 0.f;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* ResultAnim;
+
+	UPROPERTY(EditDefaultsOnly)
+	UNiagaraSystem* BeamEffectSystem;
+
+	UPROPERTY()
+	UNiagaraComponent* NiagaraComponent;
+
+	FLinearColor PlayerColor;
+	FLinearColor EnemyColor;
+
+	float Percent = 0.f;
+	float TapInc = 0.f;
+	float EnemyPerSec = 0.f;
+	float Elapsed = 0.f;
+
+	bool bDone = false;
 	bool bWon = false;
-	
-	float StartingChance = 0.f;
+	float PercentLeft = 0.f;
+
+	const float ExcellentThreshold = 2.f;
+	const float GreatThreshold     = 4.f;
+	const float NiceThreshold      = 6.f;
 };

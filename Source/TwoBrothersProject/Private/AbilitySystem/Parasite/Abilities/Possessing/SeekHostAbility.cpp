@@ -1,15 +1,15 @@
-#include "AbilitySystem/Parasite/Abilities/Possessing/EnterHuntingModeAbility.h"
+#include "AbilitySystem/Parasite/Abilities/Possessing/SeekHostAbility.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 
-UEnterHuntingModeAbility::UEnterHuntingModeAbility()
+USeekHostAbility::USeekHostAbility()
 {
 	InstancingPolicy   = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
 }
 
-void UEnterHuntingModeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+void USeekHostAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                                const FGameplayAbilityActorInfo* ActorInfo,
                                                const FGameplayAbilityActivationInfo ActivationInfo,
                                                const FGameplayEventData* TriggerEventData)
@@ -25,7 +25,7 @@ void UEnterHuntingModeAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	EnterHuntingMode();
 }
 
-void UEnterHuntingModeAbility::EnterHuntingMode()
+void USeekHostAbility::EnterHuntingMode()
 {
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	if (!ASC || !HuntingVisionEffect)
@@ -45,7 +45,7 @@ void UEnterHuntingModeAbility::EnterHuntingMode()
 								   SpecHandle);
 }
 
-void UEnterHuntingModeAbility::ExitHuntingMode()
+void USeekHostAbility::ExitHuntingMode()
 {
 	if (!HuntingEffectHandle.IsValid()) return;
 
@@ -57,7 +57,7 @@ void UEnterHuntingModeAbility::ExitHuntingMode()
 	HuntingEffectHandle.Invalidate();
 }
 
-void UEnterHuntingModeAbility::EndAbilityCleanup(const FGameplayAbilitySpecHandle /*Handle*/,
+void USeekHostAbility::EndAbilityCleanup(const FGameplayAbilitySpecHandle /*Handle*/,
                                                  const FGameplayAbilityActorInfo* /*ActorInfo*/,
                                                  const FGameplayAbilityActivationInfo /*ActivationInfo*/,
                                                  bool /*bReplicateEndAbility*/,

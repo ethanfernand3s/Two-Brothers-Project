@@ -38,12 +38,6 @@ public:
 	void Inventory(APlayerController* PC);
 
 	void ConfigureUIForInventory(APlayerController* PC, bool bIsInViewport);
-	
-	void PossessMiniGame();
-	void OnPossessMiniGameComplete();
-	UFUNCTION()
-	void HandleMiniGameFinished(bool bBarWon, float PercentTimeLeft);
-	void ShowPossessMiniGame(float StartingChance, ATBPlayerController* OwningPC);
 
 protected:
 	
@@ -72,18 +66,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widget Classes", meta = (AllowPrivateAccess))
 	TSubclassOf<UInventoryWidgetController>  InventoryWidgetControllerClass;
-
-	UPROPERTY()
-	TObjectPtr<UPossessMiniGameUserWidget> PossessMiniGameUserWidget;
-
-	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess))
-	TSubclassOf<UPossessMiniGameUserWidget> PossessMiniGameUserWidgetClass;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Widget Classes", meta = (AllowPrivateAccess))
-	TSubclassOf<UPossessMiniGameUserWidget> MiniGameWidgetClass;
-
-	UPROPERTY()
-	TObjectPtr<UPossessMiniGameUserWidget> MiniGameWidget;
 
 	TUniquePtr<FWidgetControllerParams> WCParams;
 };

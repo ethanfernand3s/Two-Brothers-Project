@@ -25,22 +25,15 @@ public:
 	TObjectPtr<UProgressBar> ProgressBar_Health;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UProgressBar> ProgressBar_Stamina;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UProgressBar> ProgressBar_Hunger;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UProgressBar> ProgressBar_Thirst;
+	TObjectPtr<UProgressBar> ProgressBar_Energy;
+	
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> ProgressBar_Drowsiness;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> ProgressBar_Oxygen;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UProgressBar> ProgressBar_Temperature;
+	
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> ProgressBar_XP;

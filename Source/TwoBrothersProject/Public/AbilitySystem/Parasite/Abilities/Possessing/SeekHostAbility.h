@@ -4,17 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/BaseGameplayAbility.h"
-#include "EnterHuntingModeAbility.generated.h"
+#include "SeekHostAbility.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class TWOBROTHERSPROJECT_API UEnterHuntingModeAbility : public UBaseGameplayAbility
+class TWOBROTHERSPROJECT_API USeekHostAbility : public UBaseGameplayAbility
 {
 	GENERATED_BODY()
 public:
-	UEnterHuntingModeAbility();
+	USeekHostAbility();
 	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 								 const FGameplayAbilityActorInfo* ActorInfo,

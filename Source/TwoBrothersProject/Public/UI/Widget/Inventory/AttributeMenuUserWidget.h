@@ -41,34 +41,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo",meta = (BindWidget))
 	TObjectPtr<UAttributeXPBar> AttributeXPBar;
 
-	// Stats
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
-	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Health;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
-	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Stamina;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
-	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Oxygen;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
-	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Hunger;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
-	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Thirst;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
-	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Strength;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
-	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Defense;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
-	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Speed;
-
-	// TODO: Make this into subclass since it doesn't inherently have a button
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInfo|Stats",meta = (BindWidget))
-	TObjectPtr<UAttributeRowUserWidget> AttributeRow_Drowsiness;
+	// TODO: Need a solution for Combat Attribute Widgets
 
 protected:
 	virtual void NativeConstruct() override;

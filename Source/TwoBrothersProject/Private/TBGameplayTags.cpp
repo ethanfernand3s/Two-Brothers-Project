@@ -25,37 +25,37 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 
 	GameplayTags.Attributes_Defense = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attributes.Defense"),
-		FString("Reduces incoming damage")
+		FString("Reduces incoming physical damage")
 	);
 
-	GameplayTags.Attributes_Thirst = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Thirst"),
-		FString("Current thirst level")
+	GameplayTags.Attributes_Strength = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.Strength"),
+		FString("Affects melee physical damage")
 	);
 
-	GameplayTags.Attributes_MaxThirst = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.MaxThirst"),
-		FString("Maximum thirst level")
+	GameplayTags.Attributes_AuraDefense = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.Defense"),
+		FString("Reduces incoming aura damage")
 	);
 
-	GameplayTags.Attributes_Hunger = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Hunger"),
-		FString("Current hunger level")
+	GameplayTags.Attributes_AuraStrength = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.AuraStrength"),
+		FString("Reduces incoming aura damage")
+	);
+	
+	GameplayTags.Attributes_Speed = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.Speed"),
+		FString("Affects movement speed")
+	);
+	
+	GameplayTags.Attributes_Energy = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.Energy"),
+		FString("Current energy level")
 	);
 
-	GameplayTags.Attributes_MaxHunger = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.MaxHunger"),
-		FString("Maximum hunger level")
-	);
-
-	GameplayTags.Attributes_Stamina = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Stamina"),
-		FString("Current stamina level")
-	);
-
-	GameplayTags.Attributes_MaxStamina = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.MaxStamina"),
-		FString("Maximum stamina level")
+	GameplayTags.Attributes_MaxEnergy = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.MaxEnergy"),
+		FString("Maximum energy level")
 	);
 
 	GameplayTags.Attributes_Oxygen = UGameplayTagsManager::Get().AddNativeGameplayTag(
@@ -66,16 +66,6 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Attributes_MaxOxygen = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attributes.MaxOxygen"),
 		FString("Maximum oxygen level")
-	);
-
-	GameplayTags.Attributes_Strength = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Strength"),
-		FString("Affects melee damage")
-	);
-
-	GameplayTags.Attributes_Speed = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Speed"),
-		FString("Affects movement speed")
 	);
 
 	GameplayTags.Attributes_Drowsiness = UGameplayTagsManager::Get().AddNativeGameplayTag(

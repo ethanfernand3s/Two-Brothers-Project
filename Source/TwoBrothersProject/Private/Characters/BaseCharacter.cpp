@@ -44,7 +44,7 @@ void ABaseCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	InitAbilityActorInfo();
+	InitActorInfo();
 }
 
 void ABaseCharacter::OnRep_PlayerState()
@@ -55,7 +55,7 @@ void ABaseCharacter::OnRep_PlayerState()
 	// if you keep ASC in Mixed replication mode)
 	if (IsLocallyControlled())
 	{
-		InitAbilityActorInfo();
+		InitActorInfo();
 	}
 }
 
@@ -89,58 +89,8 @@ void ABaseCharacter::BeginPlay()
 	StatusBarWidgetComponent->SetOwnerNoSee(true);
 }
 
-void ABaseCharacter::AddIvsToAttributes(UAbilitySystemComponent* ASC, const FCharacterIVSet& CharIvSet)
-{
-	FGameplayEffectSpecHandle SpecH =
-		ASC->MakeOutgoingSpec(ApplyIvsGameplayEffect, 1.f, ASC->MakeEffectContext());
 
-	FGameplayEffectSpec* Spec = SpecH.Data.Get();
-	if (!Spec) return;
-
-	const static FTBGameplayTags GameplayTags = FTBGameplayTags::Get();
-	
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_Defense, CharIvSet.Defense);
-	
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_MaxDrowsiness, CharIvSet.Drowsiness);
-	
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_Health, CharIvSet.Health);
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_MaxHealth, CharIvSet.Health);
-	
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_Hunger, CharIvSet.Hunger);
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_MaxHunger, CharIvSet.Hunger);
-
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_Oxygen, CharIvSet.Oxygen);
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_MaxOxygen, CharIvSet.Oxygen);
-
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_Stamina, CharIvSet.Stamina);
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_MaxStamina, CharIvSet.Stamina);
-
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_Thirst, CharIvSet.Thirst);
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_MaxThirst, CharIvSet.Thirst);
-	
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_Speed, CharIvSet.Speed);
-	
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_Strength, CharIvSet.Strength);
-
-	ASC->ApplyGameplayEffectSpecToSelf(*Spec);
-}
-
-
-void ABaseCharacter::InitAbilityActorInfo()
+void ABaseCharacter::InitActorInfo()
 {
 	// Implementation in children
 }

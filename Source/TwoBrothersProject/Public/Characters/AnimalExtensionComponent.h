@@ -32,7 +32,6 @@ public:
 	void UpdatePossessionChance(FName SocketName, float NewChance);
 	void HandlePlayerPossess(AParasitePlayerState* OwnerPS);
 	void HandlePlayerUnPossess();
-	void EnsureInitialAttributeDefaults();
 
 protected:
 	

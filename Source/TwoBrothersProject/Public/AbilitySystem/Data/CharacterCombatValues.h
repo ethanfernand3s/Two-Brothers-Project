@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "IvSet.generated.h"
+#include "CharacterCombatValues.generated.h"
 
 USTRUCT(BlueprintType)
-struct FCharacterIVSet
+struct FCharacterCombatValues
 {
 	GENERATED_BODY()
 	
@@ -14,30 +14,22 @@ struct FCharacterIVSet
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Health = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Stamina = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Oxygen = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Hunger = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Thirst = 0;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Strength = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 AuraStrength = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Defense = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Speed = 0;
+	int32 AuraDefense = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Drowsiness = 0;
+	int32 Speed = 0;
+	
 
 	/** Normalize value (0.0–1.0) for any stat */
 	static float GetNormalized(int32 Value)
@@ -45,16 +37,24 @@ struct FCharacterIVSet
 		return FMath::Clamp(static_cast<float>(Value) / MaxIV, 0.f, 1.f);
 	}
 
-	void SetIVs()
+	void SetRandomValues()
 	{
 		Health = FMath::RandRange(0, 21);
-		Stamina = FMath::RandRange(0, 21);
-		Oxygen = FMath::RandRange(0, 21);
-		Hunger = FMath::RandRange(0, 21);
-		Thirst = FMath::RandRange(0, 21);
 		Strength = FMath::RandRange(0, 21);
+		AuraStrength = FMath::RandRange(0, 21);
 		Defense = FMath::RandRange(0, 21);
+		AuraDefense = FMath::RandRange(0, 21);
 		Speed = FMath::RandRange(0, 21);
-		Drowsiness = FMath::RandRange(0, 21);
 	}
+
+	int32 GetTotal() const
+	{
+		return Health + Strength + AuraStrength + Defense + AuraDefense + Speed;
+	}
+
+	FCharacterCombatValues() = default;
+
+	FCharacterCombatValues(int32 InHealth, int32 InStrength, int32 InAuraStrength,
+		int32 InDefense, int32 InAuraDefense, int32 InSpeed) :
+			Health(InHealth), Strength(InStrength), AuraStrength(InAuraStrength),Defense(InDefense), AuraDefense(InAuraDefense), Speed(InSpeed){};
 };

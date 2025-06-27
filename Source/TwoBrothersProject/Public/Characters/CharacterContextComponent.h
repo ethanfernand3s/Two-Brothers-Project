@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "AbilitySystem/Data/IvSet.h"
+#include "AbilitySystem/Data/CharacterCombatValues.h"
 #include "Data/TribeData.h"
 #include "Rarity/Data/Rarity.h"
 #include "CharacterContextComponent.generated.h"
@@ -41,21 +41,17 @@ public:
 		const int32 InLevel,
 		const int32 InXP,
 		const FTribeData& InTribeData,
-		const ECharacterGender InGender,
-		const int32 InAttributePoints,
-		const ERarity InRarity,
-		const float WeightedBST,
-		const EGrowthRate InGrowthRate
+		const ECharacterGender InGender
 	);
-
-	 /**
-	  * One time call for setting up the base xp that will be used in future xp reward calculations.
-	  * 
-	 * @note WeightedBST (Base Stat Total) should be calculated using the stats after IVs have been applied. Attributes
-	 * should have high weights on combat related stats.
-	 */
-	void InitializeBaseXP(const float WeightedBST);
-	FORCEINLINE void InitializeRandomIVs() { IVSet.SetIVs(); }
+	
+	FORCEINLINE void InitializeRandomIVs() { IVSet.SetRandomValues(); }
+	/**
+	 * One time call for initializing BaseCombatPower | BaseXP | Rarity | GrowthRate
+	 *
+	 * @remark Currently randomly generating random base combat power if we make custom creatures change this to being
+	 * passed instead of being generated.
+	 * **/
+	void InitializeCombatRelatedVars(float CustomBaseCombatPower = -1.f);
 	
 	// Setters
 	FORCEINLINE void SetCharacterName(FText InName) { CharacterName = MoveTemp(InName); }
@@ -67,6 +63,8 @@ public:
 	FORCEINLINE void SetAttributePoints(int32 NewPoints) { AttributePoints = NewPoints; }
 	FORCEINLINE void SetRarity(ERarity NewRarity) { Rarity = NewRarity; }
 	FORCEINLINE void SetGrowthRate(EGrowthRate NewGrowthRate) { LevelGrowthRate = NewGrowthRate; }
+	FORCEINLINE void SetAuraColor(const FColor& NewAuraColor) { AuraColor = NewAuraColor; }
+	
 	// Getters
 	FORCEINLINE FText GetCharacterName() const { return CharacterName; }
 	FORCEINLINE int32 GetLevel() const { return Level; }
@@ -77,8 +75,10 @@ public:
 	FORCEINLINE int32 GetAttributePoints() const { return AttributePoints; }
 	FORCEINLINE ERarity GetRarity() const { return Rarity; }
 	FORCEINLINE int32 GetBaseXP() const { return BaseXP; }
-	FORCEINLINE const FCharacterIVSet& GetIVSet() const { return IVSet; }
+	FORCEINLINE int32 GetBaseCombatPower() const { return BaseCombatPower; }
+	FORCEINLINE const FCharacterCombatValues& GetIVSet() const { return IVSet; }
 	FORCEINLINE EGrowthRate GetGrowthRate() const {  return LevelGrowthRate; }
+	FORCEINLINE FColor GetAuraColor() const { return AuraColor; }
 
 	// Add To
 	void AddToXP(int32 InXP);
@@ -98,6 +98,8 @@ protected:
 	
 private:
 
+	// Mutable
+	
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_CharacterName)
 	FText CharacterName;
 	
@@ -107,20 +109,8 @@ private:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_XP)
 	int32 XP = 0.f;
 
-	UPROPERTY(VisibleAnywhere, Replicated)
-	int32 BaseXP = 0.f;
-
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_TribeData)
 	FTribeData TribeData;
-
-	UPROPERTY(VisibleAnywhere, Replicated)
-	ECharacterGender Gender;
-
-	UPROPERTY(VisibleAnywhere, Replicated)
-	ERarity Rarity;
-
-	UPROPERTY(VisibleAnywhere, Replicated)
-	EGrowthRate LevelGrowthRate;
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_BiomeData, meta = (AllowPrivateAccess))
 	TObjectPtr<UBiomeDataAsset> BiomeData;
@@ -128,9 +118,31 @@ private:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_AttributePoints)
 	int32 AttributePoints = 0;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Stats", Replicated)
-	FCharacterIVSet IVSet;
+	// Immutable
+	
+	UPROPERTY(VisibleAnywhere, Replicated)
+	int32 BaseXP = 0.f;
+	
+	UPROPERTY(VisibleAnywhere, Replicated)
+	int32 BaseCombatPower = 0.f;
 
+	UPROPERTY(VisibleAnywhere, Replicated)
+	ECharacterGender Gender;
+
+	UPROPERTY(VisibleAnywhere, Replicated)
+	EGrowthRate LevelGrowthRate;
+	
+	UPROPERTY(VisibleAnywhere, Replicated)
+	FCharacterCombatValues IVSet;
+
+	UPROPERTY(VisibleAnywhere, Replicated)
+	ERarity Rarity;
+
+	UPROPERTY(VisibleAnywhere, Replicated)
+	FColor AuraColor = FColor::Blue;
+	
+	// On Rep Functions
+	
 	UFUNCTION()
 	void OnRep_CharacterName();
 	

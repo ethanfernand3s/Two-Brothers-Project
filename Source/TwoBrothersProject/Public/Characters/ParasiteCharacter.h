@@ -16,7 +16,7 @@ public:
 
 protected:
 	virtual void UnPossessed() override;
-	virtual void InitAbilityActorInfo() override;
+	virtual void InitActorInfo() override;
 
 
 private:

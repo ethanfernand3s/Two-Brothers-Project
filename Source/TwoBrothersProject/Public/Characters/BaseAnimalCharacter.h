@@ -49,19 +49,20 @@ public:
 	FPossessionSocketData FindClosestPossessionSocket(const FVector& TraceImpactPoint) const;
 	FVector GetCurrentSocketLocation(FGameplayTag SocketName) const;
 	
-	// Put into interface so that animal and parasite both have defined set of rules for having character context
+	// TODO: Put into interface so that animal and parasite both have defined set of rules for having character context
 		virtual void LoadProgress();
 	//
 		
-	//UPROPERTY(EditDefaultsOnly)
-	//TMap<FName, UPossessionChanceUserWidget*> PossessedSocketMap;
-	
+	UPROPERTY(Replicated)
+	bool bIsInitialised;
+
+	UPROPERTY()
+	TObjectPtr<UCharacterContextComponent> CharacterContextComponent;
 protected:
 
 	virtual void BeginPlay() override;
 	virtual void UnPossessed() override;
-	virtual void OnRep_Controller() override;
-	virtual void InitAbilityActorInfo() override;
+	virtual void InitActorInfo() override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 		
 	// GAS
@@ -89,8 +90,6 @@ protected:
 	TSubclassOf<UPossessionChanceUserWidget> WidgetClass;
 
 	// Additional Components
-	UPROPERTY()
-	TObjectPtr<UCharacterContextComponent> CharacterContextComponent;
 
 	UPROPERTY()
 	TObjectPtr<class AAIController> SavedAIController;

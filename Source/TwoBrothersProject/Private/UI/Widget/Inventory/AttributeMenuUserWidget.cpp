@@ -18,16 +18,6 @@ void UAttributeMenuUserWidget::NativeConstruct()
 
 void UAttributeMenuUserWidget::SetWidgetController(UObject* InWidgetController)
 {
-	AttributeRow_Health->SetWidgetController(InWidgetController);
-	AttributeRow_Defense->SetWidgetController(InWidgetController);
-	AttributeRow_Hunger->SetWidgetController(InWidgetController);
-	AttributeRow_Thirst->SetWidgetController(InWidgetController);
-	AttributeRow_Oxygen->SetWidgetController(InWidgetController);
-	AttributeRow_Speed->SetWidgetController(InWidgetController);
-	AttributeRow_Stamina->SetWidgetController(InWidgetController);
-	AttributeRow_Strength->SetWidgetController(InWidgetController);
-	AttributeRow_Drowsiness->SetWidgetController(InWidgetController);
-
 	AttributeXPBar->SetWidgetController(InWidgetController);
 	
 	Super::SetWidgetController(InWidgetController);
@@ -111,38 +101,7 @@ void UAttributeMenuUserWidget::SetType(const FTBAttributeInfo& TypeAttributeInfo
 
 void UAttributeMenuUserWidget::SetupAttributeRowTags()
 {
-	AttributeRow_Health->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_Health);
-	AttributeRow_Health->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_MaxHealth);
-	MappedAttributeRows.Add(FGameplayTagContainer::CreateFromArray(AttributeRow_Health->AttributeGameplayTag), AttributeRow_Health);
-	
-	AttributeRow_Stamina->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_Stamina);
-	AttributeRow_Stamina->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_MaxStamina);
-	MappedAttributeRows.Add(FGameplayTagContainer::CreateFromArray(AttributeRow_Stamina->AttributeGameplayTag), AttributeRow_Stamina);
-
-	AttributeRow_Oxygen->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_Oxygen);
-	AttributeRow_Oxygen->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_MaxOxygen);
-	MappedAttributeRows.Add(FGameplayTagContainer::CreateFromArray(AttributeRow_Oxygen->AttributeGameplayTag), AttributeRow_Oxygen);
-
-	AttributeRow_Hunger->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_Hunger);
-	AttributeRow_Hunger->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_MaxHunger);
-	MappedAttributeRows.Add(FGameplayTagContainer::CreateFromArray(AttributeRow_Hunger->AttributeGameplayTag), AttributeRow_Hunger);
-
-	AttributeRow_Thirst->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_Thirst);
-	AttributeRow_Thirst->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_MaxThirst);
-	MappedAttributeRows.Add(FGameplayTagContainer::CreateFromArray(AttributeRow_Thirst->AttributeGameplayTag), AttributeRow_Thirst);
-
-	AttributeRow_Drowsiness->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_Drowsiness);
-	AttributeRow_Drowsiness->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_MaxDrowsiness);
-	MappedAttributeRows.Add(FGameplayTagContainer::CreateFromArray(AttributeRow_Drowsiness->AttributeGameplayTag), AttributeRow_Drowsiness);
-
-	AttributeRow_Strength->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_Strength);
-	MappedAttributeRows.Add(FGameplayTagContainer(AttributeRow_Strength->AttributeGameplayTag[0]), AttributeRow_Strength);
-	
-	AttributeRow_Defense->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_Defense);
-	MappedAttributeRows.Add(FGameplayTagContainer(AttributeRow_Defense->AttributeGameplayTag[0]), AttributeRow_Defense);
-
-	AttributeRow_Speed->AttributeGameplayTag.Add(FTBGameplayTags::Get().Attributes_Speed);
-	MappedAttributeRows.Add(FGameplayTagContainer(AttributeRow_Speed->AttributeGameplayTag[0]), AttributeRow_Speed);
+	// Set Widget(s) with appropriate attribute gameplay tags
 }
 
 void UAttributeMenuUserWidget::OnAttributePointsChanged(int NewAttributePoints)

@@ -20,10 +20,10 @@ UBaseAttributeSet::UBaseAttributeSet()
 	));
 
 	TagsToAttributes.Add(FTagAttributeBinding(
-		GameplayTags.Attributes_Stamina,
-		&UBaseAttributeSet::GetStaminaAttribute,
-		GameplayTags.Attributes_MaxStamina,
-		&UBaseAttributeSet::GetMaxStaminaAttribute
+		GameplayTags.Attributes_Energy,
+		&UBaseAttributeSet::GetEnergyAttribute,
+		GameplayTags.Attributes_MaxEnergy,
+		&UBaseAttributeSet::GetMaxEnergyAttribute
 	));
 
 	TagsToAttributes.Add(FTagAttributeBinding(
@@ -32,20 +32,7 @@ UBaseAttributeSet::UBaseAttributeSet()
 		GameplayTags.Attributes_MaxOxygen,
 		&UBaseAttributeSet::GetMaxOxygenAttribute
 	));
-
-	TagsToAttributes.Add(FTagAttributeBinding(
-		GameplayTags.Attributes_Hunger,
-		&UBaseAttributeSet::GetHungerAttribute,
-		GameplayTags.Attributes_MaxHunger,
-		&UBaseAttributeSet::GetMaxHungerAttribute
-	));
-
-	TagsToAttributes.Add(FTagAttributeBinding(
-		GameplayTags.Attributes_Thirst,
-		&UBaseAttributeSet::GetThirstAttribute,
-		GameplayTags.Attributes_MaxThirst,
-		&UBaseAttributeSet::GetMaxThirstAttribute
-	));
+	
 
 	TagsToAttributes.Add(FTagAttributeBinding(
 		GameplayTags.Attributes_Drowsiness,
@@ -60,8 +47,18 @@ UBaseAttributeSet::UBaseAttributeSet()
 	));
 
 	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_AuraStrength,
+		&UBaseAttributeSet::GetAuraStrengthAttribute
+	));
+
+	TagsToAttributes.Add(FTagAttributeBinding(
 		GameplayTags.Attributes_Defense,
 		&UBaseAttributeSet::GetDefenseAttribute
+	));
+
+	TagsToAttributes.Add(FTagAttributeBinding(
+		GameplayTags.Attributes_AuraDefense,
+		&UBaseAttributeSet::GetAuraDefenseAttribute
 	));
 
 	TagsToAttributes.Add(FTagAttributeBinding(
@@ -76,16 +73,14 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(UBaseAttributeSet, Health);
 	DOREPLIFETIME(UBaseAttributeSet, MaxHealth);
 	DOREPLIFETIME(UBaseAttributeSet, Type);
-	DOREPLIFETIME(UBaseAttributeSet, Stamina);
-	DOREPLIFETIME(UBaseAttributeSet, MaxStamina);
+	DOREPLIFETIME(UBaseAttributeSet, Energy);
+	DOREPLIFETIME(UBaseAttributeSet, MaxEnergy);
 	DOREPLIFETIME(UBaseAttributeSet, Oxygen);
 	DOREPLIFETIME(UBaseAttributeSet, MaxOxygen);
-	DOREPLIFETIME(UBaseAttributeSet, Hunger);
-	DOREPLIFETIME(UBaseAttributeSet, MaxHunger);
-	DOREPLIFETIME(UBaseAttributeSet, Thirst);
-	DOREPLIFETIME(UBaseAttributeSet, MaxThirst);
 	DOREPLIFETIME(UBaseAttributeSet, Strength);
+	DOREPLIFETIME(UBaseAttributeSet, AuraStrength);
 	DOREPLIFETIME(UBaseAttributeSet, Defense);
+	DOREPLIFETIME(UBaseAttributeSet, AuraDefense);
 	DOREPLIFETIME(UBaseAttributeSet, Speed);
 	DOREPLIFETIME(UBaseAttributeSet, Drowsiness);
 	DOREPLIFETIME(UBaseAttributeSet, MaxDrowsiness);
@@ -138,14 +133,14 @@ void UBaseAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxHealth, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_Stamina(const FGameplayAttributeData& OldValue)
+void UBaseAttributeSet::OnRep_Energy(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Stamina, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Energy, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_MaxStamina(const FGameplayAttributeData& OldValue)
+void UBaseAttributeSet::OnRep_MaxEnergy(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxStamina, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxEnergy, OldValue);
 }
 
 void UBaseAttributeSet::OnRep_Oxygen(const FGameplayAttributeData& OldValue)
@@ -158,34 +153,24 @@ void UBaseAttributeSet::OnRep_MaxOxygen(const FGameplayAttributeData& OldValue)
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxOxygen, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_Hunger(const FGameplayAttributeData& OldValue)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Hunger, OldValue);
-}
-
-void UBaseAttributeSet::OnRep_MaxHunger(const FGameplayAttributeData& OldValue)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxHunger, OldValue);
-}
-
-void UBaseAttributeSet::OnRep_Thirst(const FGameplayAttributeData& OldValue)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Thirst, OldValue);
-}
-
-void UBaseAttributeSet::OnRep_MaxThirst(const FGameplayAttributeData& OldValue)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxThirst, OldValue);
-}
-
 void UBaseAttributeSet::OnRep_Strength(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Strength, OldValue);
 }
 
+void UBaseAttributeSet::OnRep_AuraStrength(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, AuraStrength, OldValue);
+}
+
 void UBaseAttributeSet::OnRep_Defense(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Defense, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_AuraDefense(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, AuraDefense, OldValue);
 }
 
 void UBaseAttributeSet::OnRep_Speed(const FGameplayAttributeData& OldValue)
@@ -208,7 +193,7 @@ void UBaseAttributeSet::OnRep_Type(const FGameplayAttributeData& OldValue)
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Type, OldValue);
 }
 
-float UBaseAttributeSet::CalculateCombatBaseStatTotal() const
+float UBaseAttributeSet::CalculateCombatPower() const
 {
-	return (GetMaxHealth() + GetMaxStamina() + GetDefense() + GetSpeed());
+	return (GetMaxHealth() + GetStrength() + GetDefense() + GetAuraStrength()+ GetAuraDefense() + GetSpeed());
 }
