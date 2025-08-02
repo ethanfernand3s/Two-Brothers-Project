@@ -10,6 +10,7 @@
 UENUM(BlueprintType)
 enum class ECreatureType : uint8
 {
+	None		UMETA(Hidden),
 	Parasite	UMETA(DisplayName = "Parasite"),
 	Fire		UMETA(DisplayName = "Fire"),
 	Water		UMETA(DisplayName = "Water"),

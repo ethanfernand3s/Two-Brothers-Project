@@ -4,12 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "BaseWidgetController.h"
-#include "Characters/Data/BiomeDataAsset.h"
+#include "AbilitySystem/Data/CreatureType.h"
 #include "Characters/Data/TribeData.h"
 #include "InventoryWidgetController.generated.h"
 
-
+class UAbilityCardDataAsset;
+class UGenderDataAsset;
+class UCreatureTypeDataAsset;
+enum class ECharacterGender : uint8;
+struct FGameplayTag;
 struct FTBAttributeInfo;
+
 // Attribute Delegates
 // For broadcasting both current and max values (e.g., Health / MaxHealth)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAttributeCurrentAndMaxChangedSignature, const FTBAttributeInfo&, const FTBAttributeInfo&);
@@ -17,12 +22,14 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAttributeCurrentAndMaxChangedSignature, 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeValueChangedSignature, const FTBAttributeInfo&);
 
 // Character Context Delegates
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnFloatValueChangedSignature, float);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributePointsChangedSignature, int32);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnBiomeChangedSignature, const FBiomeInfo&);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnCharacterNameChangedSignature, const FText&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnTextChangedSignature, const FText&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnLevelChangedSignature, int32);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnTribeDataChangedSignature, const FTribeData&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnGenderSetSignature, const ECharacterGender&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnAuraColorSetSignature, const FColor&);
+using FCreatureTypePair = TPair<ECreatureType, ECreatureType>;
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnCreatureTypesSetSignature, const FCreatureTypePair&);
+
 
 UCLASS()
 class TWOBROTHERSPROJECT_API UInventoryWidgetController : public UBaseWidgetController
@@ -33,21 +40,32 @@ public:
 	virtual void BroadcastInitialValues() override;
 	virtual void BindCallbacksToDependencies() override;
 	
-	void OnXPChanged(int NewXP);
-	void OnAttributePointsChanged(int NewAttributePoints);
-	void OnBiomeChanged(const FBiomeInfo& NewBiomeInfo);
-	void OnCharacterNameChanged(const FText& NewCharacterName);
-	void OnLevelChanged(int NewLevel);
-	void OnTribeDataChanged(const FTribeData& NewTribeData);
+	void UpgradeAttribute(const FGameplayTag& AttributeTag);
 	
+	// Attribute Set Delegates
 	FOnAttributeCurrentAndMaxChangedSignature CurrentAndMax_AttributeInfoDelegate;
 	FOnAttributeValueChangedSignature Single_AttributeInfoDelegate;
-	FOnAttributeValueChangedSignature Type_AttributeInfoDelegate;
-	
-	FOnFloatValueChangedSignature OnXpPercentChangedDelegate;
+
+	// Character Context Delegates
 	FOnAttributePointsChangedSignature OnAttributePointsChangedDelegate;
-	FOnBiomeChangedSignature OnBiomeChangedDelegate;
-	FOnCharacterNameChangedSignature OnCharacterNameChangedDelegate;
 	FOnLevelChangedSignature OnLevelChangedDelegate;
-	FOnTribeDataChangedSignature OnTribeDataChangedDelegate;
+	FOnTextChangedSignature OnCharacterNameChangedDelegate;
+	FOnTextChangedSignature OnTribeNameChangedDelegate;
+	FOnGenderSetSignature OnGenderSetDelegate;
+	FOnAuraColorSetSignature OnAuraColorSetDelegate;
+	FOnCreatureTypesSetSignature OnCreatureTypesSetDelegate;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataAssets")
+	TObjectPtr<UCreatureTypeDataAsset> CreatureTypeData;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataAssets")
+	TObjectPtr<UGenderDataAsset> GenderData;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataAssets")
+	TObjectPtr<UAbilityCardDataAsset> AbilityCardData;
+
+private:
+
+	void OnTribeDataChanged(const FTribeData& TribeData);
+	void OnAttributePointsChanged(int NewAttributePoints);
+	void OnCharacterNameChanged(const FText& NewCharacterName);
+	void OnLevelChanged(int NewLevel);
 };

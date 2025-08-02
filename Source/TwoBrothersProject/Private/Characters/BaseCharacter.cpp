@@ -66,6 +66,7 @@ void ABaseCharacter::Tick(float DeltaSeconds)
 	if (GetNetMode() == NM_DedicatedServer) return;
 
 	// Get this *client’s* camera
+	// TODO: This is not a solution player index won't stay consistant with people joining and leaving.
 	FVector   CamLoc;
 	FRotator  CamRot;
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))

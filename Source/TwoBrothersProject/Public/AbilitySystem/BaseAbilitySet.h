@@ -14,7 +14,6 @@ struct FAbilitySet_Ability
 	UPROPERTY(EditDefaultsOnly) int32 AbilityLevel = 1;
 };
 
-
 /**
  * 
  */
@@ -22,9 +21,9 @@ UCLASS()
 class TWOBROTHERSPROJECT_API UBaseAbilitySet : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
-	
+
 public:
-	
-	UPROPERTY(EditDefaultsOnly) TArray<FAbilitySet_Ability> Abilities;
-	void GiveToAbilitySystem(UAbilitySystemComponent* ASC, TArray<FGameplayAbilitySpecHandle>* OutHandles) const;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FAbilitySet_Ability> Abilities;
 };

@@ -8,24 +8,9 @@
 
 void UOverlayWidgetController::BroadcastInitialValues()
 {
-	OnHealthChanged.Broadcast(ParasiteAttributeSet->GetHealth());
-	OnMaxHealthChanged.Broadcast(ParasiteAttributeSet->GetMaxHealth());
 }
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
 {
-	ParasiteASC->GetGameplayAttributeValueChangeDelegate(
-		ParasiteAttributeSet->GetHealthAttribute()).AddUObject(this, &UOverlayWidgetController::HealthChanged);
-	ParasiteASC->GetGameplayAttributeValueChangeDelegate(
-		ParasiteAttributeSet->GetMaxHealthAttribute()).AddUObject(this, &UOverlayWidgetController::MaxHealthChanged);
-}
-
-void UOverlayWidgetController::HealthChanged(const FOnAttributeChangeData& Data)
-{
-	OnHealthChanged.Broadcast(ParasiteAttributeSet->GetHealth());
-}
-
-void UOverlayWidgetController::MaxHealthChanged(const FOnAttributeChangeData& Data)
-{
-	OnMaxHealthChanged.Broadcast(ParasiteAttributeSet->GetMaxHealth());
+	
 }

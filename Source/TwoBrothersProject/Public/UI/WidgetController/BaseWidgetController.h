@@ -6,12 +6,17 @@
 #include "UObject/Object.h"
 #include "BaseWidgetController.generated.h"
 
+struct FTBAbilityInfo;
+class UAbilityInfo;
+DECLARE_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FTBAbilityInfo&);
+
 class UParasiteAbilitySystemComponent;
 class UParasiteAttributeSet;
 class UAnimalAbilitySystemComponent;
 class UAnimalAttributeSet;
 USTRUCT (BlueprintType)
 struct FWidgetControllerParams
+
 {
 	GENERATED_BODY()
 	FWidgetControllerParams (){};
@@ -38,6 +43,7 @@ struct FWidgetControllerParams
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UAnimalAttributeSet> AnimalAttributeSet = nullptr;
 };
+
 UCLASS(Blueprintable)
 class TWOBROTHERSPROJECT_API UBaseWidgetController : public UObject
 {
@@ -45,10 +51,18 @@ class TWOBROTHERSPROJECT_API UBaseWidgetController : public UObject
 public:
 	
 	void SetWidgetControllerParams(const TUniquePtr<FWidgetControllerParams>& WCParams);
+	
 	virtual void BroadcastInitialValues();
 	virtual void BindCallbacksToDependencies();
+	
+	FAbilityInfoSignature AbilityInfoDelegate;
+
+	void BroadcastAbilityInfo();
+	
 protected:
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data")
+	TObjectPtr<UAbilityInfo> AbilityInfo;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
 	TObjectPtr<APlayerController> TBPlayerController;

@@ -1,16 +1,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NiagaraSystemWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "PossessMiniGameUserWidget.generated.h"
 
+class UNiagaraSystemWidget;
 class UProgressBar;
 class UTextBlock;
-class UNiagaraComponent;
-class UNiagaraSystem;
 class UWidgetAnimation;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMiniGameFinishedDelegate, bool, bWon, float, NormalizedTimeLeft);
+DECLARE_DELEGATE_OneParam(FGaugeChanged, float);
+DECLARE_DELEGATE(FSpaceBarPressed);
 
 UCLASS()
 class TWOBROTHERSPROJECT_API UPossessMiniGameUserWidget : public UUserWidget
@@ -23,6 +25,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FMiniGameFinishedDelegate OnFinished;
+	
+	FGaugeChanged OnGaugeChanged;
+	FSpaceBarPressed OnSpaceBarPressed;
 
 protected:
 	virtual void NativeConstruct() override;
@@ -34,19 +39,13 @@ private:
 	void Finish(bool bWon);
 
 	UPROPERTY(meta = (BindWidget))
-	UProgressBar* Bar;
-
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* ResultText;
+	UTextBlock* TextBlock_ResultText;
 
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	UWidgetAnimation* ResultAnim;
 
-	UPROPERTY(EditDefaultsOnly)
-	UNiagaraSystem* BeamEffectSystem;
-
-	UPROPERTY()
-	UNiagaraComponent* NiagaraComponent;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UNiagaraSystemWidget> NSWidgetPossessProgress;
 
 	FLinearColor PlayerColor;
 	FLinearColor EnemyColor;

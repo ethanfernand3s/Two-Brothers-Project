@@ -10,7 +10,8 @@ struct FCharacterCombatValues
 {
 	GENERATED_BODY()
 	
-	static constexpr int32 MaxIV = 21;
+	static constexpr int32 MaxIVs = 21;
+	static constexpr int32 MaxValueAmount = 255;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Health = 0;
@@ -29,22 +30,28 @@ struct FCharacterCombatValues
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Speed = 0;
-	
 
-	/** Normalize value (0.0–1.0) for any stat */
-	static float GetNormalized(int32 Value)
-	{
-		return FMath::Clamp(static_cast<float>(Value) / MaxIV, 0.f, 1.f);
-	}
+    TArray<float> GetNormalized() const
+    {
+        constexpr float Max = static_cast<float>(MaxValueAmount);
+        return {
+            Health       / Max,
+            Strength     / Max,
+            AuraStrength / Max,
+            Defense      / Max,
+            AuraDefense  / Max,
+            Speed        / Max
+        };
+    }
 
-	void SetRandomValues()
+	void SetRandomIVValues()
 	{
-		Health = FMath::RandRange(0, 21);
-		Strength = FMath::RandRange(0, 21);
-		AuraStrength = FMath::RandRange(0, 21);
-		Defense = FMath::RandRange(0, 21);
-		AuraDefense = FMath::RandRange(0, 21);
-		Speed = FMath::RandRange(0, 21);
+		Health = FMath::RandRange(0, MaxIVs);
+		Strength = FMath::RandRange(0, MaxIVs);
+		AuraStrength = FMath::RandRange(0, MaxIVs);
+		Defense = FMath::RandRange(0, MaxIVs);
+		AuraDefense = FMath::RandRange(0, MaxIVs);
+		Speed = FMath::RandRange(0, MaxIVs);
 	}
 
 	int32 GetTotal() const

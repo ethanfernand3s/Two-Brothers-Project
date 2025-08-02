@@ -4,7 +4,7 @@
 FTBAttributeInfo AttributeInfoLibrary::FindAttributeInfo(const FGameplayTag& Tag)
 {
 	const FTBAttributeInfo* Found = GetAttributeMap().Find(Tag);
-	checkf(Found, TEXT("AttributeInfoLibrary::FindFloatAttributeInfo: No info found for tag [%s]"), *Tag.ToString());
+	checkf(Found, TEXT("AttributeInfoLibrary::FindAttributeInfo: No info found for tag [%s]"), *Tag.ToString());
 	return *Found;
 }
 

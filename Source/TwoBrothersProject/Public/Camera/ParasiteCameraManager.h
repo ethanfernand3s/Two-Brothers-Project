@@ -9,19 +9,15 @@
 class UPostProcessComponent;
 class ABaseAnimalCharacter;
 /**
- * 
+ * DEPRECATED - HANDLED BY TRYPOSSESS ABILITY NOW
  */
 UCLASS()
 class TWOBROTHERSPROJECT_API AParasiteCameraManager : public APlayerCameraManager
 {
 	GENERATED_BODY()
 public:
-	virtual void UpdateCamera(float DeltaTime) override;
+	//virtual void UpdateCamera(float DeltaTime) override;
 private:
-	void UpdateParasiteCam(float DT);
-	void UpdateHostCam(float DT, ABaseAnimalCharacter* Host);
-
-public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FX")
-	TObjectPtr<UPostProcessComponent> ParasiteVisionPostProcess;
+	//void UpdateParasiteCam(float DT);
+	//void UpdateHostCam(float DT, ABaseAnimalCharacter* Host);
 };

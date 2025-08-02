@@ -12,6 +12,40 @@ GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
 GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
 GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
+USTRUCT()
+struct FEffectProperties
+{
+	GENERATED_BODY()
+
+	FEffectProperties(){}
+
+	FGameplayEffectContextHandle EffectContextHandle;
+
+	UPROPERTY()
+	UAbilitySystemComponent* SourceASC = nullptr;
+
+	UPROPERTY()
+	AActor* SourceAvatarActor = nullptr;
+
+	UPROPERTY()
+	AController* SourceController = nullptr;
+
+	UPROPERTY()
+	ACharacter* SourceCharacter = nullptr;
+
+	UPROPERTY()
+	UAbilitySystemComponent* TargetASC = nullptr;
+
+	UPROPERTY()
+	AActor* TargetAvatarActor = nullptr;
+
+	UPROPERTY()
+	AController* TargetController = nullptr;
+
+	UPROPERTY()
+	ACharacter* TargetCharacter = nullptr;
+};
+
 class UBaseAbilitySystemComponent;
 
 template<class T>
@@ -57,7 +91,9 @@ public:
 	UBaseAttributeSet();
 	float CalculateCombatPower() const;
 	
-	TArray<FTagAttributeBinding> TagsToAttributes;
+	TArray<FTagAttributeBinding> TagsToCombatAttributes;
+
+	TArray<FTagAttributeBinding> TagsToSurvivalAttributes;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
@@ -98,9 +134,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxDrowsiness)
 	FGameplayAttributeData MaxDrowsiness;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Type)
-	FGameplayAttributeData Type;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Meta Attributes")
 	FGameplayAttributeData IncomingXP;
 
@@ -127,15 +160,13 @@ public:
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Drowsiness);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxDrowsiness);
 	
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Type);
-	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, IncomingXP);
-	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, IncomingDamage);
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 	UFUNCTION()
@@ -164,10 +195,16 @@ protected:
 	void OnRep_Drowsiness(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_MaxDrowsiness(const FGameplayAttributeData& OldValue);
-	UFUNCTION()
-	void OnRep_Type(const FGameplayAttributeData& OldValue);
-	
 
 private:
-	UBaseAbilitySystemComponent* GetTBAbilitySystemComponent() const;
+	
+	void HandleIncomingDamage(const FEffectProperties& Props);
+	void HandleIncomingXP(const FEffectProperties& Props);
+	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const;
+	void SendXPEvent(const FEffectProperties& Props);
+
+	bool bTopOffHealth = false;
+	bool bTopOffEnergy = false;
+	bool bTopOffOxygen = false;
+	bool bTopOffDrowsiness = false;
 };

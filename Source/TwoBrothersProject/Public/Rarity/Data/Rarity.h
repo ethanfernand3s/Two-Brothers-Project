@@ -12,5 +12,5 @@ enum class ERarity : uint8
 	Rare			UMETA(DisplayName = "Rare"),
 	Epic			UMETA(DisplayName = "Epic"),
 	Legendary		UMETA(DisplayName = "Legendary"),
-	Mythical		UMETA(DisplayName = "Mythical"),
+	Prismatic		UMETA(DisplayName = "Prismatic"),
 };

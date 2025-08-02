@@ -21,6 +21,7 @@ AParasitePlayerState::AParasitePlayerState()
 	CharacterContextComponent = CreateDefaultSubobject<UCharacterContextComponent>(TEXT("CharacterContextComponent"));
 	
 	bIsInitialised = false;
+	SetNetUpdateFrequency(100.f);
 }
 
 UAbilitySystemComponent* AParasitePlayerState::GetAbilitySystemComponent() const
@@ -55,18 +56,19 @@ void AParasitePlayerState::LoadProgress()
 		//TODO: Set this in character customization screen
 		
 		CharacterContextComponent->InitializeCharacterContext(
-		FText::FromString("Jaim"),                     // Name
+		FText::FromString("The Answer"),                     // Name
 		1,                                             // Level
 		0,                                             // XP
 		FTribeData(
-			FText::FromString("Pinto Basto"),          // Tribe Name
+			FText::FromString("Chosen Ones"),          // Tribe Name
 			FText::FromString("The Royal Family Of Portugal"), // Tribe Desc
 			nullptr,                                   // Icon (null for now)
 			FLinearColor::Red                          // Tribe Color
 		),
-		ECharacterGender::Male                        // Gender
+		ECharacterGender::None,                        // Gender
+		0
 		);
-		CharacterContextComponent->SetAuraColor(FColor::Emerald);
+		CharacterContextComponent->SetAuraColor(FColor::Blue);
 		
 		// End of TODO
 		
@@ -83,8 +85,8 @@ void AParasitePlayerState::LoadProgress()
 
 void AParasitePlayerState::EnsureAbilitiesAreInitialized()
 {
-	if (GrantedHandles.Num() == 0)
-	{
-		ParasiteAbilitySet->GiveToAbilitySystem(ParasiteAbilitySystem, &GrantedHandles);
-	}
+	if (!HasAuthority()) return;
+	
+	ParasiteAbilitySystem->AddCharacterAbilities(StartupAbilitySet->Abilities);
+	ParasiteAbilitySystem->AddCharacterPassiveAbilities(StartupPassiveAbilitySet->Abilities);
 }

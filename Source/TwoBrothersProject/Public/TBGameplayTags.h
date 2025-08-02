@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 
+enum class ECreatureType : uint8;
 /**
  * TB Gameplay Tags
  * 
@@ -12,6 +13,14 @@
  */
 struct FTBGameplayTags
 {
+
+	// Can be overloaded with any other enum -> tags
+	static FGameplayTag EnumToTag(ECreatureType Type);
+	static ECreatureType TagToEnum(FGameplayTag TypeTag);
+	
+	static int32 ToSlotIndex(const FGameplayTag& Tag);
+	static FGameplayTag ToInputTag(int32 SlotIndex);
+	
 	static const FTBGameplayTags& Get() { return GameplayTags;}
 	static void InitializeNativeGameplayTags();
 	
@@ -39,22 +48,28 @@ struct FTBGameplayTags
 	FGameplayTag Attributes_AuraDefense;
 	FGameplayTag Attributes_AuraStrength;
 	FGameplayTag Attributes_Speed;
+
+	// Meta
+	FGameplayTag Attributes_Meta_IncomingXP;
 	
 #pragma endregion Attributes
 
 #pragma region Abilities
 
-	FGameplayTag Ability_Parasite_SeekHost;
-	FGameplayTag Ability_Parasite_TryPossess;
+	FGameplayTag Abilities_Parasite_SeekHost;
+	FGameplayTag Abilities_Parasite_TryPossess;
+
+	FGameplayTag Abilities_Status_Equipped;
 	
 #pragma endregion Abilities
 	
 #pragma region Input
 	
-	FGameplayTag InputTag_LMB;
-	FGameplayTag Input_Jump;
-	FGameplayTag Input_SeekingHost;
-	FGameplayTag Input_TryPossess;
+	FGameplayTag Inputs_Abilities_LMB;
+	FGameplayTag Inputs_Abilities_Slot1;
+	FGameplayTag Inputs_Abilities_Slot2;
+	FGameplayTag Inputs_Abilities_Slot3;
+	FGameplayTag Inputs_Abilities_Slot4;
 
 #pragma endregion Input
 	
@@ -86,18 +101,30 @@ struct FTBGameplayTags
 #pragma endregion Gameplay Cues
 
 #pragma region Sockets
-	FGameplayTag Socket_Butt;
-	FGameplayTag Socket_Ear;
-	FGameplayTag Socket_Nose;
-	FGameplayTag Socket_Mouth;
+	FGameplayTag Sockets_Butt;
+	FGameplayTag Sockets_Ear;
+	FGameplayTag Sockets_Nose;
+	FGameplayTag Sockets_Mouth;
 #pragma endregion Sockets
 
 #pragma region Gameplay Events
 
 	FGameplayTag Event_MiniGame_Start;
 	FGameplayTag Event_MiniGame_Finish;
-	
+	FGameplayTag GameplayCue_Possession_BurrowingIn;
+
 #pragma endregion Gameplay Events
+
+#pragma region Creature Types
+
+	FGameplayTag CreatureTypes_Parasite;
+	FGameplayTag CreatureTypes_Earth;
+	FGameplayTag CreatureTypes_Wind;
+	FGameplayTag CreatureTypes_Fire;
+	FGameplayTag CreatureTypes_Water;
+	FGameplayTag CreatureTypes_Spirit;
+	
+#pragma endregion Creature Types
 	
 	static FTBGameplayTags GameplayTags;
 };

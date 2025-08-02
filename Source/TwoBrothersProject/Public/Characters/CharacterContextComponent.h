@@ -5,11 +5,13 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "AbilitySystem/Data/CharacterCombatValues.h"
+#include "Data/BiomeDataAsset.h"
 #include "Data/TribeData.h"
-#include "Rarity/Data/Rarity.h"
 #include "CharacterContextComponent.generated.h"
 
 
+enum class ERarity : uint8;
+enum class ECreatureType : uint8;
 enum class EGrowthRate : uint8;
 struct FBiomeInfo;
 enum class ECharacterGender : uint8;
@@ -32,8 +34,6 @@ public:
 	/** 
 	 *  Used to initialize character stats outside the gameplay ability system.
 	 *
-	 * @note WeightedBST (Base Stat Total) should be calculated using the stats after IVs have been applied. Attributes
-	 * should have high weights on combat related stats.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Character Context")
 	 void InitializeCharacterContext(
@@ -41,29 +41,64 @@ public:
 		const int32 InLevel,
 		const int32 InXP,
 		const FTribeData& InTribeData,
-		const ECharacterGender InGender
+		const ECharacterGender InGender,
+		const int32 InAttributePoints
 	);
 	
-	FORCEINLINE void InitializeRandomIVs() { IVSet.SetRandomValues(); }
+	FORCEINLINE void InitializeRandomIVs() { IVSet.SetRandomIVValues(); }
+
+	// TODO: Move random gen logic to creature factory spawner 
 	/**
-	 * One time call for initializing BaseCombatPower | BaseXP | Rarity | GrowthRate
+	 * One time call for initializing BaseCombatPower | BaseXP | Rarity | GrowthRate | Element Types
 	 *
 	 * @remark Currently randomly generating random base combat power if we make custom creatures change this to being
 	 * passed instead of being generated.
+	 * @attention !!! TEMPORARY - NEED TO MOVE TO CREATURE FACTORY SPAWNER !!!
 	 * **/
 	void InitializeCombatRelatedVars(float CustomBaseCombatPower = -1.f);
 	
 	// Setters
-	FORCEINLINE void SetCharacterName(FText InName) { CharacterName = MoveTemp(InName); }
-	FORCEINLINE void SetLevel(int32 NewLevel) { Level = NewLevel; }
-	FORCEINLINE void SetXP(int32 NewXP) { XP = NewXP; }
-	FORCEINLINE void SetTribeData(FTribeData InData) { TribeData = MoveTemp(InData); }
+	FORCEINLINE void SetCharacterName(FText InName)
+	{
+		CharacterName = MoveTemp(InName);
+		OnCharacterNameChanged.Broadcast(InName);
+	}
+	FORCEINLINE void SetLevel(int32 NewLevel)
+	{
+		Level = NewLevel;
+		OnLevelChanged.Broadcast(NewLevel);
+	}
+	FORCEINLINE void SetXP(int32 NewXP)
+	{
+		XP = NewXP;
+		OnXPChanged.Broadcast(NewXP);
+	}
+	FORCEINLINE void SetTribeData(FTribeData InData)
+	{
+		TribeData = MoveTemp(InData);
+		OnTribeDataChanged.Broadcast(InData);
+	}
+	FORCEINLINE void SetBiomeData(UBiomeDataAsset* NewBiomeData)
+	{
+		BiomeData = NewBiomeData;
+		if (NewBiomeData) OnBiomeChanged.Broadcast(NewBiomeData->BiomeInfo);
+	}
+	FORCEINLINE void SetAttributePoints(int32 NewPoints)
+	{
+		AttributePoints = NewPoints;
+		OnAttributePointsChanged.Broadcast(NewPoints);
+	}
 	FORCEINLINE void SetGender(ECharacterGender NewGender) { Gender = NewGender; }
-	FORCEINLINE void SetBiomeData(UBiomeDataAsset* NewBiomeData) { BiomeData = NewBiomeData; }
-	FORCEINLINE void SetAttributePoints(int32 NewPoints) { AttributePoints = NewPoints; }
 	FORCEINLINE void SetRarity(ERarity NewRarity) { Rarity = NewRarity; }
 	FORCEINLINE void SetGrowthRate(EGrowthRate NewGrowthRate) { LevelGrowthRate = NewGrowthRate; }
 	FORCEINLINE void SetAuraColor(const FColor& NewAuraColor) { AuraColor = NewAuraColor; }
+	FORCEINLINE void SetPrimaryCreatureType(const ECreatureType& NewPrimaryCreatureType) { PrimaryType = NewPrimaryCreatureType; }
+	FORCEINLINE void SetSecondaryCreatureType(const ECreatureType& NewSecondaryCreatureType) { SecondaryType = NewSecondaryCreatureType; }
+	FORCEINLINE void SetCreatureTypes(const ECreatureType& NewPrimaryCreatureType, const ECreatureType& NewSecondaryCreatureType)
+	{
+		PrimaryType = NewPrimaryCreatureType;
+		SecondaryType = NewSecondaryCreatureType;
+	}
 	
 	// Getters
 	FORCEINLINE FText GetCharacterName() const { return CharacterName; }
@@ -79,7 +114,10 @@ public:
 	FORCEINLINE const FCharacterCombatValues& GetIVSet() const { return IVSet; }
 	FORCEINLINE EGrowthRate GetGrowthRate() const {  return LevelGrowthRate; }
 	FORCEINLINE FColor GetAuraColor() const { return AuraColor; }
-
+	FORCEINLINE ECreatureType GetPrimaryCreatureType() const { return PrimaryType; }
+	FORCEINLINE ECreatureType GetSecondaryCreatureType() const { return SecondaryType; }
+	FORCEINLINE TPair<ECreatureType, ECreatureType> GetCreatureTypes() { return TPair<ECreatureType, ECreatureType>(PrimaryType,SecondaryType); }
+	
 	// Add To
 	void AddToXP(int32 InXP);
 	void AddToLevel(int32 InLevel);
@@ -139,7 +177,13 @@ private:
 	ERarity Rarity;
 
 	UPROPERTY(VisibleAnywhere, Replicated)
-	FColor AuraColor = FColor::Blue;
+	ECreatureType PrimaryType;
+
+	UPROPERTY(VisibleAnywhere, Replicated)
+	ECreatureType SecondaryType;
+
+	UPROPERTY(VisibleAnywhere, Replicated)
+	FColor AuraColor;
 	
 	// On Rep Functions
 	

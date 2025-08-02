@@ -6,6 +6,9 @@
 #include "UI/Widget/BaseUserWidget.h"
 #include "InventoryUserWidget.generated.h"
 
+class UInventoryWidgetController;
+struct FTBAbilityInfo;
+class UStatsPanelUserWidget;
 class UAttributeMenuUserWidget;
 /**
  * 
@@ -18,7 +21,22 @@ class TWOBROTHERSPROJECT_API UInventoryUserWidget : public UBaseUserWidget
 public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menus",meta = (BindWidget))
-	TObjectPtr<UAttributeMenuUserWidget>  AttributeMenu;
+	TObjectPtr<UStatsPanelUserWidget>  StatsPanel;
 	
 	virtual void SetWidgetController(UObject* InWidgetController) override;
+
+protected:
+
+	virtual void OnWidgetControllerSet() override;
+
+private:
+
+#pragma region Ability Functions
+	
+	void OnAbilityInfoRecieved(const FTBAbilityInfo& AbilityInfo);
+	
+#pragma endregion Ability Functions
+
+	UPROPERTY()
+	TObjectPtr<UInventoryWidgetController> InventoryWidgetController;
 };

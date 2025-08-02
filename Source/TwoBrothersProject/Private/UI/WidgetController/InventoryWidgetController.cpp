@@ -15,8 +15,10 @@
 void UInventoryWidgetController::BroadcastInitialValues()
 {
 	// TODO: Add animal AS when currently inhabited
+
+#pragma region Combat Attributes
 	
-	for (const auto& AttributeBinding : ParasiteAttributeSet->TagsToAttributes)
+	for (const auto& AttributeBinding : ParasiteAttributeSet->TagsToCombatAttributes)
 	{
 		if (AttributeBinding.HasSecondary())
 		{
@@ -39,41 +41,23 @@ void UInventoryWidgetController::BroadcastInitialValues()
 		}
 	}
 
-	// Broadcast Type
-	FTBAttributeInfo CreatureInfo = AttributeInfoLibrary::FindAttributeInfo(FTBGameplayTags::Get().Attributes_Type);
-	CreatureInfo.AttributeValue = ParasiteAttributeSet->GetType();
-	Type_AttributeInfoDelegate.Broadcast(CreatureInfo);
-}
+#pragma endregion Combat Attributes
 
-void UInventoryWidgetController::OnXPChanged(int NewXP)
-{
-	// TODO: Change this to call a GetGrowthRate From either PS or AnimalPawn Automatically with Interface
-	const float XPBarPercent = LevelInfoLibrary::GetProgressToNextLevel(NewXP, Cast<AParasitePlayerState>(ParasitePS)->CharacterContextComponent->GetGrowthRate());
-	OnXpPercentChangedDelegate.Broadcast(XPBarPercent);
-}
-void UInventoryWidgetController::OnAttributePointsChanged(int NewAttributePoints)
-{
-	OnAttributePointsChangedDelegate.Broadcast(NewAttributePoints);
-}
-
-void UInventoryWidgetController::OnBiomeChanged(const FBiomeInfo& BiomeInfo)
-{
-	OnBiomeChangedDelegate.Broadcast(BiomeInfo);
-}
-
-void UInventoryWidgetController::OnCharacterNameChanged(const FText& NewCharacterName)
-{
-	OnCharacterNameChangedDelegate.Broadcast(NewCharacterName);
-}
-
-void UInventoryWidgetController::OnLevelChanged(int NewLevel)
-{
-	OnLevelChangedDelegate.Broadcast(NewLevel);
-}
-
-void UInventoryWidgetController::OnTribeDataChanged(const FTribeData& NewTribeData)
-{
-	OnTribeDataChangedDelegate.Broadcast(NewTribeData);
+#pragma region Character Context
+	
+	auto* ParasitePlayerState = Cast<AParasitePlayerState>(ParasitePS);
+	check(ParasitePlayerState);
+	
+	OnAttributePointsChangedDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetAttributePoints());
+	OnCharacterNameChangedDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetCharacterName());
+	OnLevelChangedDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetLevel());
+	OnTribeNameChangedDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetTribeData().TribeName);
+	
+	OnGenderSetDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetGender());
+	OnAuraColorSetDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetAuraColor());
+	OnCreatureTypesSetDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetCreatureTypes());
+	
+#pragma endregion Character Context
 }
 
 void UInventoryWidgetController::BindCallbacksToDependencies()
@@ -81,15 +65,14 @@ void UInventoryWidgetController::BindCallbacksToDependencies()
 	// Bind Character Context
 	auto* ParasitePlayerState = Cast<AParasitePlayerState>(ParasitePS);
 	check(ParasitePlayerState);	
-	ParasitePlayerState->CharacterContextComponent->OnXPChanged.AddUObject(this, &UInventoryWidgetController::OnXPChanged);
+	
 	ParasitePlayerState->CharacterContextComponent->OnAttributePointsChanged.AddUObject(this, &UInventoryWidgetController::OnAttributePointsChanged);
-	ParasitePlayerState->CharacterContextComponent->OnBiomeChanged.AddUObject(this, &UInventoryWidgetController::OnBiomeChanged);
 	ParasitePlayerState->CharacterContextComponent->OnCharacterNameChanged.AddUObject(this, &UInventoryWidgetController::OnCharacterNameChanged);
 	ParasitePlayerState->CharacterContextComponent->OnLevelChanged.AddUObject(this, &UInventoryWidgetController::OnLevelChanged);
 	ParasitePlayerState->CharacterContextComponent->OnTribeDataChanged.AddUObject(this, &UInventoryWidgetController::OnTribeDataChanged);
-
-	// Bind Attributes
-	for (const FTagAttributeBinding& Binding : ParasiteAttributeSet->TagsToAttributes)
+	
+	// Bind Combat Related Attributes
+	for (const FTagAttributeBinding& Binding : ParasiteAttributeSet->TagsToCombatAttributes)
 	{
 		const FGameplayAttribute PrimaryAttribute = Binding.PrimaryAttributeFunc();
 
@@ -132,15 +115,54 @@ void UInventoryWidgetController::BindCallbacksToDependencies()
 		}
 	}
 
-	// Type attribute delegate
-	const FGameplayAttribute TypeAttribute = UBaseAttributeSet::GetTypeAttribute();
-	ParasiteASC->GetGameplayAttributeValueChangeDelegate(TypeAttribute).AddLambda(
-		[this](const FOnAttributeChangeData& Data)
-		{
-			FTBAttributeInfo TypeInfo = AttributeInfoLibrary::FindAttributeInfo(FTBGameplayTags::Get().Attributes_Type);
-			TypeInfo.AttributeValue = Data.NewValue;
+	// Bind Ability Callbacks
 
-			Type_AttributeInfoDelegate.Broadcast(TypeInfo);
+	if (ParasiteASC)
+	{
+		// TODO: Equip Abilities
+		// ParasiteASC->AbilityEquipped.AddUObject(this, &UInventoryWidgetController::OnAbilityEquipped);
+		if (ParasiteASC->bStartupAbilitiesGiven)
+		{
+			BroadcastAbilityInfo();
 		}
-	);
+		else
+		{
+			ParasiteASC->AbilitiesGivenDelegate.AddUObject(this, &UInventoryWidgetController::BroadcastAbilityInfo);
+		}
+	}
+}
+
+void UInventoryWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag)
+{
+	ParasiteASC->UpgradeAttribute(AttributeTag);
+}
+
+void UInventoryWidgetController::OnTribeDataChanged(const FTribeData& TribeData)
+{
+	OnTribeNameChangedDelegate.Broadcast(TribeData.TribeName);
+}
+
+//TODO: Bring to Overlay don't need this here
+/* 
+void UInventoryWidgetController::OnXPChanged(int NewXP)
+{
+	// TODO: Change this to call a GetGrowthRate From either PS or AnimalPawn Automatically with Interface
+	const float XPBarPercent = LevelInfoLibrary::GetProgressToNextLevel(NewXP, Cast<AParasitePlayerState>(ParasitePS)->CharacterContextComponent->GetGrowthRate());
+	OnXpPercentChangedDelegate.Broadcast(XPBarPercent);
+}
+*/
+
+void UInventoryWidgetController::OnAttributePointsChanged(int NewAttributePoints)
+{
+	OnAttributePointsChangedDelegate.Broadcast(NewAttributePoints);
+}
+
+void UInventoryWidgetController::OnCharacterNameChanged(const FText& NewCharacterName)
+{
+	OnCharacterNameChangedDelegate.Broadcast(NewCharacterName);
+}
+
+void UInventoryWidgetController::OnLevelChanged(int NewLevel)
+{
+	OnLevelChangedDelegate.Broadcast(NewLevel);
 }

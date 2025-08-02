@@ -30,6 +30,7 @@ struct FTBAttributeInfo
 		: AttributeTag(InAttributeTag), AttributeName(InName), AttributeDescription(InDesc), AttributeValue(InValue){}
 };
 
+// TODO: Change to Data Asset to Allow for better scalability if we wanted to later on.
 class TWOBROTHERSPROJECT_API AttributeInfoLibrary
 {
 public:

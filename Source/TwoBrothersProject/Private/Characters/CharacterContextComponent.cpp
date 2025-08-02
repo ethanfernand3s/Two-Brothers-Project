@@ -1,14 +1,20 @@
 #include "Characters/CharacterContextComponent.h"
 
+#include "AbilitySystem/Data/CreatureType.h"
 #include "Characters/Data/BiomeDataAsset.h"
 #include "Characters/Data/Gender.h"
 #include "Characters/Data/GrowthRate.h"
 #include "Net/UnrealNetwork.h"
+#include "Rarity/Data/Rarity.h"
 
 UCharacterContextComponent::UCharacterContextComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	Gender = ECharacterGender::None;
+	Rarity = ERarity::Common;
+	PrimaryType = ECreatureType::None;
+	SecondaryType = ECreatureType::None;
+	AuraColor = FColor::White;
 	SetIsReplicatedByDefault(true);
 }
 
@@ -17,7 +23,8 @@ void UCharacterContextComponent::InitializeCharacterContext(
 		const int32 InLevel,
 		const int32 InXP,
 		const FTribeData& InTribeData,
-		const ECharacterGender InGender
+		const ECharacterGender InGender,
+		const int32 InAttributePoints
 	)
 {
 	SetCharacterName(InName);
@@ -25,18 +32,12 @@ void UCharacterContextComponent::InitializeCharacterContext(
 	SetXP(InXP);
 	SetTribeData(InTribeData);
 	SetGender(InGender);
-	SetAttributePoints(0);
+	SetAttributePoints(InAttributePoints);
 	
 	OnCharacterNameChanged.Broadcast(CharacterName);
 	OnLevelChanged.Broadcast(Level);
 	OnXPChanged.Broadcast(XP);
 	OnTribeDataChanged.Broadcast(TribeData);
-	
-	if (BiomeData != nullptr)
-	{
-		OnBiomeChanged.Broadcast(BiomeData->BiomeInfo);
-	}
-	
 	OnAttributePointsChanged.Broadcast(AttributePoints);
 }
 
@@ -46,6 +47,11 @@ void UCharacterContextComponent::InitializeCombatRelatedVars(float CustomBaseCom
 	InitializeRandomIVs();
 	BaseCombatPower += IVSet.GetTotal();
 
+
+	// * Temporary Elemental type will be decided based on biome and parts * \\
+	
+	PrimaryType = static_cast<ECreatureType>(FMath::RandRange(1,6));
+	SecondaryType = static_cast<ECreatureType>(FMath::RandRange(0,6));
 	
 	if (CustomBaseCombatPower == -1.f)
 	{
@@ -186,6 +192,8 @@ void UCharacterContextComponent::GetLifetimeReplicatedProps(TArray<class FLifeti
 	DOREPLIFETIME(UCharacterContextComponent, IVSet);
 	DOREPLIFETIME(UCharacterContextComponent, LevelGrowthRate);
 	DOREPLIFETIME(UCharacterContextComponent, AuraColor);
+	DOREPLIFETIME(UCharacterContextComponent, PrimaryType);
+	DOREPLIFETIME(UCharacterContextComponent, SecondaryType);
 }
 
 void UCharacterContextComponent::OnRep_CharacterName()

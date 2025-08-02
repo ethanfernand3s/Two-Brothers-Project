@@ -36,22 +36,24 @@ public:
 	UPROPERTY(Replicated)
 	bool bIsInitialised;
 
+	UPROPERTY(Replicated)
+	bool bIsFirstServerEnter;
 	UPROPERTY()
 	TObjectPtr<UCharacterContextComponent> CharacterContextComponent;
 
+	UPROPERTY(EditAnywhere,Category="Ability System")
+	TObjectPtr<UParasiteAbilitySet> StartupAbilitySet;
+	UPROPERTY(EditAnywhere,Category="Ability System")
+	TObjectPtr<UParasiteAbilitySet> StartupPassiveAbilitySet;
+	
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
-	UPROPERTY(EditAnywhere,Category="Ability System")
-	TObjectPtr<UParasiteAbilitySet> ParasiteAbilitySet;
 
 private:
-
+	
 	// GAS
 	UPROPERTY(VisibleAnywhere,Category="Ability System")
 	TObjectPtr<UParasiteAbilitySystemComponent> ParasiteAbilitySystem;
-	
-	TArray<FGameplayAbilitySpecHandle> GrantedHandles;
 
 	UPROPERTY(VisibleAnywhere,Category="Ability System")
 	UParasiteAttributeSet* ParasiteAttributeSet;

@@ -3,12 +3,88 @@
 
 #include "AbilitySystem/BaseAbilitySystemComponent.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "TBGameplayTags.h"
+#include "AbilitySystem/BaseAbilitySet.h"
+#include "AbilitySystem/BaseGameplayAbility.h"
 #include "AbilitySystem/Data/CharacterCombatValues.h"
+#include "Player/Interfaces/PlayerInterface.h"
 
-void UBaseAbilitySystemComponent::AbilityActorInfoSet()
+void UBaseAbilitySystemComponent::AddCharacterAbilities(const TArray<FAbilitySet_Ability>& StartupAbilities)
 {
-	
+	for (const FAbilitySet_Ability& AbilitySetInfo : StartupAbilities)
+	{
+		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilitySetInfo.AbilityClass, AbilitySetInfo.AbilityLevel);
+		if (const UBaseGameplayAbility* AuraAbility = Cast<UBaseGameplayAbility>(AbilitySpec.Ability))
+		{
+			AbilitySpec.GetDynamicSpecSourceTags().AddTag(AuraAbility->StartupInputTag);
+			AbilitySpec.GetDynamicSpecSourceTags().AddTag(FTBGameplayTags::Get().Abilities_Status_Equipped);
+			GiveAbility(AbilitySpec);
+		}
+	}
+	bStartupAbilitiesGiven = true;
+	AbilitiesGivenDelegate.Broadcast();
+}
+
+void UBaseAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<FAbilitySet_Ability>& StartupPassiveAbilities)
+{
+	for (const FAbilitySet_Ability& PassiveAbilitySetInfo : StartupPassiveAbilities)
+	{
+		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(PassiveAbilitySetInfo.AbilityClass, PassiveAbilitySetInfo.AbilityLevel);
+		AbilitySpec.GetDynamicSpecSourceTags().AddTag(FTBGameplayTags::Get().Abilities_Status_Equipped);
+		GiveAbilityAndActivateOnce(AbilitySpec);
+	}
+}
+
+void UBaseAbilitySystemComponent::ForEachAbility(const FForEachAbility& Delegate)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (const FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (!Delegate.ExecuteIfBound(AbilitySpec))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to execute delegate in %hs"), __FUNCTION__);
+		}
+	}
+}
+
+FGameplayTag UBaseAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	if (AbilitySpec.Ability)
+	{
+		for (FGameplayTag Tag : AbilitySpec.Ability.Get()->AbilityTags)
+		{
+			if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities"))))
+			{
+				return Tag;
+			}
+		}
+	}
+	return FGameplayTag();
+}
+
+FGameplayTag UBaseAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	for (FGameplayTag Tag : AbilitySpec.GetDynamicSpecSourceTags())
+	{
+		if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("InputTag"))))
+		{
+			return Tag;
+		}
+	}
+	return FGameplayTag();
+}
+
+FGameplayTag UBaseAbilitySystemComponent::GetStatusFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	for (FGameplayTag StatusTag : AbilitySpec.GetDynamicSpecSourceTags())
+	{
+		if (StatusTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities.Status"))))
+		{
+			return StatusTag;
+		}
+	}
+	return FGameplayTag();
 }
 
 void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
@@ -61,6 +137,33 @@ void UBaseAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& In
 	}
 }
 
+void UBaseAbilitySystemComponent::UpgradeAttribute(const FGameplayTag& AttributeTag)
+{
+	ServerUpgradeAttribute(AttributeTag);
+}
+
+void UBaseAbilitySystemComponent::ServerUpgradeAttribute_Implementation(const FGameplayTag& AttributeTag)
+{
+	AActor* CurrentAvatarActor = GetAvatarActor();
+	if (CurrentAvatarActor && CurrentAvatarActor->Implements<UPlayerInterface>())
+	{
+		IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(CurrentAvatarActor);
+
+		if (PlayerInterface && PlayerInterface->GetAttributePoints() > 0)
+		{
+			// Send Gameplay Event
+			FGameplayEventData Payload;
+			Payload.EventTag = AttributeTag;
+			Payload.EventMagnitude = 1.f;
+
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(CurrentAvatarActor, AttributeTag, Payload);
+
+			// Subtract Attribute Point
+			PlayerInterface->AddToAttributePoints(-1);
+		}
+	}
+}
+
 void UBaseAbilitySystemComponent::SetBaseStats(float CurrentCombatPower, int32 Level)
 {
 	constexpr float Multiplier = 1.045f;              // Growth rate per level
@@ -97,7 +200,7 @@ void UBaseAbilitySystemComponent::SetBaseStats(float CurrentCombatPower, int32 L
 		--Remainder;
 	}
 
-	// Assign to your combat stats
+	// Assign combat stats
 	const float Health        = StatValues[0];
 	const float Strength      = StatValues[1];
 	const float Defense       = StatValues[2];
@@ -145,7 +248,8 @@ void UBaseAbilitySystemComponent::SetBaseStats(const FCharacterCombatValues& Cus
 
 	const static FTBGameplayTags GameplayTags = FTBGameplayTags::Get();
 
-	// Survival
+	// Survival Stats
+	// TODO: Change later to have these be different with each animal
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Type, 0.f);
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Energy, 100.f);
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxEnergy, 100.f);
@@ -154,7 +258,7 @@ void UBaseAbilitySystemComponent::SetBaseStats(const FCharacterCombatValues& Cus
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Drowsiness, 100.f);
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxDrowsiness, 100.f);
 
-	// Combat
+	// Combat Stats
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Health, CustomCombatValues.Health);
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxHealth, CustomCombatValues.Health);
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Strength, CustomCombatValues.Strength);
@@ -176,8 +280,7 @@ void UBaseAbilitySystemComponent::AddIvsToAttributes(const FCharacterCombatValue
 
 	const static FTBGameplayTags GameplayTags = FTBGameplayTags::Get();
 
-	Spec->SetSetByCallerMagnitude(
-		GameplayTags.Attributes_Health, CharIvSet.Health);
+	// Combat Stats
 	Spec->SetSetByCallerMagnitude(
 		GameplayTags.Attributes_MaxHealth, CharIvSet.Health);
 
@@ -196,4 +299,15 @@ void UBaseAbilitySystemComponent::AddIvsToAttributes(const FCharacterCombatValue
 	
 	
 	ApplyGameplayEffectSpecToSelf(*Spec);
+}
+
+void UBaseAbilitySystemComponent::OnRep_ActivateAbilities()
+{
+	Super::OnRep_ActivateAbilities();
+
+	if (!bStartupAbilitiesGiven)
+	{
+		bStartupAbilitiesGiven = true;
+		AbilitiesGivenDelegate.Broadcast();
+	}
 }
