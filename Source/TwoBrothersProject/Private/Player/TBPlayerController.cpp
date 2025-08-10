@@ -147,3 +147,33 @@ UAnimalAttributeSet* ATBPlayerController::GetCurrentAnimalsAttributeSet() const
 	return nullptr;
 }
 
+void ATBPlayerController::ClientPlayIntroLanding_Implementation()
+{
+	/* if (PlayerCameraManager)
+	{
+		PlayerCameraManager->StartCameraFade(1.f, 0.f, 2.f, FLinearColor::Black, false, true);
+	}
+
+	// 2. Play crash landing sound effect
+	if (CrashLandingSoundCue)
+	{
+		UGameplayStatics::PlaySound2D(this, CrashLandingSoundCue);
+	}
+
+	// 3. Start camera shake if you want turbulence
+	if (CrashLandingCameraShakeClass)
+	{
+		PlayerCameraManager->StartCameraShake(CrashLandingCameraShakeClass, 1.0f);
+	}
+
+	// 4. Trigger crash landing cinematic HUD or VFX
+	if (CrashLandingWidgetClass)
+	{
+		UUserWidget* CrashWidget = CreateWidget<UUserWidget>(this, CrashLandingWidgetClass);
+		if (CrashWidget)
+		{
+			CrashWidget->AddToViewport();
+		}
+	}*/
+}
+

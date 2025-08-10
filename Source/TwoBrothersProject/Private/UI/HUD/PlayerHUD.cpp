@@ -105,7 +105,7 @@ void APlayerHUD::Inventory(APlayerController* PC)
     		ConfigureUIForInventory(PC, false);
     		
     		// TODO: Remove this TEST !!!
-    		Cast<AParasitePlayerState>(UGameplayStatics::GetPlayerState(this, 0))->LoadProgress();
+    		//Cast<AParasitePlayerState>(UGameplayStatics::GetPlayerState(this, 0))->LoadProgress();
     	}
     	else
     	{

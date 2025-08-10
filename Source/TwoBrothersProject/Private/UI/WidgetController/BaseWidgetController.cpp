@@ -26,7 +26,7 @@ void UBaseWidgetController::BindCallbacksToDependencies()
 
 void UBaseWidgetController::BroadcastAbilityInfo()
 {
-	if (ParasiteASC->bStartupAbilitiesGiven) return;
+	if (!ParasiteASC->bStartupAbilitiesGiven) return;
 
 	FForEachAbility BroadcastDelegate;
 	BroadcastDelegate.BindLambda([this](const FGameplayAbilitySpec& AbilitySpec)

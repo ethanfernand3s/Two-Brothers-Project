@@ -107,7 +107,7 @@ void UCharacterContextComponent::InitializeCombatRelatedVars(float CustomBaseCom
 		else
 		{
 			BaseCombatPower = FMath::RandRange(800, 1000);
-			Rarity = ERarity::Mythical;
+			Rarity = ERarity::Prismatic;
 			BaseXP = BaseCombatPower * 0.60f;
 			LevelGrowthRate = EGrowthRate::Erratic;
 
@@ -151,7 +151,7 @@ void UCharacterContextComponent::InitializeCombatRelatedVars(float CustomBaseCom
 		}
 		else
 		{
-			Rarity = ERarity::Mythical;
+			Rarity = ERarity::Prismatic;
 			BaseXP = BaseCombatPower * 0.60f;
 			LevelGrowthRate = EGrowthRate::Erratic;
 		}
@@ -194,6 +194,7 @@ void UCharacterContextComponent::GetLifetimeReplicatedProps(TArray<class FLifeti
 	DOREPLIFETIME(UCharacterContextComponent, AuraColor);
 	DOREPLIFETIME(UCharacterContextComponent, PrimaryType);
 	DOREPLIFETIME(UCharacterContextComponent, SecondaryType);
+	DOREPLIFETIME(UCharacterContextComponent, BaseCombatPower);
 }
 
 void UCharacterContextComponent::OnRep_CharacterName()

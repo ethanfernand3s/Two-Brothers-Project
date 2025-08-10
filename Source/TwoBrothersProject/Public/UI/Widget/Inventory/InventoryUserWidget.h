@@ -6,6 +6,8 @@
 #include "UI/Widget/BaseUserWidget.h"
 #include "InventoryUserWidget.generated.h"
 
+class UAbilityCardUserWidget;
+class UItemsPanelUserWidget;
 class UInventoryWidgetController;
 struct FTBAbilityInfo;
 class UStatsPanelUserWidget;
@@ -22,6 +24,14 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menus",meta = (BindWidget))
 	TObjectPtr<UStatsPanelUserWidget>  StatsPanel;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menus",meta = (BindWidget))
+	TObjectPtr<UItemsPanelUserWidget>  ItemsPanel;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card")
+	TSubclassOf<UAbilityCardUserWidget>  Circle_AbilityCardUserWidgetClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card")
+	TSubclassOf<UAbilityCardUserWidget>  Diamond_AbilityCardUserWidgetClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card")
+	TSubclassOf<UAbilityCardUserWidget>  Square_AbilityCardUserWidgetClass;
 	
 	virtual void SetWidgetController(UObject* InWidgetController) override;
 

@@ -4,6 +4,12 @@
 #include "Game/TBGamemode.h"
 #include "Player/ParasitePlayerState.h" // Replace with your actual PlayerState class
 #include "Player/TBPlayerController.h"
+#include "Vehicles/StartGame/CrashLandingShipActor.h"
+
+FVector ATBGamemode::GetRandomIntroSpawnLocation()
+{
+	return FVector::ZeroVector;
+}
 
 void ATBGamemode::PostLogin(APlayerController* NewPlayer)
 {
@@ -13,12 +19,36 @@ void ATBGamemode::PostLogin(APlayerController* NewPlayer)
 	if (PS && PS->bIsFirstServerEnter)
 	{
 		PS->bIsFirstServerEnter = false;
-		PS->ForceNetUpdate();  
+  
 
 		ATBPlayerController* PC = Cast<ATBPlayerController>(NewPlayer);
 		if (PC)
 		{
-			//PC->ClientPlayIntroLanding(); // ✅ Safe client RPC call
+			// 1. Spawn crash ship
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = PC;
+			SpawnParams.Instigator = PC->GetPawn();
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+			FVector SpawnLocation = GetRandomIntroSpawnLocation(); // You can implement this
+			FRotator SpawnRotation = FRotator::ZeroRotator;
+
+			ACrashLandingShipActor* CrashShip = GetWorld()->SpawnActor<ACrashLandingShipActor>(
+				CrashLandingShipClass,
+				SpawnLocation,
+				SpawnRotation,
+				SpawnParams
+			);
+
+			if (CrashShip)
+			{
+				CrashShip->AttachPlayer(PC->GetPawn());
+
+				// Optionally attach camera and set initial motion
+				CrashShip->StartCrashSequence();
+
+				PC->ClientPlayIntroLanding_Implementation(); // ✅ Safe client RPC call
+			}
 		}
 	}
 }

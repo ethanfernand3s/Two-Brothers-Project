@@ -10,6 +10,7 @@
 UENUM(BlueprintType)
 enum class EAbilityType : uint8
 {
+	NONE UMETA(DisplayName = "NONE"),
 	Default	UMETA(DisplayName = "Default"),
 	Passive	UMETA(DisplayName = "Passive"),
 	Main	UMETA(DisplayName = "Main")

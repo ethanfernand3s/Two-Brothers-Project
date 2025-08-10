@@ -6,6 +6,7 @@
 #include "GameFramework/GameMode.h"
 #include "TBGamemode.generated.h"
 
+class ACrashLandingShipActor;
 /**
  * 
  */
@@ -15,6 +16,9 @@ class TWOBROTHERSPROJECT_API ATBGamemode : public AGameModeBase
 	GENERATED_BODY()
 	
 public:
+	FVector GetRandomIntroSpawnLocation();
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+	UPROPERTY(EditDefaultsOnly)
+	  UClass* CrashLandingShipClass;
 	
 };

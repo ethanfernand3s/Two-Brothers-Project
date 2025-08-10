@@ -6,6 +6,8 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "UI/Widget/Inventory/Abilities/AbilityCardUserWidget.h"
+#include "UI/Widget/Inventory/Abilities/PassiveAbilityDropdownUserWidget.h"
+#include "UI/Widget/Inventory/Items/ItemsPanelUserWidget.h"
 #include "UI/Widget/Inventory/Stats/StatsPanelUserWidget.h"
 #include "UI/WidgetController/InventoryWidgetController.h"
 
@@ -28,12 +30,56 @@ void UInventoryUserWidget::OnWidgetControllerSet()
 
 void UInventoryUserWidget::OnAbilityInfoRecieved(const FTBAbilityInfo& AbilityInfo)
 {
-	// Create widget
-	UAbilityCardUserWidget* NewCard = WidgetTree->ConstructWidget<UAbilityCardUserWidget>(UAbilityCardUserWidget::StaticClass());
-	NewCard
-	// Decide if it goes the inventory or stats panel and type of ability
+	switch (AbilityInfo.AbilityType)
+	{
+	case EAbilityType::Default:
+		{
+			UAbilityCardUserWidget* NewCard = WidgetTree->ConstructWidget<UAbilityCardUserWidget>(Square_AbilityCardUserWidgetClass);
+			NewCard->SetCardData(AbilityInfo);
 
-	// Set it
-
-	// Add to appropriate grid
+			if (AbilityInfo.bIsOnHotbar)
+			{
+				StatsPanel->ReceiveDefaultAbility(NewCard);
+			}
+			else
+			{
+				ItemsPanel->ReceiveNewCard(NewCard);
+			}
+			break;
+		}
+	case EAbilityType::Passive:
+		{
+			UAbilityCardUserWidget* NewCard = WidgetTree->ConstructWidget<UAbilityCardUserWidget>(Circle_AbilityCardUserWidgetClass);
+			NewCard->SetCardData(AbilityInfo);
+			
+			if (AbilityInfo.bIsOnHotbar)
+			{
+				StatsPanel->PassiveAbilityDropdown->ReceivePassiveAbility(NewCard);
+			}
+			else
+			{
+				ItemsPanel->ReceiveNewCard(NewCard);
+			}
+			break;
+		};
+	case EAbilityType::Main:
+		{
+			UAbilityCardUserWidget* NewCard = WidgetTree->ConstructWidget<UAbilityCardUserWidget>(Diamond_AbilityCardUserWidgetClass);
+			NewCard->SetCardData(AbilityInfo);
+			if (AbilityInfo.bIsOnHotbar)
+			{
+				StatsPanel->ReceiveMainAbility(NewCard);
+			}
+			else
+			{
+				// TODO: Implement this
+				ItemsPanel->ReceiveNewCard(NewCard);
+			}
+			break;
+		};
+	default:
+		{
+			break;
+		}
+	}
 }

@@ -61,7 +61,7 @@ struct FTBAbilityInfo
 	FText AbilityDescription;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UTexture2D* Icon;
+	UTexture* Icon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 CurrentLevel = 1;
@@ -81,6 +81,9 @@ struct FTBAbilityInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsHeld = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsOnHotbar = false;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<UGameplayAbility> Ability;

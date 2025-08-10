@@ -33,7 +33,8 @@ public:
 	bool GetIsAnimalPossessed() const;
 	UBaseAbilitySystemComponent* GetASC ();
 	UAnimalAttributeSet* GetCurrentAnimalsAttributeSet() const;
-	
+	void ClientPlayIntroLanding_Implementation();
+
 protected:
 	virtual void SetupInputComponent() override;
 	virtual void BeginPlay() override;

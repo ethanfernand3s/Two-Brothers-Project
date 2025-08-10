@@ -9,95 +9,61 @@
 #include "Components/TextBlock.h"
 #include "TBGameplayTags.h"
 #include "UI/WidgetController/InventoryWidgetController.h"
-#include "UI/WidgetController/Data/AbilityCardDataAsset.h"
+#include "UI/WidgetController/Data/RarityDataAsset.h"
 
 
 void UAbilityCardUserWidget::SetCardData(const FTBAbilityInfo& InData)
 {
 	CardData = InData;
-
-	UpdateAbilityIcon(InData);
-	UpdateBorder(InData);
+	
+	UpdateCardImage(InData);
 	UpdateText(InData);
 	UpdateProgress(InData);
-	UpdateTypes(InData.AbilityCreatureTypeTag);
-	UpdateSize(InData.AbilityType);
+	UpdateType(InData.AbilityCreatureTypeTag);
 }
 
 /* ───────── helpers ───────── */
 
-void UAbilityCardUserWidget::UpdateAbilityIcon(const FTBAbilityInfo& Info)
+void UAbilityCardUserWidget::UpdateCardImage(const FTBAbilityInfo& Info)
 {
-	if (Image_Icon && Info.Icon)
-		Image_Icon->SetBrushFromTexture(Info.Icon);
-}
-
-void UAbilityCardUserWidget::UpdateBorder(const FTBAbilityInfo& Info)
-{
-	const UAbilityCardDataAsset* StyleAsset = InventoryWidgetController ? InventoryWidgetController->AbilityCardData : nullptr;
-	if (!StyleAsset) return;
-
-	if (!Image_Border_Regular)  return;
-	Image_Border_Regular->SetVisibility(ESlateVisibility::Visible);
-										
-	if (const FRarityAppearanceInfo* RarityAppearanceInfo = StyleAsset->RarityAppearanceMap.Find(Info.Rarity))
+	const URarityDataAsset* StyleAsset = InventoryWidgetController ? InventoryWidgetController->AbilityCardData : nullptr;
+	if (!StyleAsset || !Image_Icon || Image_Border || Image_BorderGlow) return;
+	
+	if (const FLinearColor* ColorPtr = StyleAsset->RarityColorMap.Find(Info.Rarity))
 	{
-		// Set border as gradient or not
-		if (RarityAppearanceInfo->Gradient)
-		{
-			if (!BorderMID) BorderMID = UMaterialInstanceDynamic::Create(RarityAppearanceInfo->Gradient, this);
-			BorderMID->SetVectorParameterValue(TEXT("Tint"), RarityAppearanceInfo->Tint);
-			
-			if (UTexture2D* const* BorderTexturePtr = StyleAsset->AbilityBorderTypeMap.Find(Info.AbilityType))
+			if (Info.Icon)
 			{
-				if (*BorderTexturePtr)
+				// Set border as gradient or not
+				if (!IconMID) IconMID = Image_Icon->GetDynamicMaterial();
+				IconMID->SetTextureParameterValue(TEXT("IconTexture"),Info.Icon);
+				
+				Image_Border->SetBrushTintColor(*ColorPtr);					
+
+				// Apply rarity glow on interaction
+				if (Image_BorderGlow)
 				{
-					BorderMID->SetTextureParameterValue(TEXT("BorderTexture"), *BorderTexturePtr);
+					Image_BorderGlow->SetVisibility(ESlateVisibility::Hidden);
 				}
 			}
-			
-			Image_Border_Regular->SetBrushFromMaterial(BorderMID);
-		}
-
-		// Apply rarity glow on interaction
-		if (Image_BorderGlow)
-		{
-			if (RarityAppearanceInfo->GlowMaterial)
-				Image_BorderGlow->SetBrushFromMaterial(RarityAppearanceInfo->GlowMaterial);
-			Image_BorderGlow->SetVisibility(ESlateVisibility::Hidden);
-		}
 	}
 }
 
 void UAbilityCardUserWidget::UpdateText(const FTBAbilityInfo& Info)
 {
-	const UAbilityCardDataAsset* StyleAsset =
+	const URarityDataAsset* StyleAsset =
 		InventoryWidgetController ? InventoryWidgetController->AbilityCardData : nullptr;
 	if (!StyleAsset) return;
 
-	if (const FRarityAppearanceInfo* RarityAppearanceInfo = StyleAsset->RarityAppearanceMap.Find(Info.Rarity))
+	if (const FLinearColor* ColorPtr = StyleAsset->RarityColorMap.Find(Info.Rarity))
 	{
 		if (TextBlock_LevelPrefix && TextBlock_LevelNumber)
 		{
-			if (!TextMID)
-				TextMID = UMaterialInstanceDynamic::Create(RarityAppearanceInfo->Gradient, this);
-			TextMID->SetVectorParameterValue(TEXT("Tint"), RarityAppearanceInfo->Tint);
-
 			// Set the text
 			TextBlock_LevelPrefix->SetText(FText::FromString(TEXT("LV")));
 			TextBlock_LevelNumber->SetText(FText::AsNumber(Info.CurrentLevel));
 
-			// Set the color / gradient
-			if (RarityAppearanceInfo->Gradient && Info.Rarity == ERarity::Prismatic)
-			{
-				TextBlock_LevelPrefix->SetFontMaterial(TextMID);
-				TextBlock_LevelNumber->SetFontMaterial(TextMID);
-			}
-			else
-			{
-				TextBlock_LevelNumber->SetColorAndOpacity(RarityAppearanceInfo->Tint);
-				TextBlock_LevelPrefix->SetColorAndOpacity(RarityAppearanceInfo->Tint);
-			}
+			TextBlock_LevelNumber->SetColorAndOpacity(*ColorPtr);
+			TextBlock_LevelPrefix->SetColorAndOpacity(*ColorPtr);
 		}
 	}
 }
@@ -105,14 +71,13 @@ void UAbilityCardUserWidget::UpdateText(const FTBAbilityInfo& Info)
 
 void UAbilityCardUserWidget::UpdateProgress(const FTBAbilityInfo& Info)
 {
-	if (!ProgressBar || !Textblock_Progress || Info.XPRequired <= 0) return;
+	if (!ProgressBar || Info.XPRequired <= 0) return;
 
 	const float Ratio = static_cast<float>(Info.CurrentXP) / static_cast<float>(Info.XPRequired);
 	ProgressBar->SetPercent(Ratio);
-	Textblock_Progress->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(Info.CurrentXP), FText::AsNumber(Info.XPRequired)));
 }
 
-void UAbilityCardUserWidget::UpdateTypes(const FGameplayTag& Tag)
+void UAbilityCardUserWidget::UpdateType(const FGameplayTag& Tag)
 {
 	if (!InventoryWidgetController || !InventoryWidgetController->CreatureTypeData) return;
 
@@ -127,17 +92,6 @@ void UAbilityCardUserWidget::UpdateTypes(const FGameplayTag& Tag)
 
 		Image_Type->SetBrushFromTexture(Info->TypeImage, true);
 		Image_Type->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	}
-}
-
-void UAbilityCardUserWidget::UpdateSize(EAbilityType AbilityType)
-{
-	switch (AbilityType)
-	{
-		case EAbilityType::Passive:
-		// if hovering over a passive slot then change size otherwise do nothing;
-		case EAbilityType::Main: ;
-		default: ;// Do nothing already at correct size
 	}
 }
 
@@ -157,7 +111,7 @@ FReply UAbilityCardUserWidget::NativeOnMouseButtonDown(const FGeometry& Geo, con
 
 void UAbilityCardUserWidget::NativeOnDragDetected(const FGeometry& Geo, const FPointerEvent& E, UDragDropOperation*& OutOp)
 {
-	if (FPlatformTime::Seconds() - PressedTime < 0.15) return;
+	if (FPlatformTime::Seconds() - PressedTime < 0.05) return;
 
 	UDragDropOperation* DragOp = NewObject<UDragDropOperation>();
 	DragOp->Payload = this;
@@ -171,7 +125,7 @@ FReply UAbilityCardUserWidget::NativeOnMouseButtonUp(const FGeometry& Geo, const
 {
 	if (Image_BorderGlow) Image_BorderGlow->SetVisibility(ESlateVisibility::Hidden);
 
-	if (FPlatformTime::Seconds() - PressedTime < 0.15)
+	if (FPlatformTime::Seconds() - PressedTime < 0.05)
 	{
 		OnCardTapped.Broadcast(this);
 		return FReply::Handled();

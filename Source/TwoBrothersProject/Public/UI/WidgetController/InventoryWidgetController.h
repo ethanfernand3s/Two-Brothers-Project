@@ -8,7 +8,7 @@
 #include "Characters/Data/TribeData.h"
 #include "InventoryWidgetController.generated.h"
 
-class UAbilityCardDataAsset;
+class URarityDataAsset;
 class UGenderDataAsset;
 class UCreatureTypeDataAsset;
 enum class ECharacterGender : uint8;
@@ -60,7 +60,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataAssets")
 	TObjectPtr<UGenderDataAsset> GenderData;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataAssets")
-	TObjectPtr<UAbilityCardDataAsset> AbilityCardData;
+	TObjectPtr<URarityDataAsset> AbilityCardData;
 
 private:
 

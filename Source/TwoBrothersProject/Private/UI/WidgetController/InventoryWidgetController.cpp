@@ -3,12 +3,10 @@
 
 #include "UI/WidgetController/InventoryWidgetController.h"
 
-#include "TBGameplayTags.h"
 #include "AbilitySystem/Data/AttributeInfo.h"
 #include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
 #include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
 #include "Characters/CharacterContextComponent.h"
-#include "Characters/Data/LevelInfo.h"
 #include "GameFramework/PlayerState.h"
 #include "Player/ParasitePlayerState.h"
 
@@ -58,6 +56,8 @@ void UInventoryWidgetController::BroadcastInitialValues()
 	OnCreatureTypesSetDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetCreatureTypes());
 	
 #pragma endregion Character Context
+
+	BroadcastAbilityInfo();
 }
 
 void UInventoryWidgetController::BindCallbacksToDependencies()
@@ -117,19 +117,20 @@ void UInventoryWidgetController::BindCallbacksToDependencies()
 
 	// Bind Ability Callbacks
 
-	if (ParasiteASC)
-	{
-		// TODO: Equip Abilities
-		// ParasiteASC->AbilityEquipped.AddUObject(this, &UInventoryWidgetController::OnAbilityEquipped);
-		if (ParasiteASC->bStartupAbilitiesGiven)
-		{
-			BroadcastAbilityInfo();
-		}
-		else
-		{
-			ParasiteASC->AbilitiesGivenDelegate.AddUObject(this, &UInventoryWidgetController::BroadcastAbilityInfo);
-		}
-	}
+	// TODO: Move to Overlay
+	// if (ParasiteASC)
+	// {
+	// 	// TODO: Equip Abilities
+	// 	// ParasiteASC->AbilityEquipped.AddUObject(this, &UInventoryWidgetController::OnAbilityEquipped);
+	// 	if (ParasiteASC->bStartupAbilitiesGiven)
+	// 	{
+	// 		BroadcastAbilityInfo();
+	// 	}
+	// 	else
+	// 	{
+	// 		ParasiteASC->AbilitiesGivenDelegate.AddUObject(this, &UInventoryWidgetController::BroadcastAbilityInfo);
+	// 	}
+	// }
 }
 
 void UInventoryWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag)

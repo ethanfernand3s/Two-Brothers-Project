@@ -11,10 +11,12 @@
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
 #include "Components/Image.h"
+#include "Components/SizeBox.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "UI/Widget/Inventory/SlotUserWidget.h"
 #include "UI/Widget/Inventory/Abilities/AbilityCardUserWidget.h"
 #include "UI/Widget/Inventory/Abilities/PassiveAbilityDropdownUserWidget.h"
 #include "UI/Widget/Inventory/Stats/StatButton.h"
@@ -29,6 +31,58 @@ void UStatsPanelUserWidget::NativeConstruct()
 void UStatsPanelUserWidget::SetWidgetController(UObject* InWidgetController)
 {
 	Super::SetWidgetController(InWidgetController);
+}
+
+void UStatsPanelUserWidget::ReceiveDefaultAbility(UAbilityCardUserWidget* AbilityCard, int32 PreferredSlotIndex)
+{
+	// Autofill slots
+	if (PreferredSlotIndex == -1)
+	{
+		if (!DefaultAbilitySlot_1->SizeBox_AbilityCardHolder->HasAnyChildren())
+		{
+			DefaultAbilitySlot_1->FillSlot(AbilityCard);
+		}
+		else if (!DefaultAbilitySlot_2->SizeBox_AbilityCardHolder->HasAnyChildren())
+		{
+			DefaultAbilitySlot_2->FillSlot(AbilityCard);
+		}
+		else if (!DefaultAbilitySlot_3->SizeBox_AbilityCardHolder->HasAnyChildren())
+		{
+			DefaultAbilitySlot_3->FillSlot(AbilityCard);
+		}
+		else if (!DefaultAbilitySlot_4->SizeBox_AbilityCardHolder->HasAnyChildren())
+		{
+			DefaultAbilitySlot_4->FillSlot(AbilityCard);
+		}
+		
+	}
+	// Manually fill
+	else
+	{
+		switch (PreferredSlotIndex)
+		{
+			case 0:
+				DefaultAbilitySlot_1->FillSlot(AbilityCard);
+				break;
+			case 1:
+				DefaultAbilitySlot_2->FillSlot(AbilityCard);
+				break;
+			case 2:
+				DefaultAbilitySlot_3->FillSlot(AbilityCard);
+				break;
+			case 3:
+				DefaultAbilitySlot_4->FillSlot(AbilityCard);
+				break;
+			default: break;
+		}
+	}
+}
+
+
+
+void UStatsPanelUserWidget::ReceiveMainAbility(UAbilityCardUserWidget* AbilityCard)
+{
+	MainAbilitySlot->FillSlot(AbilityCard);
 }
 
 void UStatsPanelUserWidget::OnWidgetControllerSet()
@@ -47,7 +101,6 @@ void UStatsPanelUserWidget::OnWidgetControllerSet()
 		InventoryWidgetController->OnGenderSetDelegate.AddUObject(this, &UStatsPanelUserWidget::OnGenderSet);
 		InventoryWidgetController->OnAuraColorSetDelegate.AddUObject(this, &UStatsPanelUserWidget::OnAuraColorSet);
 		InventoryWidgetController->OnCreatureTypesSetDelegate.AddUObject(this,&UStatsPanelUserWidget::SetType);
-		
 	}
 
 	SetupStatButtons();
@@ -311,66 +364,4 @@ void UStatsPanelUserWidget::ToggleDropdown()
 			PlayAnimationReverse(ExpandPassiveBarAnim);
 		}
 	}
-}
-
-void UStatsPanelUserWidget::UpdateAbilitySlots(const FTBAbilityInfo& InData)
-{
-	const auto& Tags = FTBGameplayTags::Get();
-	int32 SlotIndex = INDEX_NONE;
-
-	//SlotIndex = Tags.ToInputTag()InData.InputTag
-
-	if (SlotIndex == INDEX_NONE)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UpdateAbilitySlots: Invalid InputTag on ability [%s]"), *InData.AbilityTag.ToString());
-		return;
-	}
-
-	// Clean old widget from the target slot (same row)
-	for (int32 i = UniformGridPanel_AbilitySlots->GetChildrenCount() - 1; i >= 0; --i)
-	{
-		if (UWidget* Child = UniformGridPanel_AbilitySlots->GetChildAt(i))
-		{
-			if (UUniformGridSlot* GridSlot = Cast<UUniformGridSlot>(Child->Slot))
-			{
-				if (GridSlot->GetRow() == SlotIndex && GridSlot->GetColumn() == 0)
-				{
-					UniformGridPanel_AbilitySlots->RemoveChildAt(i);
-				}
-			}
-		}
-	}
-
-	// Create and configure new card widget
-	
-	UAbilityCardUserWidget* Card = CreateWidget<UAbilityCardUserWidget>(this, UAbilityCardUserWidget::StaticClass());
-	if (!Card) return;
-
-	Card->SlotIndex = SlotIndex;
-	Card->bIsInHotbar = true;
-	Card->SetCardData(InData);
-	/*
-	Card->OnCardDragged(this, &UStatsPanelUserWidget::HandleCardDragged);
-	Card->OnCardTapped.AddUObject(this, &UStatsPanelUserWidget::HandleCardTapped); // if you're using tap logic
-	*/
-
-	// Add to grid panel at the correct slot
-	if (UUniformGridSlot* GridSlot = UniformGridPanel_AbilitySlots->AddChildToUniformGrid(Card))
-	{
-		GridSlot->SetRow(SlotIndex);
-		GridSlot->SetColumn(0);
-		GridSlot->SetHorizontalAlignment(HAlign_Center);
-		GridSlot->SetVerticalAlignment(VAlign_Center);
-	}
-
-	// Track in arrays
-	/*
-	if (!HotbarCardWidgets.IsValidIndex(SlotIndex))
-		HotbarCardWidgets.SetNum(4);
-	if (!CurrentHotbarAbilities.IsValidIndex(SlotIndex))
-		CurrentHotbarAbilities.SetNum(4);
-
-	HotbarCardWidgets[SlotIndex] = Card;
-	CurrentHotbarAbilities[SlotIndex] = InData;
-	*/
 }
