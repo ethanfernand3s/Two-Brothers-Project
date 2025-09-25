@@ -22,7 +22,8 @@ protected:
 
 private:
 	
-	void OnAttributePointsUpdated(int32 NewAttributePoints);
+	void OnAttributePointsUpdated(int32 NewAttributePoints, bool bIsParasiteVal);
+	void OnCharacterIconChanged(UTexture2D* CharacterIcon, bool bIsParasiteVal);
 	void OnLevelUpdated(int32 NewLevel);
 	void OnXPPercentageUpdated(float NewXPPercentage);
 
@@ -31,6 +32,8 @@ private:
 	void OnEnergyUpdated(float NewEnergy);
 	void OnMaxEnergyUpdated(float NewMaxEnergy);
 
+	void HideSecondaryInfo() const;
+	
 #pragma region ProgressBars
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> ProgressBar_Health;

@@ -5,14 +5,244 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "TBGameplayTags.h"
-#include "AbilitySystem/Base/BaseAbilitySet.h"
 #include "AbilitySystem/Base/Abilities/BaseGameplayAbility.h"
 #include "AbilitySystem/Data/CharacterCombatValues.h"
 #include "Characters/Components/CharacterContextComponent.h"
 #include "Player/Interfaces/PlayerInterface.h"
 
-void UBaseAbilitySystemComponent::HandleAbilityItemEquipped(const UTBInventoryItem* Item, FGameplayTag SlotInputTag)
+void UBaseAbilitySystemComponent::HandleAbilityStatusChanged(const UTBInventoryItem* Item, FGameplayTag SlotInputTag)
 {
+	Server_HandleAbilityStatusChanged(Item, SlotInputTag);
+}
+
+void UBaseAbilitySystemComponent::Server_HandleAbilityStatusChanged_Implementation(const UTBInventoryItem* Item,
+	FGameplayTag SlotInputTag)
+{
+	if (!IsValid(Item)) return;
+	
+	const auto& Tags = FTBGameplayTags::Get();
+	
+	const FAbilityFragment* AbilityFragment = GetFragment<FAbilityFragment>(Item, Tags.Fragments_Ability);
+	if (!AbilityFragment) return;
+
+	const FGameplayTag& AbilityType = Item->GetPreferredSlotContainerTag();
+	bool bIsPassiveAbility = (AbilityType == Tags.ItemCategories_Abilities_Passive);
+	
+	const FGameplayTag& NewItemStatus = Item->GetItemStatus();
+	const FGameplayTag& AbilityTag = AbilityFragment->GetAbilityTag();
+	FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
+	if (AbilitySpec)
+	{
+		const FGameplayTag& OldItemStatus = GetStatusFromSpec(*AbilitySpec);
+		if (OldItemStatus == NewItemStatus) return; // Nothing to change
+		
+		// The ability has already been given to the ASC
+		if (NewItemStatus == Tags.Status_Unlocked && (OldItemStatus == Tags.Status_Equipped))
+		{
+			UnEquipAbility(AbilitySpec, bIsPassiveAbility);
+		}
+		else if (NewItemStatus == Tags.Status_Equipped && (OldItemStatus == Tags.Status_Unlocked))
+		{
+			EquipAbility(AbilitySpec, SlotInputTag, bIsPassiveAbility);
+		}
+		else // New status is locked or none
+		{
+			ClearAbility(AbilitySpec->Handle);
+		}
+	}
+	else if (NewItemStatus == Tags.Status_Unlocked || NewItemStatus == Tags.Status_Equipped)
+	{
+		// The ability hasn't been given to the ASC
+		const FLevelFragment* LevelFragment = GetFragment<FLevelFragment>(Item, Tags.Fragments_Level);
+		if (!LevelFragment) return;
+		int32 AbilityLevel = LevelFragment->GetCurrentLevel();
+	
+		// Optional 
+		const FCreatureTypeFragment* CreatureTypeFragment = GetFragment<FCreatureTypeFragment>(Item, Tags.Fragments_CreatureType);
+		const FGameplayTag& CreatureTypeTag = (CreatureTypeFragment) ? CreatureTypeFragment->GetAbilityCreatureTypeTag() : FGameplayTag::EmptyTag;
+		/* Note: Could also add the rarity fragment if we want the rarity to influence the effectiveness of the ability. */
+		
+		const TSubclassOf<UBaseGameplayAbility>& AbilityClass = AbilityFragment->GetAbilityClass();
+		
+		UnlockAbility(AbilityClass, AbilityLevel, NewItemStatus, CreatureTypeTag);
+		if (NewItemStatus == Tags.Status_Equipped)
+		{
+			EquipAbility(AbilitySpec, SlotInputTag, bIsPassiveAbility);
+		}
+	}
+}
+
+void UBaseAbilitySystemComponent::UnlockAbility(
+	const TSubclassOf<UBaseGameplayAbility>& AbilityClass,
+	int32 AbilityLevel,
+	const FGameplayTag& NewStatus,
+	const FGameplayTag& CreatureTypeTag)
+{
+	if (!AbilityClass) return;
+
+	FGameplayAbilitySpec NewSpec(AbilityClass, AbilityLevel);
+
+	// Add dynamic tags for status and creature type
+	if (NewStatus.IsValid())
+	{
+		NewSpec.GetDynamicSpecSourceTags().AddTag(NewStatus);
+	}
+	if (CreatureTypeTag.IsValid())
+	{
+		NewSpec.GetDynamicSpecSourceTags().AddTag(CreatureTypeTag);
+	}
+
+	// Grant to ASC
+	GiveAbility(NewSpec);
+	MarkAbilitySpecDirty(NewSpec);
+	// TODO: Come back to once local predicted approach is in place
+	// ClientUpdateAbilityStatus(GetAbilityTagFromSpec(NewSpec),FTBGameplayTags::Get().Status_Unlocked, AbilityLevel);
+}
+
+void UBaseAbilitySystemComponent::EquipAbility(
+	FGameplayAbilitySpec* AbilitySpec,
+	const FGameplayTag& SlotInputTag,
+	bool bIsPassiveAbility)
+{
+	if (!AbilitySpec || !SlotInputTag.IsValid()) return;
+	const auto& Tags = FTBGameplayTags::Get();
+
+	// Only valid if currently unlocked
+	const FGameplayTag& OldStatus = GetStatusFromSpec(*AbilitySpec);
+	if (OldStatus != Tags.Status_Unlocked && OldStatus != Tags.Status_Equipped)
+	{
+		return;
+	}
+
+	const FGameplayTag& AbilityTag = GetAbilityTagFromSpec(*AbilitySpec);
+	if (!AbilityTag.IsValid()) return;
+	
+	// If slot already taken, unequip that ability
+	if (!SlotIsEmpty(SlotInputTag))
+	{
+		if (FGameplayAbilitySpec* SpecWithSlot = GetSpecWithSlot(SlotInputTag))
+		{
+			// Same ability instance return early
+			if (SpecWithSlot == AbilitySpec)
+			{
+				// Client notify // TODO: Come back to once local predicted approach is in place
+				// ClientEquipAbility(AbilityTag, Tags.Abilities_Status_Equipped, Slot, PrevSlot);
+				return;
+			}
+			
+			UnEquipAbility(SpecWithSlot, bIsPassiveAbility);
+		}
+	}
+
+	if (!AbilityHasAnySlot(*AbilitySpec)) // Ability doesn't yet have a slot (it's not active)
+	{
+		if (bIsPassiveAbility)
+		{
+			TryActivateAbility(AbilitySpec->Handle);
+			MulticastActivatePassiveEffect(AbilityTag, true);
+		}
+		AbilitySpec->GetDynamicSpecSourceTags().RemoveTag(GetStatusFromSpec(*AbilitySpec));
+		AbilitySpec->GetDynamicSpecSourceTags().AddTag(Tags.Status_Equipped);
+	}
+	AssignSlotToAbility(*AbilitySpec, SlotInputTag);
+	MarkAbilitySpecDirty(*AbilitySpec);
+
+	// Client notify // TODO: Come back to once local predicted approach is in place
+	// ClientEquipAbility(AbilityTag, Tags.Status_Equipped, SlotInputTag, PreviousSlotInputTag); 
+}
+
+
+FGameplayAbilitySpec* UBaseAbilitySystemComponent::GetSpecFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	FScopedAbilityListLock ActiveScopeLoc(*this);
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		for (FGameplayTag Tag : AbilitySpec.Ability.Get()->GetAssetTags())
+		{
+			if (Tag.MatchesTag(AbilityTag))
+			{
+				return &AbilitySpec;
+			}
+		}
+	}
+	return nullptr;
+}
+
+FGameplayTag UBaseAbilitySystemComponent::GetStatusFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	for (FGameplayTag StatusTag : AbilitySpec.GetDynamicSpecSourceTags())
+	{
+		if (StatusTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Status"))))
+		{
+			return StatusTag;
+		}
+	}
+	return FGameplayTag();
+}
+
+bool UBaseAbilitySystemComponent::SlotIsEmpty(const FGameplayTag& Slot)
+{
+	FScopedAbilityListLock ActiveScopeLoc(*this);
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (AbilityHasSlot(AbilitySpec, Slot))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+bool UBaseAbilitySystemComponent::AbilityHasSlot(const FGameplayAbilitySpec& Spec, const FGameplayTag& Slot)
+{
+	return Spec.GetDynamicSpecSourceTags().HasTagExact(Slot);
+}
+
+bool UBaseAbilitySystemComponent::AbilityHasAnySlot(const FGameplayAbilitySpec& Spec)
+{
+	return Spec.GetDynamicSpecSourceTags().HasTag(FGameplayTag::RequestGameplayTag(FName("Inputs.Abilities")));
+}
+
+FGameplayAbilitySpec* UBaseAbilitySystemComponent::GetSpecWithSlot(const FGameplayTag& Slot)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(Slot))
+		{
+			return &AbilitySpec;
+		}
+	}
+	return nullptr;
+}
+
+void UBaseAbilitySystemComponent::AssignSlotToAbility(FGameplayAbilitySpec& Spec, const FGameplayTag& Slot)
+{
+	ClearSlot(&Spec);
+	Spec.GetDynamicSpecSourceTags().AddTag(Slot);
+}
+
+void UBaseAbilitySystemComponent::UnEquipAbility(FGameplayAbilitySpec* AbilitySpec, bool bIsPassiveAbility)
+{
+	if (bIsPassiveAbility)
+	{
+		MulticastActivatePassiveEffect(GetAbilityTagFromSpec(*AbilitySpec), false);
+		DeactivatePassiveEffect.Broadcast(GetAbilityTagFromSpec(*AbilitySpec));
+	}
+	ClearSlot(AbilitySpec);
+}
+
+void UBaseAbilitySystemComponent::ClearSlot(FGameplayAbilitySpec* Spec)
+{
+	const FGameplayTag Slot = GetInputTagFromSpec(*Spec);
+	Spec->GetDynamicSpecSourceTags().RemoveTag(Slot);
+}
+
+void UBaseAbilitySystemComponent::MulticastActivatePassiveEffect_Implementation(const FGameplayTag& AbilityTag,
+	bool bActivate)
+{
+	if (bActivate) ActivatePassiveEffect.Broadcast(AbilityTag);
+	else DeactivatePassiveEffect.Broadcast(AbilityTag);
 }
 
 void UBaseAbilitySystemComponent::AddCharacterAbility(const TSubclassOf<UBaseGameplayAbility>& GameplayAbilityClass,
@@ -140,10 +370,10 @@ void UBaseAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& In
 
 void UBaseAbilitySystemComponent::UpgradeAttribute(const FGameplayTag& AttributeTag)
 {
-	ServerUpgradeAttribute(AttributeTag);
+	Server_UpgradeAttribute(AttributeTag);
 }
 
-void UBaseAbilitySystemComponent::ServerUpgradeAttribute_Implementation(const FGameplayTag& AttributeTag)
+void UBaseAbilitySystemComponent::Server_UpgradeAttribute_Implementation(const FGameplayTag& AttributeTag)
 {
 	AActor* CurrentAvatarActor = GetAvatarActor();
 	if (CurrentAvatarActor && CurrentAvatarActor->Implements<UPlayerInterface>())

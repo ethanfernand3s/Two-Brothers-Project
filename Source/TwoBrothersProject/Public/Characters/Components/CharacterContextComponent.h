@@ -15,6 +15,7 @@ class UBiomeDataAsset;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnInt32ValueChangedSignature, int32);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnTextValueChangedSignature, const FText&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnTextureChangedSignature, UTexture2D*);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnTribeDataChangedSignature, const FTribeData&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnTagContainerChangedSignature, const FGameplayTagContainer&);
 
@@ -49,6 +50,11 @@ public:
 		CharacterName = MoveTemp(InName);
 		OnCharacterNameChanged.Broadcast(InName);
 	}
+	FORCEINLINE void SetCharacterIcon(UTexture2D* InCharacterIcon)
+	{
+		CharacterIcon = MoveTemp(InCharacterIcon);
+		OnCharacterIconChanged.Broadcast(CharacterIcon);
+	}
 	FORCEINLINE void SetLevel(int32 NewLevel)
 	{
 		Level = NewLevel;
@@ -77,6 +83,7 @@ public:
 	
 	// Getters
 	FORCEINLINE FText GetCharacterName() const { return CharacterName; }
+	FORCEINLINE UTexture2D* GetCharacterIcon() const { return CharacterIcon; }
 	FORCEINLINE int32 GetLevel() const { return Level; }
 	FORCEINLINE int32 GetXP() const { return XP; }
 	FORCEINLINE const FTribeData& GetTribeData() const { return TribeData; }
@@ -94,10 +101,10 @@ public:
 	void AddToXP(int32 InXP);
 	void AddToLevel(int32 InLevel);
 	void AddToAttributePoints(int32 InPoints);
-	void AddToBodySockets(FGameplayTag NewBodySocketTag);
 
 	// Delegates
 	FOnTextValueChangedSignature OnCharacterNameChanged;
+	FOnTextureChangedSignature OnCharacterIconChanged;
 	FOnInt32ValueChangedSignature OnLevelChanged;
 	FOnInt32ValueChangedSignature OnXPChanged;
 	FOnTribeDataChangedSignature OnTribeDataChanged;
@@ -120,6 +127,11 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category="CharacterContext", meta=(AllowPrivateAccess), ReplicatedUsing=OnRep_CharacterName)
 	FText CharacterName;
+
+	/**@note Initial icon is set from editor,
+	 * but it would be cool to have the icon changed based on emotion using players voice/facial expressions as an indicator like pizza tower*/
+	UPROPERTY(EditAnywhere, Category="CharacterContext", meta=(AllowPrivateAccess), ReplicatedUsing=OnRep_CharacterIcon)
+	UTexture2D* CharacterIcon;
 
 	UPROPERTY(EditAnywhere, Category="CharacterContext", meta=(AllowPrivateAccess), ReplicatedUsing=OnRep_TribeData)
 	FTribeData TribeData;
@@ -181,6 +193,9 @@ private:
 	
 	UFUNCTION()
 	void OnRep_CharacterName();
+
+	UFUNCTION()
+	void OnRep_CharacterIcon();
 	
 	UFUNCTION()
 	void OnRep_Level();

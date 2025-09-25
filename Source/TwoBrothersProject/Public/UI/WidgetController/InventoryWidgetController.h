@@ -43,9 +43,8 @@ public:
 	void TryUnlockItem(UTBInventoryItem* Item, bool bIsEquippableSlot) const;
 	// TODO: Change to set Grid Status and make each grid have grid data like slotted items have item data
 	// void TryUnlockGridSlot(UInventoryGridSlot* GridSlot) const; // TODO: Implement
-	void HandleAbilityEquipped(const UTBInventoryItem* Item, FGameplayTag SlotInputTag); // TODO: Move to equipment component
+	void HandleAbilityStatusChanged(const UTBInventoryItem* Item, FGameplayTag SlotInputTag); // TODO: Move to equipment component
 	
-
 	// Attribute Set Delegates
 	FOnAttributeCurrentAndMaxChangedSignature CurrentAndMax_AttributeInfoDelegate;
 	FOnAttributeValueChangedSignature         Single_AttributeInfoDelegate;

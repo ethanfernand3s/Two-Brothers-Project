@@ -137,16 +137,11 @@ void UCharacterContextComponent::AddToAttributePoints(int32 InPoints)
 	OnAttributePointsChanged.Broadcast(AttributePoints);
 }
 
-void UCharacterContextComponent::AddToBodySockets(FGameplayTag NewBodySocketTag)
-{
-	BodySocketTags.AddTagFast(NewBodySocketTag);
-	OnBodySocketTagsChanged.Broadcast(BodySocketTags);
-}
-
 void UCharacterContextComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	// TODO: Convert to push model and limit using replicated, prefer On_Rep
 	DOREPLIFETIME(UCharacterContextComponent, CharacterName);
 	DOREPLIFETIME(UCharacterContextComponent, Level);
 	DOREPLIFETIME(UCharacterContextComponent, XP);
@@ -159,12 +154,18 @@ void UCharacterContextComponent::GetLifetimeReplicatedProps(TArray<class FLifeti
 	DOREPLIFETIME(UCharacterContextComponent, LevelGrowthRate);
 	DOREPLIFETIME(UCharacterContextComponent, CreatureTypeTags);
 	DOREPLIFETIME(UCharacterContextComponent, BaseCombatPower);
-	DOREPLIFETIME(UCharacterContextComponent, BodySocketTags);
+	DOREPLIFETIME(UCharacterContextComponent, BodyPartTags);
+	DOREPLIFETIME(UCharacterContextComponent, CharacterIcon);
 }
 
 void UCharacterContextComponent::OnRep_CharacterName()
 {
 	OnCharacterNameChanged.Broadcast(CharacterName);
+}
+
+void UCharacterContextComponent::OnRep_CharacterIcon()
+{
+	OnCharacterIconChanged.Broadcast(CharacterIcon);
 }
 
 void UCharacterContextComponent::OnRep_Level()
@@ -185,9 +186,4 @@ void UCharacterContextComponent::OnRep_TribeData()
 void UCharacterContextComponent::OnRep_AttributePoints()
 {
 	OnAttributePointsChanged.Broadcast(AttributePoints);
-}
-
-void UCharacterContextComponent::OnRep_BodySocketTags()
-{
-	OnBodySocketTagsChanged.Broadcast(BodySocketTags);
 }

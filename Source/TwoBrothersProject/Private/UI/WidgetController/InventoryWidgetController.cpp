@@ -5,6 +5,7 @@
 #include "AbilitySystem/Animal/AnimalAbilitySystemComponent.h"
 #include "AbilitySystem/Animal/AnimalAttributeSet.h"
 #include "AbilitySystem/Base/BaseAttributeSet.h"
+#include "AbilitySystem/Base/BaseAbilitySystemComponent.h"
 #include "AbilitySystem/Data/AttributeInfo.h"
 #include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
 #include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
@@ -199,24 +200,24 @@ void UInventoryWidgetController::BindAllCharacterContext(UCharacterContextCompon
 
 void UInventoryWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag) const
 {
-	UBaseAbilitySystemComponent* FocusedASC = (bIsParasiteFocusedCharacter) ? ParasiteASC : AnimalASC;
-	if (IsValid(FocusedASC)) FocusedASC->UpgradeAttribute(AttributeTag);
+	UBaseAbilitySystemComponent* ActiveASC = GetActiveASC(!bIsParasiteFocusedCharacter);
+	
+	if (IsValid(ActiveASC)) ActiveASC->UpgradeAttribute(AttributeTag);
 }
 
 void UInventoryWidgetController::TryUnlockItem(UTBInventoryItem* Item, bool bIsEquippableSlot) const
 {
-	const TWeakInterfacePtr<IPlayerInterface> FocusedCharacter =  (bIsParasiteFocusedCharacter) ? ParasitePI : AnimalPI;
-	if (!FocusedCharacter.IsValid()) return;
+	IPlayerInterface* ActivePI = GetActivePI(!bIsParasiteFocusedCharacter);
+	if (!ActivePI) return;
 	
-	const UCharacterContextComponent* CharacterContextComp = FocusedCharacter->GetCharacterContextComponent();
+	const UCharacterContextComponent* CharacterContextComp = ActivePI->GetCharacterContextComponent();
 	if (!IsValid(CharacterContextComp)) return;
 	
 	CachedInventory->Server_TryUnlockItem(Item, bIsEquippableSlot, CharacterContextComp);
 }
 
-void UInventoryWidgetController::HandleAbilityEquipped(const UTBInventoryItem* Item, FGameplayTag SlotInputTag)
+void UInventoryWidgetController::HandleAbilityStatusChanged(const UTBInventoryItem* Item, FGameplayTag SlotInputTag)
 {
-	UBaseAbilitySystemComponent* FocusedASC = (bIsParasiteFocusedCharacter) ? ParasiteASC : AnimalASC;
-	if (IsValid(FocusedASC)) FocusedASC->HandleAbilityItemEquipped(Item, SlotInputTag);
+	UBaseAbilitySystemComponent* ActiveASC = GetActiveASC(!bIsParasiteFocusedCharacter);
+	if (IsValid(ActiveASC)) ActiveASC->HandleAbilityStatusChanged(Item, SlotInputTag);
 }
-

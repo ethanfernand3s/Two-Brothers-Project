@@ -49,8 +49,8 @@ class TWOBROTHERSPROJECT_API USlotUserWidget : public UBaseUserWidget, public IH
 
 public:
 	
-	/* For holding the item in the UI */
-	void SetSlottedItem(USlottedItemUserWidget* SlottedItem);
+	/* For holding the item in the UI, return false if the placement fails */
+	bool SetSlottedItem(USlottedItemUserWidget* SlottedItem);
 	/* For removing the held item in the UI */
 	void RemoveSlottedItem();
 	
@@ -74,7 +74,7 @@ public:
 	int32 GetStackCount() const { return StackCount; }
 
 	void SetItemCategoryPreference(FGameplayTag ItemPreferenceTag) { ItemCategoryPreference = ItemPreferenceTag; }
-	bool DoesItemMeetSlotRequirement(const UTBInventoryItem* Item) const;
+	bool CanAcceptItem(const UTBInventoryItem* Item) const;
 	bool MatchesCategory(const UTBInventoryItem* Item) const;
 	bool HasCategoryPreference() const;
 

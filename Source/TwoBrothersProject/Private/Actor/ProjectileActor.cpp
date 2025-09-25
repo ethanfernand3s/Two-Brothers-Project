@@ -29,7 +29,7 @@ AProjectileActor::AProjectileActor()
 void AProjectileActor::BeginPlay()
 {
 	Super::BeginPlay();
-	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, AProjectileActor::OnSphereOverlap);
+	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &AProjectileActor::OnSphereOverlap);
 	
 }
 

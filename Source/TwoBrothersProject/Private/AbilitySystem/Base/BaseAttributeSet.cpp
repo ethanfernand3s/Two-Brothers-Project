@@ -5,6 +5,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffectExtension.h"
 #include "TBGameplayTags.h"
+#include "Characters/Components/CharacterContextComponent.h"
 #include "Characters/Data/LevelInfo.h"
 #include "GameFramework/Character.h"
 #include "Net/UnrealNetwork.h"
@@ -288,31 +289,31 @@ void UBaseAttributeSet::HandleIncomingXP(const FEffectProperties& Props)
 	// Source Character is the owner, since GA_ListenForEvents applies GE_EventBasedEffect, adding to IncomingXP
 	if (IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(Props.SourceCharacter))
 	{
-		const int32 CurrentLevel = PlayerInterface->GetLevel();
-		const int32 CurrentXP = PlayerInterface->GetXP();
+		const int32 CurrentLevel = PlayerInterface->GetCharacterContextComponent()->GetLevel();
+		const int32 CurrentXP = PlayerInterface->GetCharacterContextComponent()->GetXP();
 
-		const int32 NewLevel = LevelInfoLibrary::GetLevelFromXP(CurrentXP + LocalIncomingXP, PlayerInterface->GetGrowthRate());
+		const int32 NewLevel = LevelInfoLibrary::GetLevelFromXP(CurrentXP + LocalIncomingXP, PlayerInterface->GetCharacterContextComponent()->GetGrowthRate());
 		const int32 NumLevelUps = NewLevel - CurrentLevel;
 		if (NumLevelUps > 0)
 		{
-			PlayerInterface->AddToPlayerLevel(NumLevelUps);
+			PlayerInterface->GetCharacterContextComponent()->AddToLevel(NumLevelUps);
 
 			int32 AttributePointsReward = 0;
 
 			for (int32 i = 0; i < NumLevelUps; ++i)
 			{
-				AttributePointsReward += PlayerInterface->GetAttributePointsReward(CurrentLevel + i);
+				AttributePointsReward += 1; // Could make the attribute point reward dynamic and based on the characters level + 1
 			}
 			
-			PlayerInterface->AddToAttributePoints(AttributePointsReward);
+			PlayerInterface->GetCharacterContextComponent()->AddToAttributePoints(AttributePointsReward);
 			
 			bTopOffHealth = true;
 			bTopOffEnergy = true;
 				
-			// PlayerInterface->LevelUp(); Could Implement if needed
+			// PlayerInterface->GetCharacterContextComponent()->LevelUp(); Could Implement if needed
 		}
 			
-		PlayerInterface->AddToXP(LocalIncomingXP);
+		PlayerInterface->GetCharacterContextComponent()->AddToXP(LocalIncomingXP);
 	}
 }
 
@@ -320,7 +321,7 @@ void UBaseAttributeSet::SendXPEvent(const FEffectProperties& Props)
 {
 	if (IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(Props.SourceCharacter))
 	{
-		const int32 XPReward = LevelInfoLibrary::GetXPReward(PlayerInterface->GetBaseXP(), PlayerInterface->GetLevel(),
+		const int32 XPReward = LevelInfoLibrary::GetXPReward(PlayerInterface->GetCharacterContextComponent()->GetBaseXP(), PlayerInterface->GetCharacterContextComponent()->GetLevel(),
 			PlayerInterface->GetIsInhabited(), PlayerInterface->GetXPMultiplierAmount());
 
 		const FTBGameplayTags& GameplayTags = FTBGameplayTags::Get();

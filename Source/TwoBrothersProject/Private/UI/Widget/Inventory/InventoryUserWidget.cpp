@@ -7,6 +7,7 @@
 #include "Inventory/Utils/InventoryStatics.h"
 #include "UI/Widget/Inventory/InventoryBackgroundUserWidget.h"
 #include "UI/Widget/Inventory/CharacterPanel/CharacterPanelUserWidget.h"
+#include "UI/Widget/Inventory/CharacterPanel/CharacterDetail/CharacterDetailsUserWidget.h"
 #include "UI/Widget/Inventory/Items/HoverItemUserWidget.h"
 #include "UI/Widget/Inventory/Slots/SlotPanelUserWidget.h"
 
@@ -51,14 +52,31 @@ void UInventoryUserWidget::NativeOnInitialized()
 { 
     Super::NativeOnInitialized();
 
+    if (!IsValid(CharacterPanel) || !IsValid(InventoryPanel)) return;
+    
     const auto& Tags = FTBGameplayTags::Get();
 
+    UCharacterDetailsUserWidget* ParasiteCharacterDetails = CharacterPanel->GetParasiteDetailsUserWidget();
+    if (!IsValid(ParasiteCharacterDetails)) return;
+
+    /* This is optional based on if a animal is inhabited or not */
+    UCharacterDetailsUserWidget* AnimalCharacterDetails = CharacterPanel->GetAnimalDetailsUserWidget();
+    
     /* Note: Inventory can take any ItemCategory tag as long as its of ItemCategories */
     SlotContainers.Add({Tags.ItemCategories_None, InventoryPanel->GetSlotContainer()});
-    SlotContainers.Add({Tags.ItemCategories_Abilities_Main, CharacterPanel->GetMainAbilitySlotContainer()});
-    SlotContainers.Add({Tags.ItemCategories_Abilities_Default, CharacterPanel->GetDefaultAbilitySlotContainer()});
-    SlotContainers.Add({Tags.ItemCategories_Abilities_Passive, CharacterPanel->GetPassiveAbilitySlotContainer()});
 
+    
+    SlotContainers.Add({Tags.ItemCategories_Abilities_Main, ParasiteCharacterDetails->GetMainAbilitySlotContainer()});
+    SlotContainers.Add({Tags.ItemCategories_Abilities_Default, ParasiteCharacterDetails->GetDefaultAbilitySlotContainer()});
+    SlotContainers.Add({Tags.ItemCategories_Abilities_Passive, ParasiteCharacterDetails->GetPassiveAbilitySlotContainer()});
+
+    if (IsValid(AnimalCharacterDetails))
+    {
+        SlotContainers.Add({Tags.ItemCategories_Abilities_Main, AnimalCharacterDetails->GetMainAbilitySlotContainer()});
+        SlotContainers.Add({Tags.ItemCategories_Abilities_Default, AnimalCharacterDetails->GetDefaultAbilitySlotContainer()});
+        SlotContainers.Add({Tags.ItemCategories_Abilities_Passive, AnimalCharacterDetails->GetPassiveAbilitySlotContainer()});
+    }
+    
     for (auto& SlotContainerPair : SlotContainers)
     {
         SlotContainerPair.Value->SetOwningCanvasPanel(CanvasPanel);

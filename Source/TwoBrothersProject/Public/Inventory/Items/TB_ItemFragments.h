@@ -144,7 +144,6 @@ struct FAbilityFragment : public FTB_ItemFragment
 
 	FGameplayTag GetAbilityTag() const { return AbilityTag; }
 	FGameplayTag GetAbilityCooldownTag() const { return AbilityCooldownTag; }
-	FGameplayTag GetAbilityTypeTag() const { return AbilityTypeTag; }
 	TSubclassOf<UBaseGameplayAbility> GetAbilityClass() const { return AbilityClass; }
 	
 private:
@@ -156,10 +155,6 @@ private:
 	// The tag to broadcast the abilities cooldown to the UI
 	UPROPERTY(EditAnywhere, Category = "Inventory")
 	FGameplayTag AbilityCooldownTag = FGameplayTag::EmptyTag;
-
-	// The type of ability
-	UPROPERTY(EditAnywhere, Category = "Inventory", meta=(GameplayTagFilter="AbilityTypes"))
-	FGameplayTag AbilityTypeTag = FGameplayTag::EmptyTag;
 
 	// The blueprint version of this ability
 	UPROPERTY(EditAnywhere, Category = "Inventory")

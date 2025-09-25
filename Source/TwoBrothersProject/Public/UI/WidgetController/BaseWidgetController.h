@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystem/Base/BaseAttributeSet.h"
 #include "UObject/Object.h"
+#include "Player/Interfaces/PlayerInterface.h"
 #include "BaseWidgetController.generated.h"
 
 class IPlayerInterface;
@@ -23,25 +25,15 @@ struct FWidgetControllerParams
 	FWidgetControllerParams (){};
 	
 	FWidgetControllerParams(
-		ATBPlayerController* InTBPC,
-		AParasitePlayerState* InPS,
-		UParasiteAbilitySystemComponent* InParasiteASC,
-		UParasiteAttributeSet* InParasiteAS,
-		IPlayerInterface* InParasitePI,
-		UAnimalAbilitySystemComponent* InAnimalASC = nullptr,
-		UAnimalAttributeSet* InAnimalAS = nullptr,
-		IPlayerInterface* InAnimalPI = nullptr) :
-		  TBPC(InTBPC)
-		, ParasitePS(InPS)
-		, ParasiteASC(InParasiteASC)
-		, ParasiteAS(InParasiteAS)
-		, ParasitePI(InParasitePI)
-		, AnimalASC(InAnimalASC)
-		, AnimalAS(InAnimalAS)
-		, AnimalPI(InAnimalPI)
-	{}
-
-
+	ATBPlayerController* InTBPC,
+	AParasitePlayerState* InPS,
+	UParasiteAbilitySystemComponent* InParasiteASC,
+	UParasiteAttributeSet* InParasiteAS,
+	IPlayerInterface* InParasitePI,
+	UAnimalAbilitySystemComponent* InAnimalASC = nullptr,
+	UAnimalAttributeSet* InAnimalAS = nullptr,
+	IPlayerInterface* InAnimalPI = nullptr);
+	
 	TWeakObjectPtr<ATBPlayerController> TBPC = nullptr;
 	TWeakObjectPtr<AParasitePlayerState> ParasitePS = nullptr;
 	TWeakObjectPtr<UParasiteAbilitySystemComponent> ParasiteASC = nullptr;
@@ -64,7 +56,11 @@ public:
 	virtual void BindCallbacksToDependencies();
 
 	const UUIDataAsset* GetUIDataAsset() const;
-	
+	bool IsAnimalInhabited() const;
+	UBaseAbilitySystemComponent* GetActiveASC(bool bIsAnimalPriority) const;
+	UBaseAttributeSet* GetActiveAS(bool bIsAnimalPriority) const;
+	IPlayerInterface* GetActivePI(bool bIsAnimalPriority) const;
+
 protected:
 
 	/* Widget Param Set*/

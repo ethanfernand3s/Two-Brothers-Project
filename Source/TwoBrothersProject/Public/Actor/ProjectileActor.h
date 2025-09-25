@@ -17,7 +17,7 @@ public:
 
 	AProjectileActor();
 
-	UPROPERTY(editAnywhere)
+	UPROPERTY(EditAnywhere)
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
 protected:
 

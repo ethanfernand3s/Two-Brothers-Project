@@ -1,9 +1,10 @@
 #include "UI/HUD/PlayerHUD.h"
 
 #include "AbilitySystem/Animal/AnimalAbilitySystemComponent.h"
+#include "AbilitySystem/Animal/AnimalAttributeSet.h"
 #include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
+#include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
 #include "Blueprint/UserWidget.h"
-#include "Game/TBGamemode.h"
 #include "Inventory/Components/TBInventoryComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/TBPlayerController.h"

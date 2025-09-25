@@ -1,4 +1,5 @@
 
+
 #include "UI/Widget/Inventory/Slots/SlotUserWidget.h"
 
 #include "Blueprint/DragDropOperation.h"
@@ -24,19 +25,25 @@ const TMap<EGridSlotState, FLinearColor>& USlotUserWidget::GetMappedTints()
 	return MappedTints;
 }
 
-void USlotUserWidget::SetSlottedItem(USlottedItemUserWidget* SlottedItem)
+bool USlotUserWidget::SetSlottedItem(USlottedItemUserWidget* SlottedItem)
 {
+	if (!IsValid(SlottedItem) || !IsValid(SlottedItem->GetInventoryItem())
+		|| !CanAcceptItem(SlottedItem->GetInventoryItem()) || !IsValid(SizeBox_Holder)) return false;
+	
 	if (SizeBox_Holder->HasAnyChildren())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Slot already has a slotted item, ERROR!"));
-		return;
+		return false;
 	}
 	
 	SizeBox_Holder->AddChild(SlottedItem);
 	
 	USizeBoxSlot* SlottedItemSizeBoxSlot = UWidgetLayoutLibrary::SlotAsSizeBoxSlot(SlottedItem);
+	if (!IsValid(SlottedItemSizeBoxSlot)) return false;
+	
 	SlottedItemSizeBoxSlot->SetVerticalAlignment(VAlign_Center);
 	SlottedItemSizeBoxSlot->SetHorizontalAlignment(HAlign_Center);
+	return true;
 }
 
 void USlotUserWidget::RemoveSlottedItem()
@@ -97,7 +104,7 @@ void USlotUserWidget::NativeOnDragEnter(const FGeometry& InGeometry, const FDrag
 				if (HasCategoryPreference())
 				{
 					// Does item meet slot requirements?
-					if (DoesItemMeetSlotRequirement(HoverInventoryItem))
+					if (CanAcceptItem(HoverInventoryItem))
 					{
 						SetTint(EGridSlotState::CompatibleHovered);
 					}
@@ -160,7 +167,7 @@ void USlotUserWidget::HandleOpposingClick(UHoverItemUserWidget* HoverWidget)
 
 bool USlotUserWidget::RequestPlaceItemInSlot(UHoverItemUserWidget* InHoverItemWidget, const UTBInventoryItem* Item, bool IsDrop)
 {
-	if (bAvailable & DoesItemMeetSlotRequirement(Item))
+	if (CanAcceptItem(Item))
 	{
 		if (IsDrop || (!InHoverItemWidget->IsStackable() && InHoverItemWidget->IsOpposingMouseBeingHeld()))
 		{
@@ -234,9 +241,9 @@ void USlotUserWidget::SetInventoryItem(UTBInventoryItem* NewItem)
 	InventoryItem = NewItem;
 }
 
-bool USlotUserWidget::DoesItemMeetSlotRequirement(const UTBInventoryItem* Item) const
+bool USlotUserWidget::CanAcceptItem(const UTBInventoryItem* Item) const
 {
-	return (HasCategoryPreference()) ? MatchesCategory(Item) : true;
+	return (bAvailable && ((HasCategoryPreference()) ? MatchesCategory(Item) : true));
 }
 
 bool USlotUserWidget::MatchesCategory(const UTBInventoryItem* Item) const

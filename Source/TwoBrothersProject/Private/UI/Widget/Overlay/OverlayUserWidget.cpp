@@ -15,7 +15,9 @@ void UOverlayUserWidget::OnWidgetControllerSet()
 {
 	if ((OverlayWidgetController = Cast<UOverlayWidgetController>(WidgetController)))
 	{
+		if (OverlayWidgetController->IsAnimalInhabited()) HideSecondaryInfo();
 		OverlayWidgetController->AttributePointsChanged.AddUObject(this,&UOverlayUserWidget::OnAttributePointsUpdated);
+		OverlayWidgetController->CharacterIconChanged.AddUObject(this,&UOverlayUserWidget::OnCharacterIconChanged);
 		OverlayWidgetController->XPChanged.AddUObject(this,&UOverlayUserWidget::OnXPPercentageUpdated);
 		OverlayWidgetController->LevelChanged.AddUObject(this,&UOverlayUserWidget::OnLevelUpdated);
 
@@ -26,26 +28,58 @@ void UOverlayUserWidget::OnWidgetControllerSet()
 	}
 }
 
-void UOverlayUserWidget::OnAttributePointsUpdated(int32 NewAttributePoints)
+void UOverlayUserWidget::OnAttributePointsUpdated(int32 NewAttributePoints, bool bIsParasiteVal)
 {
-	if (NewAttributePoints > 0)
+	if (!IsValid(OverlayWidgetController)) return;
+	UTextBlock* FocusedTextBlock = nullptr;
+	UImage* FocusedIconFill = nullptr;
+	if (OverlayWidgetController->IsAnimalInhabited())
 	{
-		if (bIsAttributePointsEmpty)
-		{
-			TextBlock_PointsToSpend_Primary->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			Image_Icon_Primary_Fill->SetBrushTintColor(FLinearColor::White);
-			bIsAttributePointsEmpty = false;
-		}
-		TextBlock_PointsToSpend_Primary->SetText(FText::AsNumber(NewAttributePoints));
+		// Parasite becomes secondary if animal is inhabited
+		FocusedTextBlock = bIsParasiteVal ? TextBlock_PointsToSpend_Secondary : TextBlock_PointsToSpend_Primary;
+		FocusedIconFill = bIsParasiteVal ? Image_Icon_Secondary_Fill : Image_Icon_Primary_Fill;
 	}
 	else
 	{
-		TextBlock_PointsToSpend_Primary->SetVisibility(ESlateVisibility::Collapsed);
-		Image_Icon_Primary_Fill->SetBrushTintColor(FLinearColor(0.2f, 0.2f, 0.2f, 1.0f));
-		bIsAttributePointsEmpty = true;
+		// Otherwise parasite is primary
+		FocusedTextBlock = TextBlock_PointsToSpend_Primary;
+		FocusedIconFill = Image_Icon_Primary_Fill;
 	}
+	if (!IsValid(FocusedTextBlock) || !IsValid(FocusedIconFill)) return;
+	
+	if (NewAttributePoints > 0)
+	{
+		if (!FocusedTextBlock->IsVisible() || !FocusedIconFill->IsVisible())
+		{
+			FocusedTextBlock->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			FocusedIconFill->SetBrushTintColor(FLinearColor::White);
+		}
+		FocusedTextBlock->SetText(FText::AsNumber(NewAttributePoints));
+	}
+	else
+	{
+		FocusedTextBlock->SetVisibility(ESlateVisibility::Collapsed);
+		FocusedIconFill->SetBrushTintColor(FLinearColor(0.2f, 0.2f, 0.2f, 1.0f));
+	}
+}
 
-	// TODO: Update Primary (for parasite) if host is present and primary for the host
+void UOverlayUserWidget::OnCharacterIconChanged(UTexture2D* CharacterIcon, bool bIsParasiteVal)
+{
+	if (!IsValid(CharacterIcon)) return;
+	
+	UImage* FocusedIcon = nullptr;
+	if (OverlayWidgetController->IsAnimalInhabited())
+	{
+		// Parasite becomes secondary if animal is inhabited
+		FocusedIcon = bIsParasiteVal ? Image_Icon_Secondary : Image_Icon_Primary;
+	}
+	else
+	{
+		// Otherwise parasite is primary
+		FocusedIcon = Image_Icon_Primary;
+	}
+	if (!IsValid(FocusedIcon)) return;
+	FocusedIcon->SetBrushFromTexture(CharacterIcon);
 }
 
 void UOverlayUserWidget::OnLevelUpdated(int32 NewLevel)
@@ -96,4 +130,11 @@ void UOverlayUserWidget::OnMaxEnergyUpdated(float NewMaxEnergy)
 	{
 		ProgressBar_Energy->SetPercent(Energy / MaxEnergy);
 	}
+}
+
+void UOverlayUserWidget::HideSecondaryInfo() const
+{
+	Image_Icon_Secondary->SetVisibility(ESlateVisibility::Hidden);
+	Image_Icon_Secondary_Fill->SetVisibility(ESlateVisibility::Hidden);
+	TextBlock_PointsToSpend_Secondary->SetVisibility(ESlateVisibility::Hidden);
 }

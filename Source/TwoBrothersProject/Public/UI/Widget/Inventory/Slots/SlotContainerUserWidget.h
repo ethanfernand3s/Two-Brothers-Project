@@ -59,9 +59,7 @@ public:
 	void AddItemToIndices(FSlotAvailabilityResult AvailabilityResult, UTBInventoryItem* Item);
 	void AddItemAtIndex(UTBInventoryItem* Item, const int32 Index, const bool bStackable, const int32 StackAmount);
 	USlottedItemUserWidget* CreateSlottedItem(UTBInventoryItem* Item, const bool bStackable,
-                                              const int32 StackAmount, const int32 Index,
-                                              const FLevelFragment* LevelFragment,
-                                              const FTBGameplayTags& Tags);
+                                              const int32 StackAmount, const int32 Index);
 	void UpdateItemStatus(UTBInventoryItem* Item) const;
 	// Creature Type is optional
 	void HandleAbilityEquipped(UTBInventoryItem* Item, const FAbilityFragment* AbilityFragment,
