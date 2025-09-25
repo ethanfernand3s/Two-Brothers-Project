@@ -185,6 +185,12 @@ void UInventoryWidgetController::BindAllCharacterContext(UCharacterContextCompon
 			OnCharacterNameChangedDelegate.Broadcast(NewCharacterName, bIsParasiteVal);
 		});
 
+	CharacterContextComponent->OnCharacterIconChanged.AddLambda(
+		[this, bIsParasiteVal](UTexture2D* NewCharacterIcon)
+		{
+			CharacterIconChanged.Broadcast(NewCharacterIcon, bIsParasiteVal);
+		});
+
 	CharacterContextComponent->OnLevelChanged.AddLambda(
 		[this, bIsParasiteVal](int NewLevel)
 		{

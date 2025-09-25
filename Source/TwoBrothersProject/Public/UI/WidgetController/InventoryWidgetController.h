@@ -24,6 +24,7 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAttributeValueChangedSignature, const FT
 // Character Context Delegates
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnIntChanged, int32, bool bIsParasiteVal);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnTextChangedSignature, const FText&, bool bIsParasiteVal);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FTextureDelegateSignature, UTexture2D*, bool bIsParasiteVal);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnTagChangedSignature, const FGameplayTag&, bool bIsParasiteVal);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCreatureTypesSetSignature, const struct FGameplayTagContainer&, bool bIsParasiteVal);
@@ -53,6 +54,7 @@ public:
 	FOnIntChanged					   OnAttributePointsChangedDelegate;
 	FOnIntChanged					   OnLevelChangedDelegate;
 	FOnTextChangedSignature            OnCharacterNameChangedDelegate;
+	FTextureDelegateSignature		   CharacterIconChanged;
 	FOnTextChangedSignature            OnTribeNameChangedDelegate;
 	FOnTagChangedSignature             OnGenderSetDelegate;
 	FOnCreatureTypesSetSignature       OnCreatureTypesSetDelegate;

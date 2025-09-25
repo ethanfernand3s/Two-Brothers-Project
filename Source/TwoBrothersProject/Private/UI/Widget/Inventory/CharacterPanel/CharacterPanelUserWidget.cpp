@@ -18,10 +18,9 @@ void UCharacterPanelUserWidget::NativeOnInitialized()
     }
     
     // Default to Parasite
-    if (IsValid(WidgetSwitcher_DetailSwitcher))
-    {
-        WidgetSwitcher_DetailSwitcher->SetActiveWidget(ParasiteDetailsUserWidget);
-    }
+    if (IsValid(WidgetSwitcher_DetailSwitcher)) WidgetSwitcher_DetailSwitcher->SetActiveWidget(ParasiteDetailsUserWidget);
+
+    if (IsValid(AnimalDetailsUserWidget)) AnimalDetailsUserWidget->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UCharacterPanelUserWidget::OnWidgetControllerSet()
@@ -31,7 +30,12 @@ void UCharacterPanelUserWidget::OnWidgetControllerSet()
 	
 	if(InventoryWidgetController = Cast<UInventoryWidgetController>(WidgetController))
 	{
-	    if (InventoryWidgetController->IsAnimalInhabited()) Button_SwitchCharacter->SetIsEnabled(true);
+	    if (InventoryWidgetController->IsAnimalInhabited())
+	    {
+	        Button_SwitchCharacter->SetIsEnabled(true);
+	        AnimalDetailsUserWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	        SwitchCharacter();
+	    }
 	    
         // Attribute Delegates
         InventoryWidgetController->CurrentAndMax_AttributeInfoDelegate.AddLambda(
@@ -75,6 +79,16 @@ void UCharacterPanelUserWidget::OnWidgetControllerSet()
                 );
             });
 
+	    InventoryWidgetController->CharacterIconChanged.AddLambda(
+            [this](UTexture2D* NewIcon, bool bIsParasiteVal)
+            {
+                ForwardToChild<UCharacterDetailsUserWidget>(
+                    bIsParasiteVal,
+                    &UCharacterDetailsUserWidget::OnCharacterIconChanged,
+                    NewIcon
+                );
+            });
+	    
         InventoryWidgetController->OnLevelChangedDelegate.AddLambda(
             [this](int32 Level, bool bIsParasiteVal)
             {

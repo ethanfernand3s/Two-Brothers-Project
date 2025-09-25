@@ -63,6 +63,7 @@ public:
 	
 	void OnAttributePointsChanged(int NewAttributePoints);
 	void OnCharacterNameChanged(const FText& NewCharacterName);
+	void OnCharacterIconChanged(UTexture2D* NewCharacterIcon);
 	void OnLevelChanged(int32 NewLevel);
 	void OnTribeDataChanged(const FText& NewTribeText);
 
@@ -143,6 +144,9 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> Image_Gender;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> Image_Icon;
 
 #pragma endregion Character Context Variables
 

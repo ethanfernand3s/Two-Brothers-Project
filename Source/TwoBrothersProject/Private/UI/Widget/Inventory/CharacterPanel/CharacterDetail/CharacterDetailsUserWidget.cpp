@@ -206,6 +206,11 @@ void UCharacterDetailsUserWidget::OnCharacterNameChanged(const FText& NewCharact
 	TextBlock_CharacterName->SetText(NewCharacterName);
 }
 
+void UCharacterDetailsUserWidget::OnCharacterIconChanged(UTexture2D* NewCharacterIcon)
+{
+	Image_Icon->SetBrushFromTexture(NewCharacterIcon);
+}
+
 void UCharacterDetailsUserWidget::OnLevelChanged(int32 NewLevel)
 {
 	TextBlock_Level->SetText(FText::AsNumber(NewLevel));
