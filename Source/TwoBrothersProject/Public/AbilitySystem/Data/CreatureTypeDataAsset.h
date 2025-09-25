@@ -7,15 +7,9 @@
 #include "CreatureTypeDataAsset.generated.h"
 
 enum class ECreatureType : uint8;
+struct FGameplayTag;
 
-USTRUCT(BlueprintType)
-struct FCreatureTypeInfo
-{
-	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ImageMaps")
-	TObjectPtr<UTexture2D> TypeImage;
-};
 
 /**
  * 
@@ -26,6 +20,5 @@ class TWOBROTHERSPROJECT_API UCreatureTypeDataAsset : public UDataAsset
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ImageMaps")
-	TMap<ECreatureType, FCreatureTypeInfo> CreatureTypeInfoMap;
+
 };

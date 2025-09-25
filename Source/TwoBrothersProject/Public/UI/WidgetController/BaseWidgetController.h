@@ -6,42 +6,50 @@
 #include "UObject/Object.h"
 #include "BaseWidgetController.generated.h"
 
-struct FTBAbilityInfo;
-class UAbilityInfo;
-DECLARE_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FTBAbilityInfo&);
-
+class IPlayerInterface;
+class ATBPlayerController;
+class AParasitePlayerState;
 class UParasiteAbilitySystemComponent;
 class UParasiteAttributeSet;
 class UAnimalAbilitySystemComponent;
 class UAnimalAttributeSet;
+class UUIDataAsset;
+
 USTRUCT (BlueprintType)
 struct FWidgetControllerParams
-
 {
 	GENERATED_BODY()
+	
 	FWidgetControllerParams (){};
-	FWidgetControllerParams (APlayerController* InPC,APlayerState* InPS,
-		UParasiteAbilitySystemComponent* InParasiteASC,UParasiteAttributeSet* InParasiteAS,
-		UAnimalAbilitySystemComponent* InAnimalASC = nullptr,UAnimalAttributeSet* InAnimalAS = nullptr) :
-	TBPlayerController(InPC),ParasitePS(InPS),ParasiteAsc(InParasiteASC),ParasiteAttributeSet(InParasiteAS),AnimalAsc(InAnimalASC),AnimalAttributeSet(InAnimalAS){};
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<APlayerController> TBPlayerController = nullptr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<APlayerState> ParasitePS = nullptr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UParasiteAbilitySystemComponent> ParasiteAsc = nullptr;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UParasiteAttributeSet> ParasiteAttributeSet = nullptr;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UAnimalAbilitySystemComponent> AnimalAsc = nullptr;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UAnimalAttributeSet> AnimalAttributeSet = nullptr;
+	FWidgetControllerParams(
+		ATBPlayerController* InTBPC,
+		AParasitePlayerState* InPS,
+		UParasiteAbilitySystemComponent* InParasiteASC,
+		UParasiteAttributeSet* InParasiteAS,
+		IPlayerInterface* InParasitePI,
+		UAnimalAbilitySystemComponent* InAnimalASC = nullptr,
+		UAnimalAttributeSet* InAnimalAS = nullptr,
+		IPlayerInterface* InAnimalPI = nullptr) :
+		  TBPC(InTBPC)
+		, ParasitePS(InPS)
+		, ParasiteASC(InParasiteASC)
+		, ParasiteAS(InParasiteAS)
+		, ParasitePI(InParasitePI)
+		, AnimalASC(InAnimalASC)
+		, AnimalAS(InAnimalAS)
+		, AnimalPI(InAnimalPI)
+	{}
+
+
+	TWeakObjectPtr<ATBPlayerController> TBPC = nullptr;
+	TWeakObjectPtr<AParasitePlayerState> ParasitePS = nullptr;
+	TWeakObjectPtr<UParasiteAbilitySystemComponent> ParasiteASC = nullptr;
+	TWeakObjectPtr<UParasiteAttributeSet> ParasiteAS = nullptr;
+	TWeakInterfacePtr<IPlayerInterface> ParasitePI = nullptr;
+	TWeakObjectPtr<UAnimalAbilitySystemComponent> AnimalASC = nullptr;
+	TWeakObjectPtr<UAnimalAttributeSet> AnimalAS = nullptr;
+	TWeakInterfacePtr<IPlayerInterface> AnimalPI = nullptr;
 };
 
 UCLASS(Blueprintable)
@@ -54,34 +62,22 @@ public:
 	
 	virtual void BroadcastInitialValues();
 	virtual void BindCallbacksToDependencies();
-	
-	FAbilityInfoSignature AbilityInfoDelegate;
 
-	void BroadcastAbilityInfo();
+	const UUIDataAsset* GetUIDataAsset() const;
 	
 protected:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data")
-	TObjectPtr<UAbilityInfo> AbilityInfo;
-	
-	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<APlayerController> TBPlayerController;
+	/* Widget Param Set*/
+	TWeakObjectPtr<ATBPlayerController> TBPC = nullptr;
+	TWeakObjectPtr<AParasitePlayerState> ParasitePS = nullptr;
+	TWeakObjectPtr<UParasiteAbilitySystemComponent> ParasiteASC = nullptr;
+	TWeakObjectPtr<UParasiteAttributeSet> ParasiteAS = nullptr;
+	TWeakInterfacePtr<IPlayerInterface> ParasitePI = nullptr;
+	TWeakObjectPtr<UAnimalAbilitySystemComponent> AnimalASC = nullptr;
+	TWeakObjectPtr<UAnimalAttributeSet> AnimalAS = nullptr;
+	TWeakInterfacePtr<IPlayerInterface> AnimalPI = nullptr;
 
-	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<APlayerState> ParasitePS;
-
-	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<UParasiteAbilitySystemComponent> ParasiteASC;
-
-	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<UParasiteAttributeSet> ParasiteAttributeSet;
-
-	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<UAnimalAbilitySystemComponent> AnimalASC;
-
-	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<UAnimalAttributeSet> AnimalAttributeSet;
-
-	
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess), Category = "UI")
+	TObjectPtr<UUIDataAsset> UIDataAsset;
 };
 

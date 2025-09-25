@@ -10,16 +10,16 @@ struct FTribeData
 {
 	GENERATED_BODY()
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	FText TribeName;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	FText TribeDescription;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	UTexture2D* TribeIcon = nullptr;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	FLinearColor TribeColor = FLinearColor::White;
 
 	FTribeData() = default;

@@ -1,169 +1,222 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "UI/WidgetController/InventoryWidgetController.h"
 
+#include "AbilitySystem/Animal/AnimalAbilitySystemComponent.h"
+#include "AbilitySystem/Animal/AnimalAttributeSet.h"
+#include "AbilitySystem/Base/BaseAttributeSet.h"
 #include "AbilitySystem/Data/AttributeInfo.h"
 #include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
 #include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
-#include "Characters/CharacterContextComponent.h"
-#include "GameFramework/PlayerState.h"
+#include "Characters/Components/CharacterContextComponent.h"
+#include "Inventory/Components/TBInventoryComponent.h"
 #include "Player/ParasitePlayerState.h"
+#include "UI/HUD/PlayerHUD.h"
 
 void UInventoryWidgetController::BroadcastInitialValues()
 {
-	// TODO: Add animal AS when currently inhabited
-
-#pragma region Combat Attributes
-	
-	for (const auto& AttributeBinding : ParasiteAttributeSet->TagsToCombatAttributes)
+	// Parasite
+	if (ParasiteAS.IsValid())
 	{
-		if (AttributeBinding.HasSecondary())
-		{
-			// Broadcast Current & Max Vals
-			FTBAttributeInfo CurrentInfo = AttributeInfoLibrary::FindAttributeInfo(AttributeBinding.PrimaryTag);
-			CurrentInfo.AttributeValue = AttributeBinding.PrimaryAttributeFunc().GetNumericValue(ParasiteAttributeSet);
-			
-			FTBAttributeInfo MaxInfo = AttributeInfoLibrary::FindAttributeInfo(AttributeBinding.SecondaryTag);
-			MaxInfo.AttributeValue = AttributeBinding.SecondaryAttributeFunc().GetNumericValue(ParasiteAttributeSet);
+		BroadcastAllAttributes(ParasiteAS.Get(), true);
+	}
+	if (ParasitePI.IsValid() && ParasitePI->GetCharacterContextComponent())
+	{
+		BroadcastCharacterContext(ParasitePI->GetCharacterContextComponent(), true);
+	}
+	
+	// Animal
+	if (AnimalAS.IsValid())
+	{
+		BroadcastAllAttributes(AnimalAS.Get(),false);
+	}
+	if (AnimalPI.IsValid() && AnimalPI->GetCharacterContextComponent())
+	{
+		BroadcastCharacterContext(AnimalPI->GetCharacterContextComponent(), false);
+	}
 
-			CurrentAndMax_AttributeInfoDelegate.Broadcast(CurrentInfo, MaxInfo);
+	// Inventory
+	if (ParasitePS.IsValid())
+	{
+		if (UTBInventoryComponent* Inv = ParasitePS->FindComponentByClass<UTBInventoryComponent>())
+		{
+			CachedInventory = Inv;
+		}
+	}
+}
+
+// Loop over all bindings in an AttributeSet and broadcast values
+void UInventoryWidgetController::BroadcastAllAttributes(UBaseAttributeSet* AttributeSet, bool bIsParasiteVal) const
+{
+	for (const FTagAttributeBinding& Binding : AttributeSet->TagsToCombatAttributes)
+	{
+		if (Binding.HasSecondary())
+		{
+			BroadcastAttributePair(Binding, AttributeSet, bIsParasiteVal);
 		}
 		else
 		{
-			// Broadcast Single Vals
-			FTBAttributeInfo Info = AttributeInfoLibrary::FindAttributeInfo(AttributeBinding.PrimaryTag);
-			Info.AttributeValue = AttributeBinding.PrimaryAttributeFunc().GetNumericValue(ParasiteAttributeSet);
-
-			Single_AttributeInfoDelegate.Broadcast(Info);
+			BroadcastSingleAttribute(Binding, AttributeSet, bIsParasiteVal);
 		}
 	}
-
-#pragma endregion Combat Attributes
-
-#pragma region Character Context
-	
-	auto* ParasitePlayerState = Cast<AParasitePlayerState>(ParasitePS);
-	check(ParasitePlayerState);
-	
-	OnAttributePointsChangedDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetAttributePoints());
-	OnCharacterNameChangedDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetCharacterName());
-	OnLevelChangedDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetLevel());
-	OnTribeNameChangedDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetTribeData().TribeName);
-	
-	OnGenderSetDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetGender());
-	OnAuraColorSetDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetAuraColor());
-	OnCreatureTypesSetDelegate.Broadcast(ParasitePlayerState->CharacterContextComponent->GetCreatureTypes());
-	
-#pragma endregion Character Context
-
-	BroadcastAbilityInfo();
 }
 
 void UInventoryWidgetController::BindCallbacksToDependencies()
 {
 	// Bind Character Context
-	auto* ParasitePlayerState = Cast<AParasitePlayerState>(ParasitePS);
-	check(ParasitePlayerState);	
 	
-	ParasitePlayerState->CharacterContextComponent->OnAttributePointsChanged.AddUObject(this, &UInventoryWidgetController::OnAttributePointsChanged);
-	ParasitePlayerState->CharacterContextComponent->OnCharacterNameChanged.AddUObject(this, &UInventoryWidgetController::OnCharacterNameChanged);
-	ParasitePlayerState->CharacterContextComponent->OnLevelChanged.AddUObject(this, &UInventoryWidgetController::OnLevelChanged);
-	ParasitePlayerState->CharacterContextComponent->OnTribeDataChanged.AddUObject(this, &UInventoryWidgetController::OnTribeDataChanged);
-	
-	// Bind Combat Related Attributes
-	for (const FTagAttributeBinding& Binding : ParasiteAttributeSet->TagsToCombatAttributes)
+	// Parasite
+	if (ParasiteASC.IsValid() && ParasiteAS.IsValid())
 	{
-		const FGameplayAttribute PrimaryAttribute = Binding.PrimaryAttributeFunc();
+		BindAllAttributeCallbacks(ParasiteASC.Get(), ParasiteAS.Get(), true);
+	}
+	if (ParasitePI.IsValid() && ParasitePI->GetCharacterContextComponent())
+	{
+		BindAllCharacterContext(ParasitePI->GetCharacterContextComponent(), true);
+	}
+	
+	// Animal
+	if (AnimalASC.IsValid() && AnimalAS.IsValid())
+	{
+		BindAllAttributeCallbacks(AnimalASC.Get(), AnimalAS.Get(), false);
+	}
+	if (AnimalPI.IsValid() && AnimalPI->GetCharacterContextComponent())
+	{
+		BindAllCharacterContext(AnimalPI->GetCharacterContextComponent(), false);
+	}
+}
 
-		ParasiteASC->GetGameplayAttributeValueChangeDelegate(PrimaryAttribute).AddLambda(
-			[this, Binding](const FOnAttributeChangeData& Data)
+// Loop over all bindings in an AttributeSet and bind callbacks
+void UInventoryWidgetController::BindAllAttributeCallbacks(UAbilitySystemComponent* ASC, UBaseAttributeSet* AttributeSet,
+														   bool bIsParasiteVal) const
+{
+	for (const FTagAttributeBinding& Binding : AttributeSet->TagsToCombatAttributes)
+	{
+		BindAttributeCallback(ASC, Binding, AttributeSet, bIsParasiteVal);
+	}
+}
+
+// Bind attribute change callbacks for one binding
+void UInventoryWidgetController::BindAttributeCallback( UAbilitySystemComponent* ASC,
+														const FTagAttributeBinding& Binding,
+														UBaseAttributeSet* AttributeSet,
+														bool bIsParasiteVal) const
+{
+	const FGameplayAttribute PrimaryAttribute = Binding.PrimaryAttributeFunc();
+
+	// Bind Primary
+	ASC->GetGameplayAttributeValueChangeDelegate(PrimaryAttribute).AddLambda(
+		[this, Binding, AttributeSet, bIsParasiteVal](const FOnAttributeChangeData& Data)
+		{
+			if (Binding.HasSecondary())
 			{
-				FTBAttributeInfo Info = AttributeInfoLibrary::FindAttributeInfo(Binding.PrimaryTag);
-				Info.AttributeValue = Data.NewValue;
+				BroadcastAttributePair(Binding, AttributeSet, bIsParasiteVal);
+			}
+			else
+			{
+				BroadcastSingleAttribute(Binding, AttributeSet, bIsParasiteVal);
+			}
+		}
+	);
 
-				if (Binding.HasSecondary())
-				{
-					FTBAttributeInfo MaxInfo = AttributeInfoLibrary::FindAttributeInfo(Binding.SecondaryTag);
-					MaxInfo.AttributeValue = Binding.SecondaryAttributeFunc().GetNumericValue(ParasiteAttributeSet);
+	// Bind Secondary (if it exists)
+	if (Binding.HasSecondary())
+	{
+		const FGameplayAttribute SecondaryAttribute = Binding.SecondaryAttributeFunc();
 
-					CurrentAndMax_AttributeInfoDelegate.Broadcast(Info, MaxInfo);
-				}
-				else
-				{
-					Single_AttributeInfoDelegate.Broadcast(Info);
-				}
+		ASC->GetGameplayAttributeValueChangeDelegate(SecondaryAttribute).AddLambda(
+			[this, Binding, AttributeSet, bIsParasiteVal](const FOnAttributeChangeData& Data)
+			{
+				BroadcastAttributePair(Binding, AttributeSet, bIsParasiteVal);
 			}
 		);
-
-		if (Binding.HasSecondary())
-		{
-			const FGameplayAttribute SecondaryAttribute = Binding.SecondaryAttributeFunc();
-
-			ParasiteASC->GetGameplayAttributeValueChangeDelegate(SecondaryAttribute).AddLambda(
-				[this, Binding](const FOnAttributeChangeData& Data)
-				{
-					FTBAttributeInfo MaxInfo = AttributeInfoLibrary::FindAttributeInfo(Binding.SecondaryTag);
-					MaxInfo.AttributeValue = Data.NewValue;
-
-					FTBAttributeInfo CurrentInfo = AttributeInfoLibrary::FindAttributeInfo(Binding.PrimaryTag);
-					CurrentInfo.AttributeValue = Binding.PrimaryAttributeFunc().GetNumericValue(ParasiteAttributeSet);
-
-					CurrentAndMax_AttributeInfoDelegate.Broadcast(CurrentInfo, MaxInfo);
-				}
-			);
-		}
 	}
-
-	// Bind Ability Callbacks
-
-	// TODO: Move to Overlay
-	// if (ParasiteASC)
-	// {
-	// 	// TODO: Equip Abilities
-	// 	// ParasiteASC->AbilityEquipped.AddUObject(this, &UInventoryWidgetController::OnAbilityEquipped);
-	// 	if (ParasiteASC->bStartupAbilitiesGiven)
-	// 	{
-	// 		BroadcastAbilityInfo();
-	// 	}
-	// 	else
-	// 	{
-	// 		ParasiteASC->AbilitiesGivenDelegate.AddUObject(this, &UInventoryWidgetController::BroadcastAbilityInfo);
-	// 	}
-	// }
 }
 
-void UInventoryWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag)
+// Broadcast a Primary/Secondary attribute pair (Current + Max)
+void UInventoryWidgetController::BroadcastAttributePair(const FTagAttributeBinding& Binding, 
+													    UBaseAttributeSet* AttributeSet,
+													    bool bIsParasiteVal) const
 {
-	ParasiteASC->UpgradeAttribute(AttributeTag);
+	FTBAttributeInfo CurrentInfo = AttributeInfoLibrary::FindAttributeInfo(Binding.PrimaryTag);
+	CurrentInfo.AttributeValue = Binding.PrimaryAttributeFunc().GetNumericValue(AttributeSet);
+
+	FTBAttributeInfo MaxInfo = AttributeInfoLibrary::FindAttributeInfo(Binding.SecondaryTag);
+	MaxInfo.AttributeValue = Binding.SecondaryAttributeFunc().GetNumericValue(AttributeSet);
+
+	CurrentAndMax_AttributeInfoDelegate.Broadcast(CurrentInfo, MaxInfo, bIsParasiteVal);
 }
 
-void UInventoryWidgetController::OnTribeDataChanged(const FTribeData& TribeData)
+// Broadcast a single attribute (no secondary)
+void UInventoryWidgetController::BroadcastSingleAttribute(const FTagAttributeBinding& Binding, 
+														  UBaseAttributeSet* AttributeSet,
+														  bool bIsParasiteVal) const
 {
-	OnTribeNameChangedDelegate.Broadcast(TribeData.TribeName);
+	FTBAttributeInfo Info = AttributeInfoLibrary::FindAttributeInfo(Binding.PrimaryTag);
+	Info.AttributeValue = Binding.PrimaryAttributeFunc().GetNumericValue(AttributeSet);
+
+	Single_AttributeInfoDelegate.Broadcast(Info, bIsParasiteVal);
 }
 
-//TODO: Bring to Overlay don't need this here
-/* 
-void UInventoryWidgetController::OnXPChanged(int NewXP)
+void UInventoryWidgetController::BroadcastCharacterContext(UCharacterContextComponent* CharacterContextComponent, bool bIsParasiteVal) const
 {
-	// TODO: Change this to call a GetGrowthRate From either PS or AnimalPawn Automatically with Interface
-	const float XPBarPercent = LevelInfoLibrary::GetProgressToNextLevel(NewXP, Cast<AParasitePlayerState>(ParasitePS)->CharacterContextComponent->GetGrowthRate());
-	OnXpPercentChangedDelegate.Broadcast(XPBarPercent);
-}
-*/
+	OnAttributePointsChangedDelegate.Broadcast(CharacterContextComponent->GetAttributePoints(), bIsParasiteVal);
+	OnCharacterNameChangedDelegate.Broadcast(CharacterContextComponent->GetCharacterName(), bIsParasiteVal);
+	OnLevelChangedDelegate.Broadcast(CharacterContextComponent->GetLevel(), bIsParasiteVal);
+	OnTribeNameChangedDelegate.Broadcast(CharacterContextComponent->GetTribeData().TribeName, bIsParasiteVal);
+	OnRaritySetDelegate.Broadcast(CharacterContextComponent->GetRarity(), bIsParasiteVal);
 
-void UInventoryWidgetController::OnAttributePointsChanged(int NewAttributePoints)
-{
-	OnAttributePointsChangedDelegate.Broadcast(NewAttributePoints);
+	OnGenderSetDelegate.Broadcast(CharacterContextComponent->GetGender(), bIsParasiteVal);
+	OnCreatureTypesSetDelegate.Broadcast(CharacterContextComponent->GetCreatureTypes(), bIsParasiteVal);
 }
 
-void UInventoryWidgetController::OnCharacterNameChanged(const FText& NewCharacterName)
+void UInventoryWidgetController::BindAllCharacterContext(UCharacterContextComponent* CharacterContextComponent, bool bIsParasiteVal) const
 {
-	OnCharacterNameChangedDelegate.Broadcast(NewCharacterName);
+	CharacterContextComponent->OnAttributePointsChanged.AddLambda(
+		[this, bIsParasiteVal](int NewAttributePoints)
+		{
+			OnAttributePointsChangedDelegate.Broadcast(NewAttributePoints, bIsParasiteVal);
+		});
+
+	CharacterContextComponent->OnCharacterNameChanged.AddLambda(
+		[this, bIsParasiteVal](const FText& NewCharacterName)
+		{
+			OnCharacterNameChangedDelegate.Broadcast(NewCharacterName, bIsParasiteVal);
+		});
+
+	CharacterContextComponent->OnLevelChanged.AddLambda(
+		[this, bIsParasiteVal](int NewLevel)
+		{
+			OnLevelChangedDelegate.Broadcast(NewLevel, bIsParasiteVal);
+		});
+
+	CharacterContextComponent->OnTribeDataChanged.AddLambda(
+		[this, bIsParasiteVal](const FTribeData& TribeData)
+		{
+			OnTribeNameChangedDelegate.Broadcast(TribeData.TribeName, bIsParasiteVal);
+		});
 }
 
-void UInventoryWidgetController::OnLevelChanged(int NewLevel)
+void UInventoryWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag) const
 {
-	OnLevelChangedDelegate.Broadcast(NewLevel);
+	UBaseAbilitySystemComponent* FocusedASC = (bIsParasiteFocusedCharacter) ? ParasiteASC : AnimalASC;
+	if (IsValid(FocusedASC)) FocusedASC->UpgradeAttribute(AttributeTag);
 }
+
+void UInventoryWidgetController::TryUnlockItem(UTBInventoryItem* Item, bool bIsEquippableSlot) const
+{
+	const TWeakInterfacePtr<IPlayerInterface> FocusedCharacter =  (bIsParasiteFocusedCharacter) ? ParasitePI : AnimalPI;
+	if (!FocusedCharacter.IsValid()) return;
+	
+	const UCharacterContextComponent* CharacterContextComp = FocusedCharacter->GetCharacterContextComponent();
+	if (!IsValid(CharacterContextComp)) return;
+	
+	CachedInventory->Server_TryUnlockItem(Item, bIsEquippableSlot, CharacterContextComp);
+}
+
+void UInventoryWidgetController::HandleAbilityEquipped(const UTBInventoryItem* Item, FGameplayTag SlotInputTag)
+{
+	UBaseAbilitySystemComponent* FocusedASC = (bIsParasiteFocusedCharacter) ? ParasiteASC : AnimalASC;
+	if (IsValid(FocusedASC)) FocusedASC->HandleAbilityItemEquipped(Item, SlotInputTag);
+}
+

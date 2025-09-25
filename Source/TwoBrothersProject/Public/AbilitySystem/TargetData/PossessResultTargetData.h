@@ -11,7 +11,7 @@ struct FGameplayAbilityTargetData_PossessResult : public FGameplayAbilityTargetD
 	uint8 bWon : 1;            // 1 = win, 0 = loss
 
 	UPROPERTY()
-	float NormalizedTimeLeft;        // 0-1 time left
+	float NormalizedTimeLeft{0.f};        // 0-1 time left
 
 	/* Required override so the handle can identify this struct type */
 	virtual UScriptStruct* GetScriptStruct() const override

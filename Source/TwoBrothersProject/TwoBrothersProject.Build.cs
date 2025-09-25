@@ -9,10 +9,10 @@ public class TwoBrothersProject : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput"
-			,"GameplayAbilities","GameplayTags","GameplayTasks", "AIModule", "Niagara", "NiagaraUIRenderer"
+			,"GameplayAbilities","GameplayTags","GameplayTasks", "AIModule", "Niagara", "NiagaraUIRenderer", "NetCore", "StructUtils"
 		});
 		
-		PrivateDependencyModuleNames.AddRange(new string[] {  "UMG", "Slate", "SlateCore" });
+		PrivateDependencyModuleNames.AddRange(new string[] {  "UMG", "Slate", "SlateCore"});
 		
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");

@@ -8,7 +8,7 @@ struct FGameplayAbilityTargetData_BurrowDepthUpdate : public FGameplayAbilityTar
 	GENERATED_USTRUCT_BODY() 
 
 	UPROPERTY()
-	float NewDepth;
+	float NewDepth{0.f};
 
 	/* Required override so the handle can identify this struct type */
 	virtual UScriptStruct* GetScriptStruct() const override

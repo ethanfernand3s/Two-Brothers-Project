@@ -12,7 +12,6 @@ const TMap<FGameplayTag, FTBAttributeInfo>& AttributeInfoLibrary::GetAttributeMa
 {
 	const FTBGameplayTags& GameplayTags =  FTBGameplayTags::Get();
 	static const TMap<FGameplayTag, FTBAttributeInfo> Map = {
-		{ GameplayTags.Attributes_Type, FTBAttributeInfo(GameplayTags.Attributes_Type, FText::FromString("Type"), FText::FromString("Current creature type"), 0.f) },
 		{ GameplayTags.Attributes_Health, FTBAttributeInfo(GameplayTags.Attributes_Health, FText::FromString("Health"), FText::FromString("Current health value"), 0.f) },
 		{ GameplayTags.Attributes_MaxHealth, FTBAttributeInfo(GameplayTags.Attributes_MaxHealth, FText::FromString("Max Health"), FText::FromString("Maximum health value"), 0.f) },
 		{ GameplayTags.Attributes_Defense, FTBAttributeInfo(GameplayTags.Attributes_Defense, FText::FromString("Defense"), FText::FromString("Reduces incoming physical damage"), 0.f) },

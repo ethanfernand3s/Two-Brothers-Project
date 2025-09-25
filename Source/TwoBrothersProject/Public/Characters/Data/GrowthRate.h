@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
+// TODO: Make into gameplay tag if necessary
 /**
  * 
  */

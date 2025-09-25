@@ -10,8 +10,10 @@
 // Sets default values
 AAnimalAIController::AAnimalAIController()
 {
-	Blackboard = CreateDefaultSubobject<UBlackboardComponent>("BlackboardComponent");
-	check(Blackboard);
+	
 	BehaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>("BehaviorTreeComponent");
 	check(BehaviorTreeComponent);
+
+	Blackboard = CreateDefaultSubobject<UBlackboardComponent>("BlackBoardComponent");
+	check(Blackboard);
 }

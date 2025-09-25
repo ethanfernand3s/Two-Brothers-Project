@@ -5,6 +5,8 @@
 #include "Blueprint/UserWidget.h"
 #include "PossessMiniGameUserWidget.generated.h"
 
+class UUIDataAsset;
+struct FGameplayTag;
 class UNiagaraSystemWidget;
 class UProgressBar;
 class UTextBlock;
@@ -14,6 +16,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMiniGameFinishedDelegate, bool, bW
 DECLARE_DELEGATE_OneParam(FGaugeChanged, float);
 DECLARE_DELEGATE(FSpaceBarPressed);
 
+
+/**
+ * This widget shows the battle for inhabitance between the parasite and the animal that it's trying to take over.
+ * @remark Consider making this use base widget controller if wanting to keep widget creation and data centralized.
+ * For the current moment we keep it like this since it only needs the rarity color and not any of the widget parms or callbacks.
+ */
 UCLASS()
 class TWOBROTHERSPROJECT_API UPossessMiniGameUserWidget : public UUserWidget
 {
@@ -21,7 +29,7 @@ class TWOBROTHERSPROJECT_API UPossessMiniGameUserWidget : public UUserWidget
 
 public:
 	void Init(float InStartingChance, float InTapInc, float InEnemyPerSec,
-			  const FColor& InPlayerColor, const FColor& InEnemyColor);
+			  const FGameplayTag& ParasiteRarityTag, const FGameplayTag& AnimalRarityTag);
 
 	UPROPERTY(BlueprintAssignable)
 	FMiniGameFinishedDelegate OnFinished;
@@ -62,4 +70,7 @@ private:
 	const float ExcellentThreshold = 2.f;
 	const float GreatThreshold     = 4.f;
 	const float NiceThreshold      = 6.f;
+
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess), Category = "UI")
+	TObjectPtr<UUIDataAsset> UIDataAsset;
 };

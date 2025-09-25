@@ -1,20 +1,21 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// InventoryUserWidget.h
 
 #pragma once
-
 #include "CoreMinimal.h"
+#include "Inventory/Types/GridTypes.h"
+#include "Slots/SlotContainerUserWidget.h"
+#include "Slots/SlotPanelUserWidget.h"
 #include "UI/Widget/BaseUserWidget.h"
 #include "InventoryUserWidget.generated.h"
 
-class UAbilityCardUserWidget;
-class UItemsPanelUserWidget;
+class USlotPanelUserWidget;
+class UInventoryBackgroundUserWidget;
+class UCharacterPanelUserWidget;
+class UTBItemComponent;
 class UInventoryWidgetController;
-struct FTBAbilityInfo;
-class UStatsPanelUserWidget;
-class UAttributeMenuUserWidget;
-/**
- * 
- */
+class UAbilityCardUserWidget;
+class USlotContainerUserWidget;
+
 UCLASS()
 class TWOBROTHERSPROJECT_API UInventoryUserWidget : public UBaseUserWidget
 {
@@ -22,31 +23,49 @@ class TWOBROTHERSPROJECT_API UInventoryUserWidget : public UBaseUserWidget
 
 public:
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menus",meta = (BindWidget))
-	TObjectPtr<UStatsPanelUserWidget>  StatsPanel;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menus",meta = (BindWidget))
-	TObjectPtr<UItemsPanelUserWidget>  ItemsPanel;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card")
-	TSubclassOf<UAbilityCardUserWidget>  Circle_AbilityCardUserWidgetClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card")
-	TSubclassOf<UAbilityCardUserWidget>  Diamond_AbilityCardUserWidgetClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Card")
-	TSubclassOf<UAbilityCardUserWidget>  Square_AbilityCardUserWidgetClass;
-	
-	virtual void SetWidgetController(UObject* InWidgetController) override;
+	virtual void SetWidgetController(UBaseWidgetController* InWidgetController) override;
 
+	/** Returns an FSlotAvailabilityResult containing the slot info needed for adding an item. */
+	FSlotAvailabilityResult HasRoomForItem(UTBItemComponent* ItemComponent) const;
+	
+	USlotContainerUserWidget* GetSlotContainer() const { return InventoryPanel->GetSlotContainer(); }
+	USlotContainerUserWidget* GetDestinationContainer(const USlotContainerUserWidget* OriginSlotContainer,
+														  const FGameplayTag& ItemCategory) const;
+
+	void SetAllGridSlotsCompatibilityTints(bool bIsPickup, const UTBInventoryItem* ItemToCheck = nullptr);
+	
+	void EvenlySplitPreviousSelectedSlotStackAmounts(int32 AmountToRemove);
+	int32 GetAmountOfPreviousSelectedSlots();
+	void ClearSelectedSlots();
+	void AddNewSelectedSlot(USlotContainerUserWidget* OwningSlotContainer, USlotUserWidget* NewestSlot);
 protected:
-
-	virtual void OnWidgetControllerSet() override;
-
+	
+	virtual void NativeOnInitialized() override;
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
+	virtual void NativeDestruct() override;
+	
 private:
-
-#pragma region Ability Functions
 	
-	void OnAbilityInfoRecieved(const FTBAbilityInfo& AbilityInfo);
 	
-#pragma endregion Ability Functions
+	// Widget Controller
+	UPROPERTY() UInventoryWidgetController* InventoryWidgetController = nullptr;
+	
+	// Panels
 
-	UPROPERTY()
-	TObjectPtr<UInventoryWidgetController> InventoryWidgetController;
+	UPROPERTY(meta=(BindWidget))
+	UCanvasPanel* CanvasPanel = nullptr;
+	
+	UPROPERTY(meta=(BindWidget))
+	USlotPanelUserWidget* InventoryPanel = nullptr;
+	
+	UPROPERTY(meta=(BindWidget))
+	UCharacterPanelUserWidget*  CharacterPanel = nullptr;
+
+	// Background
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UInventoryBackgroundUserWidget> DimmedBackground = nullptr;
+
+	// Cached Vals
+	TMap<FGameplayTag, TWeakObjectPtr<USlotContainerUserWidget>> SlotContainers;
+	TArray<TPair<TWeakObjectPtr<USlotContainerUserWidget>, TWeakObjectPtr<USlotUserWidget>>> SelectedGridSlots;
 };

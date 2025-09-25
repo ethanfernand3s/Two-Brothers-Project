@@ -8,6 +8,8 @@
 #include "TBPlayerController.generated.h"
 
 
+class IPlayerInterface;
+class UTBInventoryComponent;
 struct FInputBindingHandle;
 class UAnimalAttributeSet;
 class UBaseAbilitySystemComponent;
@@ -31,9 +33,12 @@ public:
 	void OnPawnChanged(APawn* InOldPawn, APawn* InNewPawn);
 	
 	bool GetIsAnimalPossessed() const;
-	UBaseAbilitySystemComponent* GetASC ();
+	TWeakInterfacePtr<IPlayerInterface> GetActivePlayerInterface() const;
+	
+	UBaseAbilitySystemComponent* GetASC () const;
 	UAnimalAttributeSet* GetCurrentAnimalsAttributeSet() const;
-	void ClientPlayIntroLanding_Implementation();
+
+	UTBInventoryComponent* GetInventoryComponent() const { return InventoryComponent.Get(); }
 
 protected:
 	virtual void SetupInputComponent() override;
@@ -64,8 +69,7 @@ private:
 	void AbilityInputTagHeld(FGameplayTag InputTag);
 
 	UPROPERTY()
-	TObjectPtr<UBaseAbilitySystemComponent> BaseAbilitySystemComponent;
-
-	UPROPERTY()
 	bool bIsAnimalPossessed;
+	
+	TWeakObjectPtr<UTBInventoryComponent> InventoryComponent;
 };

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/BaseAbilitySystemComponent.h"
+#include "AbilitySystem/Base/BaseAbilitySystemComponent.h"
 #include "AnimalAbilitySystemComponent.generated.h"
 
 

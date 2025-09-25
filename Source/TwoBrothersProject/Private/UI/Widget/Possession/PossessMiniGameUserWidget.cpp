@@ -1,21 +1,30 @@
 #include "UI/Widget/Possession/PossessMiniGameUserWidget.h"
+
+#include "GameplayTagContainer.h"
 #include "Components/TextBlock.h"
 #include "TimerManager.h"
 #include "Animation/WidgetAnimation.h"
 #include "NiagaraComponent.h"
 #include "NiagaraUIComponent.h"
+#include "UI/Data/UIDataAsset.h"
 
 void UPossessMiniGameUserWidget::Init(float InStartingChance, float InTapInc, float InEnemyPerSec,
-                                      const FColor& InPlayerColor, const FColor& InEnemyColor)
+                                      const FGameplayTag& ParasiteRarityTag, const FGameplayTag& AnimalRarityTag)
 {
 	Percent     = FMath::Clamp(InStartingChance, 0.f, 1.f);
 	TapInc      = FMath::Clamp(InTapInc, 0.f, 1.f);
 	EnemyPerSec = FMath::Clamp(InEnemyPerSec, 0.f, 1.f);
 	Elapsed     = 0.f;
 	bDone       = false;
-
-	PlayerColor = InPlayerColor;
-	EnemyColor  = InEnemyColor;
+	
+	const FLinearColor* ParasiteAuraColor = UIDataAsset->GetRarityColor(ParasiteRarityTag);
+	if (!ParasiteAuraColor) return;
+	
+	const FLinearColor* AnimalAuraColor = UIDataAsset->GetRarityColor(AnimalRarityTag);
+	if (!AnimalAuraColor) return;
+	
+	PlayerColor = *ParasiteAuraColor;
+	EnemyColor  = *AnimalAuraColor;
 }
 
 void UPossessMiniGameUserWidget::NativeConstruct()

@@ -6,7 +6,7 @@
 #include "UObject/Interface.h"
 #include "PlayerInterface.generated.h"
 
-enum class EGrowthRate : uint8;
+class UCharacterContextComponent;
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UPlayerInterface : public UInterface
@@ -25,31 +25,7 @@ class TWOBROTHERSPROJECT_API IPlayerInterface
 public:
 
 	UFUNCTION()
-	virtual int32 GetXP() const = 0;
-
-	UFUNCTION()
-	virtual void AddToXP(int32 InXP) = 0;
-	
-	UFUNCTION()
-	virtual int32 GetBaseXP() const = 0;
-
-	UFUNCTION()
-	virtual int32 GetLevel() = 0;
-	
-	UFUNCTION()
-	virtual void AddToPlayerLevel(int32 InPlayerLevel) = 0;
-
-	UFUNCTION()
-	virtual int32 GetAttributePointsReward(int32 Level) const = 0;
-	
-	UFUNCTION()
-	virtual void AddToAttributePoints(int32 InAttributePoints) = 0;
-	
-	UFUNCTION()
-	virtual int32 GetAttributePoints() const = 0;
-
-	UFUNCTION()
-	virtual EGrowthRate GetGrowthRate() const = 0;
+	virtual UCharacterContextComponent* GetCharacterContextComponent() const = 0;
 
 	UFUNCTION()
 	virtual bool GetIsInhabited() const = 0;

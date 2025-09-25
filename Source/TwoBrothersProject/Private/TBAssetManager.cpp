@@ -10,8 +10,8 @@ UTBAssetManager& UTBAssetManager::Get()
 {
 	check(GEngine);
 	
-	UTBAssetManager* AuraAssetManager = Cast<UTBAssetManager>(GEngine->AssetManager);
-	return *AuraAssetManager;
+	UTBAssetManager* TBAssetManager = Cast<UTBAssetManager>(GEngine->AssetManager);
+	return *TBAssetManager;
 }
 
 void UTBAssetManager::StartInitialLoading()

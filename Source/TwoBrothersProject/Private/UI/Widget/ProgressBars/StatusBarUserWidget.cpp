@@ -2,7 +2,8 @@
 
 
 #include "UI/Widget/ProgressBars/StatusBarUserWidget.h"
-#include "AbilitySystem//BaseAttributeSet.h"
+
+#include "AbilitySystem/Base/BaseAttributeSet.h"
 #include "Components/ProgressBar.h"
 
 void UStatusBarUserWidget::RefreshHealth()

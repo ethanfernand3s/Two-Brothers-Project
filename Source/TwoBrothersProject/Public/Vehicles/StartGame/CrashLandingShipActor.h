@@ -1,46 +1,78 @@
+// CrashLandingShipActor.h
+
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "CrashLandingShipActor.generated.h"
+#include "CrashLandingShipActor.generated.h" // must be the last include in the header
+
+class UBoxComponent;
+class AParasiteCharacter;
+class UNiagaraComponent;
+class URadialForceComponent;
+class UProjectileMovementComponent;
+class USkeletalMesh;
 
 UCLASS()
-class TWOBROTHERSPROJECT_API ACrashLandingShipActor : public AActor
+class TWOBROTHERSPROJECT_API ACrashLandingShipActor : public APawn
 {
 	GENERATED_BODY()
 
 public:
 	ACrashLandingShipActor();
-
-protected:
+	
 	virtual void BeginPlay() override;
 
-public:
-	// Components
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class USkeletalMeshComponent* ShipMesh;
+	/** Attach a player pawn to the ship (server only). */
+	void AttachPlayer(AParasiteCharacter* InParasiteCharacter);
 
-	// Broken ship mesh to swap to
-	UPROPERTY(EditDefaultsOnly, Category = "Crash Landing")
-	USkeletalMesh* BrokenShipMesh;
+	void ActivateShip() const;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Niagara")
+	UParticleSystem* ExplosionEffect;
 
-	// Attach player to ship
-	UFUNCTION(BlueprintCallable)
-	void AttachPlayer(APawn* Pawn);
+	UPROPERTY(EditDefaultsOnly, Category="Audio")
+	USoundBase* ExplosionSoundEffect;
 
-	// Start the crash sequence
-	UFUNCTION(BlueprintCallable)
-	void StartCrashSequence();
+	/** Socket on the ship mesh used to hold the pawn while flying. */
+	UPROPERTY(EditDefaultsOnly, Category="Names")
+	FName LandingSocketName = TEXT("Seat");
 
-	// Finish the crash: detach player and swap mesh
-	UFUNCTION(BlueprintCallable)
-	void CrashIntoGround();
+protected:
+	/* ================= Components ================= */
 
-	// Replicate player attach visuals
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_OnPlayerAttached(APawn* Pawn);
+	/** The visual ship mesh (root) and parent for the pawn while flying. */
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess=true), Category="Components")
+	UStaticMeshComponent* ShipMesh;
 
-	// Replicate mesh swap
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_SwitchToBrokenShipMesh();
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess=true), Category="Components")
+	UBoxComponent* BoxComponent;
+	
+	/** Drives the ballistic arc with gravity. */
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess=true), Category="Components")
+	UProjectileMovementComponent* CrashMovement;
+
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess=true), Category="Components")
+	UNiagaraComponent* RocketTrail;
+	
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess=true), Category="Components")
+	URadialForceComponent* RadialForceComponent;
+	
+	/* ================= Cache ================= */
+
+	/** The pawn currently attached to the ship (server authoritative). */
+	TWeakObjectPtr<AParasiteCharacter> ParasiteCharacter;
+
+	/* ================= Flow ================= */
+
+	UFUNCTION()
+	void OnColliderHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	/** Detach pawn, restore movement/collision, swap mesh. (server only) */
+	void CrashIntoGround(const FHitResult& Hit);
+
+	void HandleDestruction(const FVector_NetQuantize& HitLocation);
+	/** Runs on all machines to swap to the broken mesh. */
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayShipDestructionEffects(const FVector_NetQuantize& HitLocation);
 };

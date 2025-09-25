@@ -4,68 +4,80 @@
 
 #include "CoreMinimal.h"
 #include "BaseWidgetController.h"
-#include "AbilitySystem/Data/CreatureType.h"
-#include "Characters/Data/TribeData.h"
+#include "AbilitySystem/Base/BaseAttributeSet.h"
+#include "Inventory/Items/TB_ItemFragments.h"
+#include "UI/Widget/Inventory/Slots/SlotContainerUserWidget.h"
 #include "InventoryWidgetController.generated.h"
 
-class URarityDataAsset;
-class UGenderDataAsset;
-class UCreatureTypeDataAsset;
-enum class ECharacterGender : uint8;
+class UCharacterContextComponent;
+class UTBInventoryItem;
+class APlayerHUD;
+class UTBInventoryComponent;
+
 struct FGameplayTag;
 struct FTBAttributeInfo;
 
 // Attribute Delegates
-// For broadcasting both current and max values (e.g., Health / MaxHealth)
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAttributeCurrentAndMaxChangedSignature, const FTBAttributeInfo&, const FTBAttributeInfo&);
-// For broadcasting a single value (e.g., Strength, Speed)
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeValueChangedSignature, const FTBAttributeInfo&);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAttributeCurrentAndMaxChangedSignature, const FTBAttributeInfo&, const FTBAttributeInfo&, bool bIsParasiteVal);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAttributeValueChangedSignature, const FTBAttributeInfo&, bool bIsParasiteVal);
 
 // Character Context Delegates
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributePointsChangedSignature, int32);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnTextChangedSignature, const FText&);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnLevelChangedSignature, int32);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnGenderSetSignature, const ECharacterGender&);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnAuraColorSetSignature, const FColor&);
-using FCreatureTypePair = TPair<ECreatureType, ECreatureType>;
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnCreatureTypesSetSignature, const FCreatureTypePair&);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnIntChanged, int32, bool bIsParasiteVal);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnTextChangedSignature, const FText&, bool bIsParasiteVal);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnTagChangedSignature, const FGameplayTag&, bool bIsParasiteVal);
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCreatureTypesSetSignature, const struct FGameplayTagContainer&, bool bIsParasiteVal);
 
 UCLASS()
 class TWOBROTHERSPROJECT_API UInventoryWidgetController : public UBaseWidgetController
 {
-
 	GENERATED_BODY()
+
 public:
+	
 	virtual void BroadcastInitialValues() override;
 	virtual void BindCallbacksToDependencies() override;
 	
-	void UpgradeAttribute(const FGameplayTag& AttributeTag);
+	// GAS attr upgrades
+	void UpgradeAttribute(const FGameplayTag& AttributeTag) const;
+	void TryUnlockItem(UTBInventoryItem* Item, bool bIsEquippableSlot) const;
+	// TODO: Change to set Grid Status and make each grid have grid data like slotted items have item data
+	// void TryUnlockGridSlot(UInventoryGridSlot* GridSlot) const; // TODO: Implement
+	void HandleAbilityEquipped(const UTBInventoryItem* Item, FGameplayTag SlotInputTag); // TODO: Move to equipment component
 	
+
 	// Attribute Set Delegates
 	FOnAttributeCurrentAndMaxChangedSignature CurrentAndMax_AttributeInfoDelegate;
-	FOnAttributeValueChangedSignature Single_AttributeInfoDelegate;
+	FOnAttributeValueChangedSignature         Single_AttributeInfoDelegate;
 
 	// Character Context Delegates
-	FOnAttributePointsChangedSignature OnAttributePointsChangedDelegate;
-	FOnLevelChangedSignature OnLevelChangedDelegate;
-	FOnTextChangedSignature OnCharacterNameChangedDelegate;
-	FOnTextChangedSignature OnTribeNameChangedDelegate;
-	FOnGenderSetSignature OnGenderSetDelegate;
-	FOnAuraColorSetSignature OnAuraColorSetDelegate;
-	FOnCreatureTypesSetSignature OnCreatureTypesSetDelegate;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataAssets")
-	TObjectPtr<UCreatureTypeDataAsset> CreatureTypeData;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataAssets")
-	TObjectPtr<UGenderDataAsset> GenderData;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataAssets")
-	TObjectPtr<URarityDataAsset> AbilityCardData;
+	FOnIntChanged					   OnAttributePointsChangedDelegate;
+	FOnIntChanged					   OnLevelChangedDelegate;
+	FOnTextChangedSignature            OnCharacterNameChangedDelegate;
+	FOnTextChangedSignature            OnTribeNameChangedDelegate;
+	FOnTagChangedSignature             OnGenderSetDelegate;
+	FOnCreatureTypesSetSignature       OnCreatureTypesSetDelegate;
+	FOnTagChangedSignature             OnRaritySetDelegate;
 
 private:
 
-	void OnTribeDataChanged(const FTribeData& TribeData);
-	void OnAttributePointsChanged(int NewAttributePoints);
-	void OnCharacterNameChanged(const FText& NewCharacterName);
-	void OnLevelChanged(int NewLevel);
+									/* Broadcast and Bind Helpers */
+
+	/* Attribute Set */
+	void BroadcastAllAttributes(UBaseAttributeSet* AttributeSet, bool bIsParasiteVal) const;
+	void BindAllAttributeCallbacks(UAbilitySystemComponent* ASC, UBaseAttributeSet* AttributeSet,
+								   bool bIsParasiteVal) const;
+	void BindAttributeCallback(UAbilitySystemComponent* ASC, const FTagAttributeBinding& Binding,
+							   UBaseAttributeSet* AttributeSet, bool bIsParasiteVal) const;
+	void BroadcastAttributePair(const FTagAttributeBinding& Binding, UBaseAttributeSet* AttributeSet,
+								bool bIsParasiteVal) const;
+	void BroadcastSingleAttribute(const FTagAttributeBinding& Binding, UBaseAttributeSet* AttributeSet,
+								  bool bIsParasiteVal) const;
+
+	/* Character Context */
+	void BroadcastCharacterContext(UCharacterContextComponent* CharacterContextComponent, bool bIsParasiteVal) const;
+	void BindAllCharacterContext(UCharacterContextComponent* CharacterContextComponent, bool bIsParasiteVal) const;
+	
+	TWeakObjectPtr<UTBInventoryComponent> CachedInventory;
+	bool bIsParasiteFocusedCharacter = true;
 };

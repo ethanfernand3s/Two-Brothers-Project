@@ -2,18 +2,19 @@
 
 
 #include "UI/WidgetController/BaseWidgetController.h"
-
-#include "AbilitySystem/Data/AbilityInfo.h"
-#include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
+#include "Game/TBGamemode.h"
+#include "Inventory/Components/TBInventoryComponent.h"
 
 void UBaseWidgetController::SetWidgetControllerParams(const TUniquePtr<FWidgetControllerParams>& WCParams)
 {
-	TBPlayerController = WCParams->TBPlayerController;
+	TBPC = WCParams->TBPC;
 	ParasitePS = WCParams->ParasitePS;
-	ParasiteASC = WCParams->ParasiteAsc;
-	ParasiteAttributeSet = WCParams->ParasiteAttributeSet;
-	AnimalASC = WCParams->AnimalAsc;
-	AnimalAttributeSet = WCParams->AnimalAttributeSet;
+	ParasiteASC = WCParams->ParasiteASC;
+	ParasiteAS = WCParams->ParasiteAS;
+	AnimalASC = WCParams->AnimalASC;
+	AnimalAS = WCParams->AnimalAS;
+	ParasitePI = WCParams->ParasitePI;
+	AnimalPI = WCParams->AnimalPI;
 }
 
 void UBaseWidgetController::BroadcastInitialValues()
@@ -24,21 +25,7 @@ void UBaseWidgetController::BindCallbacksToDependencies()
 {
 }
 
-void UBaseWidgetController::BroadcastAbilityInfo()
+const UUIDataAsset* UBaseWidgetController::GetUIDataAsset() const
 {
-	if (!ParasiteASC->bStartupAbilitiesGiven) return;
-
-	FForEachAbility BroadcastDelegate;
-	BroadcastDelegate.BindLambda([this](const FGameplayAbilitySpec& AbilitySpec)
-	{
-		FTBAbilityInfo* Info = AbilityInfo->AbilityMap.Find(ParasiteASC->GetAbilityTagFromSpec(AbilitySpec));
-		if (Info)
-		{
-			Info->InputTag = ParasiteASC->GetInputTagFromSpec(AbilitySpec);
-			Info->StatusTag = ParasiteASC->GetStatusFromSpec(AbilitySpec);
-			AbilityInfoDelegate.Broadcast(*Info);
-		}
-		
-	});
-	ParasiteASC->ForEachAbility(BroadcastDelegate);
+	return UIDataAsset;
 }

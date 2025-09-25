@@ -3,7 +3,7 @@
 
 #include "UI/Widget/BaseUserWidget.h"
 
-void UBaseUserWidget::SetWidgetController(UObject* InWidgetController)
+void UBaseUserWidget::SetWidgetController(UBaseWidgetController* InWidgetController)
 {
 	WidgetController = InWidgetController;
 	OnWidgetControllerSet();

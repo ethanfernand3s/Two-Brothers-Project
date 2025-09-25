@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "BaseUserWidget.generated.h"
 
+class UBaseWidgetController;
 /**
  * 
  */
@@ -16,10 +17,10 @@ class TWOBROTHERSPROJECT_API UBaseUserWidget : public UUserWidget
 
 public:
 	
-	virtual void SetWidgetController(UObject* InWidgetController);
+	virtual void SetWidgetController(UBaseWidgetController* InWidgetController);
 	
 	UPROPERTY()
-	TObjectPtr<UObject> WidgetController;
+	TObjectPtr<UBaseWidgetController> WidgetController;
 
 protected:
 

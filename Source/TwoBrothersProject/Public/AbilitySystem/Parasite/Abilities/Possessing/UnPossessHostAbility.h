@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/BaseGameplayAbility.h"
+#include "AbilitySystem/Base/Abilities/BaseGameplayAbility.h"
 #include "UnPossessHostAbility.generated.h"
 
 class AParasiteCharacter;

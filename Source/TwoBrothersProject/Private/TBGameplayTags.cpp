@@ -2,18 +2,15 @@
 
 #include "GameplayCueManager.h"
 #include "GameplayTagsManager.h"
-#include "AbilitySystem/Data/CreatureType.h"
 
 FTBGameplayTags FTBGameplayTags::GameplayTags;
 
 void FTBGameplayTags::InitializeNativeGameplayTags()
 {
-#pragma region Attributes
 
-	// Handled manually
-	GameplayTags.Attributes_Type = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Type"),
-		FString("Current creature type"));
+#pragma region Gameplay Ability System
+	
+#pragma region Attributes
 
 	// Handled by AttributeInfo
 	GameplayTags.Attributes_Health = UGameplayTagsManager::Get().AddNativeGameplayTag(
@@ -85,6 +82,10 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Attributes_Meta_IncomingXP = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attributes.Meta.IncomingXP"),
 		FString("Incoming XP Meta Attribute"));
+	GameplayTags.Attributes_Meta_Damage = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.Meta.Damage"),
+		FString("Gameplay tag for incoming damage meta attribute"));
+	
 #pragma endregion Attributes
 
 #pragma region Abilities
@@ -97,41 +98,48 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 		FName("Abilities.Parasite.TryPossess"),
 		FString("Ability for trying to possess a host")
 	);
-
-	GameplayTags.Abilities_Status_Equipped = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Abilities.Status.Equipped"),
-		FString("Ability status when equipped")
-	);
 	
 #pragma endregion Abilities
 	
 #pragma region Input
 
-	GameplayTags.Inputs_Abilities_LMB = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Inputs.Abilities.LMB"),
-		FString("Input tag for the left mouse button")
+	GameplayTags.Inputs_Abilities_Main = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Inputs.Abilities.Main"),
+		FString("Input tag for the main ability")
 	);
-
-	GameplayTags.Inputs_Abilities_Slot1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Inputs.Abilities.Slot1"),
-		FString("Input tag for the first ability slot")
+	GameplayTags.Inputs_Abilities_Default_1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Inputs.Abilities.Default.1"),
+		FString("Input tag for the default ability in slot 1")
 	);
-
-	GameplayTags.Inputs_Abilities_Slot2 = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Inputs.Abilities.Slot2"),
-		FString("Input tag for the second ability slot")
+	GameplayTags.Inputs_Abilities_Default_2 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Inputs.Abilities.Default.2"),
+		FString("Input tag for the default ability in slot 2")
 	);
-
-	GameplayTags.Inputs_Abilities_Slot3 = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Inputs.Abilities.Slot3"),
-		FString("Input tag for the third ability slot")
-		);
-
-	GameplayTags.Inputs_Abilities_Slot4 = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Inputs.Abilities.Slot4"),
-		FString("Input tag for the fourth ability slot")
-		);
-
+	GameplayTags.Inputs_Abilities_Default_3 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Inputs.Abilities.Default.3"),
+		FString("Input tag for the default ability in slot 3")
+	);
+	GameplayTags.Inputs_Abilities_Default_4 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Inputs.Abilities.Default.4"),
+		FString("Input tag for the default ability in slot 4")
+	);
+	GameplayTags.Inputs_Abilities_Passive_1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Inputs.Abilities.Passive.1"),
+		FString("Input tag for the passive ability in slot 1")
+	);
+	GameplayTags.Inputs_Abilities_Passive_2 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Inputs.Abilities.Passive.2"),
+		FString("Input tag for the passive ability in slot 2")
+	);
+	GameplayTags.Inputs_Abilities_Passive_3 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Inputs.Abilities.Passive.3"),
+		FString("Input tag for the passive ability in slot 3")
+	);
+	GameplayTags.Inputs_Abilities_Passive_4 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Inputs.Abilities.Passive.4"),
+		FString("Input tag for the passive ability in slot 4")
+	);
+	
 #pragma endregion Input
 
 #pragma region States
@@ -156,7 +164,14 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 	
 #pragma endregion PossessionAbiltyState
 
-#pragma region Posssesion Result
+#pragma region Possession Begin
+
+	GameplayTags.GameplayCue_Possession_BurrowingIn = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("GameplayCue.Possession.BurrowingIn"),FString("gameplayCue for burrowing in Animal"));
+	
+#pragma endregion Possession Begin
+	
+#pragma region Possession Result
 	
 	GameplayTags.GameplayCue_Possession_Captured = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("GameplayCue.Possession.Captured"),
@@ -177,29 +192,9 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 		FName("GameplayCue.Possession.Eject.Vomit"),
 		FString("GameplayCue for rejection of possession from the head"));
 	
-#pragma endregion Posssesion Result
+#pragma endregion Possession Result
 	
 #pragma endregion Gameplay Cues
-	
-#pragma region Sockets
-	GameplayTags.Sockets_Butt = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Sockets.Butt"),
-		FString("Gameplay tag for representing the butt socket"));
-
-	GameplayTags.Sockets_Ear = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Sockets.Ear"),
-		FString("Gameplay tag for representing the ear socket"));
-
-	GameplayTags.Sockets_Nose = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Sockets.Nose"),
-		FString("Gameplay tag for representing the nose socket"));
-
-	GameplayTags.Sockets_Mouth = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Sockets.Mouth"),
-		FString("Gameplay tag for representing the mouth socket"));
-#pragma endregion Sockets
-	
-
 
 #pragma region Gameplay Events
 
@@ -209,9 +204,30 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Event_MiniGame_Finish = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Event.MiniGame.Finish"),
 		FString("Event that signifies the end of a minigame."));
-	GameplayTags.GameplayCue_Possession_BurrowingIn = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("GameplayCue.Possession.BurrowingIn"),FString("gameplayCue for burrowing in Animal"));
+	
 #pragma endregion Gameplay Events
+
+#pragma endregion Gameplay Ability System
+	
+#pragma region BodyParts
+	
+	GameplayTags.BodyParts_Butt = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("BodyParts.Butt"),
+		FString("Gameplay tag for representing the butt body part"));
+
+	GameplayTags.BodyParts_Ear = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("BodyParts.Ear"),
+		FString("Gameplay tag for representing the ear body part"));
+
+	GameplayTags.BodyParts_Nose = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("BodyParts.Nose"),
+		FString("Gameplay tag for representing the nose body part"));
+
+	GameplayTags.BodyParts_Mouth = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("BodyParts.Mouth"),
+		FString("Gameplay tag for representing the mouth body part"));
+	
+#pragma endregion BodyParts
 
 #pragma region Creature Types
 
@@ -235,72 +251,184 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 		FString("Creature type of Spirit"));
 	
 #pragma endregion Creature Types
+
+#pragma region Rarities
+
+	GameplayTags.Rarities_Common = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Rarities.Common"),
+		FString("Gameplay tag the common rarity"));
+	GameplayTags.Rarities_Uncommon = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Rarities.Uncommon"),
+	FString("Gameplay tag the uncommon rarity"));
+	GameplayTags.Rarities_Rare = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Rarities.Rare"),
+	FString("Gameplay tag the rare rarity"));
+	GameplayTags.Rarities_Epic = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Rarities.Epic"),
+	FString("Gameplay tag the epic rarity"));
+	GameplayTags.Rarities_Legendary = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Rarities.Legendary"),
+	FString("Gameplay tag the legendary rarity"));
+	GameplayTags.Rarities_Prismatic = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Rarities.Prismatic"),
+	FString("Gameplay tag the prismatic rarity"));
+	
+#pragma endregion Rarities
+
+#pragma region Genders
+
+	GameplayTags.Genders_None = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Genders.None"),
+		FString("Gameplay tag no gender"));
+	GameplayTags.Genders_Male = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Genders.Male"),
+		FString("Gameplay tag the male gender"));
+	GameplayTags.Genders_Female = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Genders.Female"),
+		FString("Gameplay tag the female gender"));
+	
+#pragma endregion Genders
+	
+#pragma region Inventory
+	
+#pragma region Items
+
+	GameplayTags.Items_Abilities_Defaults_Possess = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Items.Abilities.Defaults.Possess"),
+	FString("This ability allows the user to enter a hunting mode showing nearby inhabitants. "
+		 "If the ability is activated again within the duration the user will be launched forward. "
+		 "If a hole in a potential inhabitants body is hit the user has the chance to possess."));
+	
+	GameplayTags.Items_Craftables_TEST = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Items.Craftables.TEST"),
+	FString("Test Craftable."));
+	
+#pragma endregion Items
+
+#pragma region ItemCategories
+
+	GameplayTags.ItemCategories_None = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("ItemCategories.None"),
+	FString("No item category"));
+	GameplayTags.ItemCategories_Abilities_Main = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("ItemCategories.Abilities.Main"),
+	FString("Main ability item category"));
+	GameplayTags.ItemCategories_Abilities_Default = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("ItemCategories.Abilities.Default"),
+	FString("Default ability item category"));
+	GameplayTags.ItemCategories_Abilities_Passive = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("ItemCategories.Abilities.Passive"),
+	FString("Passive ability item category"));
+	GameplayTags.ItemCategories_BodyPart = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("ItemCategories.BodyPart"),
+	FString("BodyPart item category"));
+	
+#pragma endregion ItemCategories
+	
+#pragma region Status
+
+	GameplayTags.Status_Equipped = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Status.Equipped"),
+		FString("In the inventory and equipped."));
+	
+	GameplayTags.Status_Unlocked = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Status.Unlocked"),
+		FString("In the inventory but not equipped."));
+	
+	GameplayTags.Status_Locked = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Status.Locked"),
+		FString("In the inventory but can't be equipped."));
+
+	GameplayTags.Status_None = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Status.None"),
+		FString("Not in the inventory, on the ground."));
+	
+#pragma endregion Status
+	
+#pragma region Fragments
+
+	/* Required for all items*/
+	GameplayTags.Fragments_Material_Icon = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Fragments.Material.Icon"),
+		FString("An Inventory items fragment holding the data needed to display an icon"));
+	
+	GameplayTags.Fragments_Text_Name = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Fragments.Text.Name"),
+		FString("An Inventory items fragment holding the data needed to display its name"));
+	GameplayTags.Fragments_Text_Description = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Fragments.Text.Description"),
+		FString("An Inventory items fragment holding the data needed to display its description"));
+	
+	GameplayTags.Fragments_Rarity = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Fragments.Rarity"),
+		FString("An Inventory items fragment holding the data needed to display its rarity"));
+
+	/* Additionally required for ability items */
+	GameplayTags.Fragments_Ability = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			FName("Fragments.Ability"),
+			FString("An Inventory items fragment holding the data needed to display an ability"));
+	GameplayTags.Fragments_Status = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			FName("Fragments.Status"),
+			FString("An Inventory items fragment holding the data need to display an item's status"));
+	GameplayTags.Fragments_Level = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			FName("Fragments.Level"),
+			FString("An Inventory items fragment holding the data need to display an item's level"));
+
+	/* Optional fragments */
+	GameplayTags.Fragments_CreatureType = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			FName("Fragments.CreatureType"),
+			FString("An Inventory items fragment holding the data need to display an item's creature type"));
+	GameplayTags.Fragments_Requirements = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			FName("Fragments.Requirements"),
+			FString("An Inventory items fragment holding the data need to display an item's requirements to be used"));
+	GameplayTags.Fragments_Input = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			FName("Fragments.Input"),
+			FString("An Inventory items fragment holding the data needed to bind input"));
+	GameplayTags.Fragments_Stackable = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			FName("Fragments.Stackable"),
+			FString("An Inventory items fragment holding the data needed to stack an item"));
+	
+#pragma endregion Fragments
+	
+#pragma endregion Inventory
 }
 
-FGameplayTag FTBGameplayTags::EnumToTag(ECreatureType Type)
+const FGameplayTag& FTBGameplayTags::GetSlotInputTag(FGameplayTag ItemCategory, int32 SlotTileIndex)
 {
-	const auto& Tags = FTBGameplayTags::Get();
-	switch (Type)
-	{
-		case ECreatureType::Parasite: return Tags.CreatureTypes_Parasite;
-		case ECreatureType::Wind:     return Tags.CreatureTypes_Wind;
-		case ECreatureType::Earth:    return Tags.CreatureTypes_Earth;
-		case ECreatureType::Fire:     return Tags.CreatureTypes_Fire;
-		case ECreatureType::Water:    return Tags.CreatureTypes_Water;
-		case ECreatureType::Spirit:   return Tags.CreatureTypes_Spirit;
-		default:                      return FGameplayTag();
-	}
-}
+	auto& Tags = Get();
 
-ECreatureType FTBGameplayTags::TagToEnum(FGameplayTag TypeTag)
-{
-	static const TMap<FGameplayTag, ECreatureType> TagToEnumMap = {
-		{ FTBGameplayTags::Get().CreatureTypes_Parasite , ECreatureType::Parasite },
-		{ FTBGameplayTags::Get().CreatureTypes_Wind     , ECreatureType::Wind     },
-		{ FTBGameplayTags::Get().CreatureTypes_Earth    , ECreatureType::Earth    },
-		{ FTBGameplayTags::Get().CreatureTypes_Fire     , ECreatureType::Fire     },
-		{ FTBGameplayTags::Get().CreatureTypes_Water    , ECreatureType::Water    },
-		{ FTBGameplayTags::Get().CreatureTypes_Spirit   , ECreatureType::Spirit   }
-	};
-
-	if (const ECreatureType* Found = TagToEnumMap.Find(TypeTag))
+	// Main ability only has one slot → always return Main
+	if (ItemCategory.MatchesTagExact(Tags.ItemCategories_Abilities_Main))
 	{
-		return *Found;              
+		return Tags.Inputs_Abilities_Main;
 	}
 
-	return ECreatureType::None;
-}
-
-int32 FTBGameplayTags::ToSlotIndex(const FGameplayTag& Tag)
-{
-	const FTBGameplayTags& Tags = FTBGameplayTags::Get();
-
-	static const TMap<FGameplayTag, int32> TagToIndexMap = {
-		{ Tags.Inputs_Abilities_LMB , 0 },
-		{ Tags.Inputs_Abilities_Slot1, 1 },
-		{ Tags.Inputs_Abilities_Slot2, 2 },
-		{ Tags.Inputs_Abilities_Slot3, 3 },
-		{ Tags.Inputs_Abilities_Slot4, 4 }
-	};
-
-	if (const int32* Found = TagToIndexMap.Find(Tag))
+	// Default ability slots
+	if (ItemCategory.MatchesTagExact(Tags.ItemCategories_Abilities_Default))
 	{
-		return *Found;
+		switch (SlotTileIndex)
+		{
+		case 0: return Tags.Inputs_Abilities_Default_1;
+		case 1: return Tags.Inputs_Abilities_Default_2;
+		case 2: return Tags.Inputs_Abilities_Default_3;
+		case 3: return Tags.Inputs_Abilities_Default_4;
+		default: break;
+		}
 	}
-	return INDEX_NONE;
-}
 
-FGameplayTag FTBGameplayTags::ToInputTag(int32 SlotIndex)
-{
-	const FTBGameplayTags& Tags = FTBGameplayTags::Get();
-
-	switch (SlotIndex)
+	// Passive ability slots
+	if (ItemCategory.MatchesTagExact(Tags.ItemCategories_Abilities_Passive))
 	{
-	case 0: return Tags.Inputs_Abilities_LMB;
-	case 1: return Tags.Inputs_Abilities_Slot1;
-	case 2: return Tags.Inputs_Abilities_Slot2;
-	case 3: return Tags.Inputs_Abilities_Slot3;
-	case 4: return Tags.Inputs_Abilities_Slot4;
-	default: return FGameplayTag();
+		switch (SlotTileIndex)
+		{
+		case 0: return Tags.Inputs_Abilities_Passive_1;
+		case 1: return Tags.Inputs_Abilities_Passive_2;
+		case 2: return Tags.Inputs_Abilities_Passive_3;
+		case 3: return Tags.Inputs_Abilities_Passive_4;
+		default: break;
+		}
 	}
+
+	// Fallback
+	return FGameplayTag::EmptyTag;
 }

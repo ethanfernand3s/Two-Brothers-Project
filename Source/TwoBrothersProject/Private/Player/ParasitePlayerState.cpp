@@ -2,17 +2,16 @@
 
 
 #include "Player/ParasitePlayerState.h"
-#include "AbilitySystem/Parasite/ParasiteAbilitySet.h"
 #include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
 #include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
-#include "Characters/CharacterContextComponent.h"
-#include "Characters/Data/Gender.h"
+#include "Characters/Components/CharacterContextComponent.h"
+#include "Inventory/Components/TBInventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 
 AParasitePlayerState::AParasitePlayerState()
 { 
-	ParasiteAbilitySystem =	CreateDefaultSubobject<UParasiteAbilitySystemComponent>(TEXT("AnimalAbilitySystemComponent"));
-	ParasiteAttributeSet = CreateDefaultSubobject<UParasiteAttributeSet>(TEXT("AnimalAttributeSet"));
+	ParasiteAbilitySystem =	CreateDefaultSubobject<UParasiteAbilitySystemComponent>(TEXT("ParasiteAbilitySystemComponent"));
+	ParasiteAttributeSet = CreateDefaultSubobject<UParasiteAttributeSet>(TEXT("ParasiteAttributeSet"));
 
 	ParasiteAbilitySystem->SetIsReplicated(true);
 	ParasiteAbilitySystem->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
@@ -22,6 +21,27 @@ AParasitePlayerState::AParasitePlayerState()
 	
 	bIsInitialised = false;
 	SetNetUpdateFrequency(100.f);
+}
+
+void AParasitePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AParasitePlayerState,bIsInitialised);
+}
+
+void AParasitePlayerState::LoadProgress()
+{
+	// TODO: Add Loading From Save!!
+	
+	if (!bIsInitialised)
+	{
+		ParasiteAbilitySystem->SetBaseStats(FCharacterCombatValues(50, 50, 50, 50, 50, 50));
+		CharacterContextComponent->InitializeCombatRelatedVars(ParasiteAttributeSet->CalculateCombatPower());
+		ParasiteAbilitySystem->AddIvsToAttributes(CharacterContextComponent->GetIVSet());
+		
+		bIsInitialised = true;
+	}
+	 
 }
 
 UAbilitySystemComponent* AParasitePlayerState::GetAbilitySystemComponent() const
@@ -40,53 +60,18 @@ const TArray<UGameplayEffect*> AParasitePlayerState::GetBuffForHost()
 	return TArray<UGameplayEffect*>();
 }
 
-void AParasitePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+UCharacterContextComponent* AParasitePlayerState::GetCharacterContextComponent() const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AParasitePlayerState,bIsInitialised);
+	return CharacterContextComponent;
 }
 
-void AParasitePlayerState::LoadProgress()
+bool AParasitePlayerState::GetIsInhabited() const
 {
-	// TODO: Add Loading From Save!!
-	
-	if (!bIsInitialised)
-	{
-
-		//TODO: Set this in character customization screen
-		
-		CharacterContextComponent->InitializeCharacterContext(
-		FText::FromString("The Answer"),                     // Name
-		1,                                             // Level
-		0,                                             // XP
-		FTribeData(
-			FText::FromString("Chosen Ones"),          // Tribe Name
-			FText::FromString("The Royal Family Of Portugal"), // Tribe Desc
-			nullptr,                                   // Icon (null for now)
-			FLinearColor::Red                          // Tribe Color
-		),
-		ECharacterGender::None,                        // Gender
-		0
-		);
-		CharacterContextComponent->SetAuraColor(FColor::Blue);
-		
-		// End of TODO
-		
-		ParasiteAbilitySystem->SetBaseStats(FCharacterCombatValues(50, 50, 50, 50, 50, 50));
-		CharacterContextComponent->InitializeCombatRelatedVars(ParasiteAttributeSet->CalculateCombatPower());
-		ParasiteAbilitySystem->AddIvsToAttributes(CharacterContextComponent->GetIVSet());
-	
-		EnsureAbilitiesAreInitialized();
-		
-		bIsInitialised = true;
-	}
-	 
+	return false; // Will never be inhabited
 }
 
-void AParasitePlayerState::EnsureAbilitiesAreInitialized()
+float AParasitePlayerState::GetXPMultiplierAmount()
 {
-	if (!HasAuthority()) return;
-	
-	ParasiteAbilitySystem->AddCharacterAbilities(StartupAbilitySet->Abilities);
-	ParasiteAbilitySystem->AddCharacterPassiveAbilities(StartupPassiveAbilitySet->Abilities);
+	// TODO: Adjust based on current Multiplier Bonuses
+	return 1;
 }

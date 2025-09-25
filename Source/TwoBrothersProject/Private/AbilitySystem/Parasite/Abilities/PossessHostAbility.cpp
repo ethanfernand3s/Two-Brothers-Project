@@ -14,13 +14,12 @@
 #include "GameFramework/Character.h"
 #include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
-#include "Characters/CharacterContextComponent.h"
+#include "Characters/Components/CharacterContextComponent.h"
 #include "Characters/ParasiteCharacter.h"
 #include "Components/CapsuleComponent.h"
+#include "Game/TBGamemode.h"
 #include "Player/ParasitePlayerState.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
-using FTBTags = FTBGameplayTags;
 
 /* ctor */
 /* ------------------------------------------------------------------------ */
@@ -29,7 +28,7 @@ UPossessHostAbility::UPossessHostAbility()
     InstancingPolicy   = EGameplayAbilityInstancingPolicy::InstancedPerActor;
     NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
     
-    ActivationRequiredTags.AddTag(FTBTags::Get().State_Parasite_SeekingHost);
+    ActivationRequiredTags.AddTag(FTBGameplayTags::Get().State_Parasite_SeekingHost);
 }
 
 void UPossessHostAbility::ActivateAbility(
@@ -65,7 +64,7 @@ void UPossessHostAbility::ActivateLocalPlayerAbility(const FGameplayAbilitySpecH
     UAbilityTask_WaitGameplayEvent* WaitStart =
         UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
             this,
-            FTBTags::Get().Event_MiniGame_Start);
+            FTBGameplayTags::Get().Event_MiniGame_Start);
 
     if (WaitStart)
     {
@@ -128,11 +127,11 @@ void UPossessHostAbility::OnActorHit(
     // Cache Values
     CachedAnimalSocketData = SocketData;
     CachedAnimalCombatPower = TargetAnimalPtr->GetAttributeSet()->CalculateCombatPower();
-    CachedAnimalAuraColor = TargetAnimalPtr->CharacterContextComponent->GetAuraColor();
+    CachedAnimalRarity = TargetAnimalPtr->CharacterContextComponent->GetRarity();
     
     // Send start minigame to client
     FGameplayEventData StartMiniGameEvent;
-    StartMiniGameEvent.EventTag       = FTBTags::Get().Event_MiniGame_Start;
+    StartMiniGameEvent.EventTag       = FTBGameplayTags::Get().Event_MiniGame_Start;
     StartMiniGameEvent.EventMagnitude = SocketData.PossessionChance;
 
     UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
@@ -141,7 +140,12 @@ void UPossessHostAbility::OnActorHit(
         StartMiniGameEvent);
 
     // 1) Freeze parasite movement
-    AttachParasiteToAnimal();  
+    AParasiteCharacter* ParasiteChar = Cast<AParasiteCharacter>(GetAvatarActorFromActorInfo());
+    if (ParasiteChar && CachedAnimalSocketData.SocketGameplayTag.IsValid())
+    {
+        FName RequestedSocketName = CachedAnimalSocketData.SocketGameplayTag.GetTagName();
+        ParasiteChar->AttachToMeshOrActor(RequestedSocketName, TargetAnimalPtr.Get()->GetMesh(), TargetAnimalPtr.Get());
+    }
 
     // 2) Start the cue
     StartBurrowCue();
@@ -197,38 +201,6 @@ void UPossessHostAbility::TransferParasitePostProcessToAnimal(bool bApply)
     }
 }
 
-void UPossessHostAbility::AttachParasiteToAnimal()
-{
-    if (AParasiteCharacter* ParasiteChar = Cast<AParasiteCharacter>(GetAvatarActorFromActorInfo()))
-    {
-        if (GetActorInfo().IsNetAuthority())
-        {
-            ParasiteChar->GetCharacterMovement()->DisableMovement();
-                                                
-            // TODO: Doesn't always start at 50% make it match with cached socket percentage
-
-            // Multicast function because collision isn't auto replicated
-            if (TargetAnimalPtr.IsValid() && CachedAnimalSocketData.SocketGameplayTag.IsValid())
-            {
-                ParasiteChar->SetBurrowCollision(false, TargetAnimalPtr.Get());
-                
-                USkeletalMeshComponent* AnimalMeshComponent = TargetAnimalPtr->GetMesh();
-                FName RequestedSocketName = CachedAnimalSocketData.SocketGameplayTag.GetTagName();
-                // Attach to animal
-                if (AnimalMeshComponent)
-                {
-                    ParasiteChar->AttachToComponent(
-                            AnimalMeshComponent,
-                            FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-                            RequestedSocketName);
-                }
-
-                ParasiteChar->ForceNetUpdate();
-            }
-        }
-    }
-}
-
 
 /*  Spawn once — called from OnActorHit after you cache start vectors */
 void UPossessHostAbility::StartBurrowCue()
@@ -250,10 +222,10 @@ void UPossessHostAbility::HandleMiniGameStart(FGameplayEventData /*Unused*/)
 {
     checkf(MiniGameWidgetClass, TEXT("Invalid! Must set MiniGameWidgetClass in BP."));
     
-    UPossessMiniGameUserWidget* W =
+    UPossessMiniGameUserWidget* MiniGameUserWidget =
         CreateWidget<UPossessMiniGameUserWidget>(GetWorld(), MiniGameWidgetClass);
 
-    if (!W) return;
+    if (!MiniGameUserWidget) return;
 
     const AParasitePlayerState* PlayerState = Cast<AParasitePlayerState>(GetOwningActorFromActorInfo());
     if (PlayerState == nullptr)
@@ -264,20 +236,20 @@ void UPossessHostAbility::HandleMiniGameStart(FGameplayEventData /*Unused*/)
     
     const float ParasiteCombatPower = PlayerState->GetParasiteAttributeSet()->CalculateCombatPower();
 
-    const float Scale = 0.0025f;
-    const float Base  = 0.04f;
+    constexpr float Scale = 0.0025f;
+    constexpr float Base  = 0.04f;
 
     const float TapInc = FMath::Clamp(Base + (ParasiteCombatPower - CachedAnimalCombatPower) * Scale, 0.01f, 0.07f);
     const float EnemyPerSec = FMath::Clamp(Base + (CachedAnimalCombatPower - ParasiteCombatPower) * Scale, 0.01f, 0.07f);
-
-    W->Init(CachedAnimalSocketData.PossessionChance, TapInc, EnemyPerSec, PlayerState->CharacterContextComponent->GetAuraColor(), CachedAnimalAuraColor);
-    W->OnFinished.AddDynamic(this, &UPossessHostAbility::OnMiniGameWidgetFinished);
-    W->OnGaugeChanged.BindUObject(this, &UPossessHostAbility::ReceiveNewDepthFromClient);
-    W->OnSpaceBarPressed.BindUObject(this, &UPossessHostAbility::NotifyServerToPlayBurrowAnim);
-    W->AddToViewport();
+    
+    MiniGameUserWidget->Init(CachedAnimalSocketData.PossessionChance, TapInc, EnemyPerSec, PlayerState->CharacterContextComponent->GetRarity(), CachedAnimalRarity);
+    MiniGameUserWidget->OnFinished.AddDynamic(this, &UPossessHostAbility::OnMiniGameWidgetFinished);
+    MiniGameUserWidget->OnGaugeChanged.BindUObject(this, &UPossessHostAbility::ReceiveNewDepthFromClient);
+    MiniGameUserWidget->OnSpaceBarPressed.BindUObject(this, &UPossessHostAbility::NotifyServerToPlayBurrowAnim);
+    MiniGameUserWidget->AddToViewport();
 
     FInputModeUIOnly Mode;
-    Mode.SetWidgetToFocus(W->TakeWidget());
+    Mode.SetWidgetToFocus(MiniGameUserWidget->TakeWidget());
     GetActorInfo().PlayerController->SetInputMode(Mode);
     GetActorInfo().PlayerController->SetShowMouseCursor(false);
 }
@@ -414,7 +386,7 @@ void UPossessHostAbility::FinishMiniGame(bool bBarWon, float NormalizedTimeLeft)
                 FGameplayCueParameters Params;
                 Params.SourceObject = Animal.Get();
                 Params.RawMagnitude = 1.f;
-                ASC->ExecuteGameplayCue(FTBTags::Get().GameplayCue_Possession_Pulse, Params);
+                ASC->ExecuteGameplayCue(FTBGameplayTags::Get().GameplayCue_Possession_Pulse, Params);
             },
             Delay,
             false);
@@ -438,7 +410,7 @@ void UPossessHostAbility::FinishMiniGame(bool bBarWon, float NormalizedTimeLeft)
                 {
                     AController* PC = GetActorInfo().PlayerController.Get();
                     const FGameplayAbilityActivationInfo& ActInfo = GetCurrentActivationInfo();
-                    if (HasAuthority(&ActInfo))
+                    if (IsValid(PC) && HasAuthority(&ActInfo))
                     {
                         GetActorInfo().AvatarActor->Destroy();
                         PC->Possess(TargetAnimalPtr.Get());
@@ -457,38 +429,15 @@ void UPossessHostAbility::EndBurrowCue()
     if (bHasBurrowEnded) return;
     bHasBurrowEnded = true;
     
-    UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-    if (ASC)
+    if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
     {
         ASC->RemoveGameplayCue(FTBGameplayTags::Get().GameplayCue_Possession_BurrowingIn); // fires OnRemove
     }
 
-    // CLEANUP
-    if (GetActorInfo().IsNetAuthority())
-    {
-        if (AParasiteCharacter* ParasiteChar = Cast<AParasiteCharacter>(GetAvatarActorFromActorInfo()))
-        {
-            // Multicast function because collision isn't auto replicated
-            if (TargetAnimalPtr.IsValid() && CachedAnimalSocketData.SocketGameplayTag.IsValid())
-            {
-                ParasiteChar->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-                ParasiteChar->AddActorWorldOffset(
-                FVector(0,0, ParasiteChar->GetCapsuleComponent()->GetScaledCapsuleHalfHeight()+1.f));
-                
-                // Restore an upright orientation
-                ParasiteChar->SetActorRotation(
-                    FRotator(0.f, 0, 0.f),                              // pitch
-                    ETeleportType::TeleportPhysics);                      // no interpolation
-                
-                ParasiteChar->SetBurrowCollision(true, TargetAnimalPtr.Get());
-            }
-
-            UCharacterMovementComponent* Move = ParasiteChar->GetCharacterMovement();
-            Move->SetMovementMode(MOVE_Walking);
-
-            ParasiteChar->ForceNetUpdate();
-        }
-    }
+    AParasiteCharacter* ParasiteChar = Cast<AParasiteCharacter>(GetAvatarActorFromActorInfo());
+    if (!TargetAnimalPtr.IsValid() || !IsValid(ParasiteChar)) return;
+    
+    if (GetActorInfo().IsNetAuthority()) ParasiteChar->DetachFromAllActors(TargetAnimalPtr.Get());
 }
 
 /* TriggerEjectionFX */
@@ -496,10 +445,10 @@ void UPossessHostAbility::TriggerEjectionFX(const FGameplayTag& SocketTag)
 {
     UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 
-    const FGameplayTag PoopCue   = FTBTags::Get().GameplayCue_Possession_Eject_Poop;
-    const FGameplayTag VomitCue  = FTBTags::Get().GameplayCue_Possession_Eject_Vomit;
+    const FGameplayTag PoopCue   = FTBGameplayTags::Get().GameplayCue_Possession_Eject_Poop;
+    const FGameplayTag VomitCue  = FTBGameplayTags::Get().GameplayCue_Possession_Eject_Vomit;
 
-    bool bButtSocket = SocketTag == FTBTags::Get().Sockets_Butt;
+    bool bButtSocket = SocketTag == FTBGameplayTags::Get().BodyParts_Butt;
 
     FGameplayCueParameters Params;
     Params.SourceObject = TargetAnimalPtr.Get();

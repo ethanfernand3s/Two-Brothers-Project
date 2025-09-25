@@ -40,7 +40,7 @@ class TWOBROTHERSPROJECT_API ABaseAnimalCharacter : public ABaseCharacter, publi
 public:
 
 	ABaseAnimalCharacter();
-
+	virtual void PossessedBy(AController* NewController) override;
 	// ASC Interface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAnimalAttributeSet* GetAttributeSet() const;
@@ -51,16 +51,8 @@ public:
 	//~End Of Possessable Interface
 
 	// Player Interface
-	virtual int32 GetXP() const override;
-	virtual int32 GetAttributePointsReward(int32 Level) const override;
-	virtual void AddToXP(int32 InXP) override;
-	virtual void AddToPlayerLevel(int32 InPlayerLevel) override;
-	virtual void AddToAttributePoints(int32 InAttributePoints) override;
-	virtual int32 GetAttributePoints() const override;
-	virtual int32 GetLevel() override;
-	virtual EGrowthRate GetGrowthRate() const override;
+	virtual UCharacterContextComponent* GetCharacterContextComponent() const override;
 	virtual bool GetIsInhabited() const override;
-	virtual int32 GetBaseXP() const override;
 	virtual float GetXPMultiplierAmount() override;
 	//~End of Player Interface
 	
@@ -75,7 +67,7 @@ public:
 	UPROPERTY(Replicated)
 	bool bIsInitialised;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category="CharacterContext")
 	TObjectPtr<UCharacterContextComponent> CharacterContextComponent;
 	
 protected:
@@ -122,7 +114,6 @@ private:
 
 	void InitializePossessionWidgets();
 	void UpdatePossessionChance(FName SocketName, float NewChance);
-	void EnsureAbilitiesAreInitialized();
 	
 	UPROPERTY()
 	TMap<FName, UWidgetComponent*> SocketWidgetMap;

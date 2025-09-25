@@ -1,87 +1,129 @@
 #include "Vehicles/StartGame/CrashLandingShipActor.h"
 
-#include "Components/CapsuleComponent.h"
-#include "GameFramework/Pawn.h"
-#include "GameFramework/Character.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "NiagaraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Engine/World.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "TimerManager.h"
-#include "Net/UnrealNetwork.h"
+#include "Characters/ParasiteCharacter.h"
+#include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "PhysicsEngine/RadialForceComponent.h"
 
 ACrashLandingShipActor::ACrashLandingShipActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	ShipMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ShipMesh"));
-	SetRootComponent(ShipMesh);
+	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
+	SetRootComponent(BoxComponent);
+	BoxComponent->SetCollisionProfileName(FName("BlockAll"));
+	BoxComponent->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	BoxComponent->SetNotifyRigidBodyCollision(true);
+	BoxComponent->SetIsReplicated(true);
+	
+	ShipMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipMesh"));
+	ShipMesh->SetupAttachment(BoxComponent);
+	ShipMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	RocketTrail = CreateDefaultSubobject<UNiagaraComponent>(TEXT("RocketTrail"));
+	RocketTrail->SetupAttachment(ShipMesh);
+	RocketTrail->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	RadialForceComponent = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForceComponent"));
+	RadialForceComponent->SetupAttachment(RocketTrail);
+	
+	CrashMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("CrashMovement"));
+	CrashMovement->UpdatedComponent = BoxComponent; // Root
+	CrashMovement->bRotationFollowsVelocity = true;
+	
 	bReplicates = true;
+	AActor::SetReplicateMovement(true);
+
+	SetNetUpdateFrequency(100.f);  // ~100 updates per second (fast)
+	SetMinNetUpdateFrequency(30.f);   // fallback if bandwidth is tight
 }
 
 void ACrashLandingShipActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsValid(BoxComponent)) BoxComponent->OnComponentHit.AddDynamic(this, &ACrashLandingShipActor::OnColliderHit);
 }
 
-void ACrashLandingShipActor::AttachPlayer(APawn* Pawn)
+void ACrashLandingShipActor::AttachPlayer(AParasiteCharacter* InParasiteCharacter)
 {
-	if (!HasAuthority() || !IsValid(Pawn)) return;
-
-	if (ACharacter* Char = Cast<ACharacter>(Pawn))
-	{
-		Char->GetCharacterMovement()->DisableMovement();
-	}
-
-	static const FName AttachSocketName = "LandingSocket";
-	if (ShipMesh && ShipMesh->DoesSocketExist(AttachSocketName))
-	{
-		Pawn->AttachToComponent(ShipMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AttachSocketName);
-
-		Multicast_OnPlayerAttached(Pawn);
-	}
-
-	Pawn->ForceNetUpdate();
+	if (!IsValid(InParasiteCharacter) || !IsValid(ShipMesh) || !ShipMesh->DoesSocketExist(LandingSocketName)) return;
+	
+	ParasiteCharacter = InParasiteCharacter;
+	ParasiteCharacter->AttachToMeshOrActor(LandingSocketName, ShipMesh, this, true);
+	ActivateShip();
 }
 
-void ACrashLandingShipActor::StartCrashSequence()
+void ACrashLandingShipActor::ActivateShip() const
 {
-	// Simulate delay before impact (replace with Timeline or Notify if needed)
-	GetWorldTimerManager().SetTimerForNextTick(this, &ACrashLandingShipActor::CrashIntoGround);
+	CrashMovement->SetVelocityInLocalSpace(FVector::ForwardVector * CrashMovement->InitialSpeed);
+	CrashMovement->Activate(true);
 }
 
-void ACrashLandingShipActor::CrashIntoGround()
+void ACrashLandingShipActor::OnColliderHit(
+    UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+    FVector NormalImpulse, const FHitResult& Hit)
 {
+	// Only runs on server because of binding done with auth check in begin play
 	if (!HasAuthority()) return;
-
-	// Detach and re-enable player
-	APawn* AttachedPawn = Cast<APawn>(ShipMesh->GetAttachParentActor());
-	if (AttachedPawn)
-	{
-		AttachedPawn->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-
-		if (ACharacter* Char = Cast<ACharacter>(AttachedPawn))
-		{
-			Char->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-			Char->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		}
-	}
-
-	// Visually switch ship mesh
-	Multicast_SwitchToBrokenShipMesh();
+	
+    CrashIntoGround(Hit);
 }
 
-void ACrashLandingShipActor::Multicast_OnPlayerAttached_Implementation(APawn* Pawn)
+void ACrashLandingShipActor::CrashIntoGround(const FHitResult& Hit)
 {
-	if (ACharacter* Char = Cast<ACharacter>(Pawn))
+    if (!ParasiteCharacter.IsValid() || !IsValid(Controller))
+    {
+    	HandleDestruction(Hit.ImpactPoint);
+    	return;
+    }
+	
+    ParasiteCharacter->DetachFromAllActors(this, FDetachmentTransformRules::KeepWorldTransform);
+	
+	APlayerController* PC = Cast<APlayerController>(Controller);
+	if (PC)
 	{
-		Char->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		PC->Possess(ParasiteCharacter.Get());
 	}
+	
+    ParasiteCharacter->ForceNetUpdate();
+
+    // Physics impulse that should actually affect server-auth physics
+    if (RadialForceComponent)
+    {
+        RadialForceComponent->FireImpulse(); // server-side
+    }
+
+	HandleDestruction(Hit.ImpactPoint);
 }
 
-void ACrashLandingShipActor::Multicast_SwitchToBrokenShipMesh_Implementation()
+void ACrashLandingShipActor::HandleDestruction(const FVector_NetQuantize& HitLocation)
 {
-	if (BrokenShipMesh)
-	{
-		ShipMesh->SetSkeletalMesh(BrokenShipMesh);
-	}
+	// VFX/SFX on everyone
+	Multicast_PlayShipDestructionEffects(HitLocation);
+
+	// Destroy on server AFTER multicast (don’t destroy in the multicast)
+	SetLifeSpan(0.2f);
+}
+
+void ACrashLandingShipActor::Multicast_PlayShipDestructionEffects_Implementation(const FVector_NetQuantize& HitLocation)
+{
+    // Skip on dedicated servers
+    if (IsNetMode(NM_DedicatedServer)) return;
+
+    if (RocketTrail) RocketTrail->Deactivate();
+
+    if (ExplosionEffect)
+    {
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, HitLocation);
+    }
+    if (ExplosionSoundEffect)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, ExplosionSoundEffect, HitLocation);
+    }
 }

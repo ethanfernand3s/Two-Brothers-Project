@@ -3,20 +3,17 @@
 
 #include "TwoBrothersProject/Public/Player/TBPlayerController.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
 #include "EnhancedInputSubsystems.h"
-#include "TBGameplayTags.h"
-#include "AbilitySystem/BaseAbilitySystemComponent.h"
 #include "AbilitySystem/Animal/AnimalAttributeSet.h"
+#include "AbilitySystem/Base/BaseAbilitySystemComponent.h"
 #include "AbilitySystem/Parasite/Abilities/Possessing/PossessHostAbility.h"
-#include "Blueprint/UserWidget.h"
 #include "Camera/ParasiteCameraManager.h"
 #include "Characters/BaseAnimalCharacter.h"
 #include "Characters/ParasiteCharacter.h"
 #include "Input/TBInputComponent.h"
+#include "Inventory/Components/TBInventoryComponent.h"
 #include "Player/ParasitePlayerState.h"
 #include "UI/HUD/PlayerHUD.h"
-#include "UI/Widget/Possession/PossessMiniGameUserWidget.h"
 
 
 ATBPlayerController::ATBPlayerController()
@@ -24,8 +21,6 @@ ATBPlayerController::ATBPlayerController()
 	PlayerCameraManagerClass = AParasiteCameraManager::StaticClass();
 	bIsAnimalPossessed = false;
 }
-
-
 
 void ATBPlayerController::SetupInputComponent()
 {
@@ -53,6 +48,8 @@ void ATBPlayerController::BeginPlay()
 		Subsystem->AddMappingContext(DefaultInputMappingContext, 0);
 	}
 	OnPossessedPawnChanged.AddDynamic(this, &ATBPlayerController::OnPawnChanged);
+
+	InventoryComponent = FindComponentByClass<UTBInventoryComponent>();
 }
 
 void ATBPlayerController::OnPawnChanged(APawn* InOldPawn, APawn* InNewPawn)
@@ -70,6 +67,11 @@ void ATBPlayerController::OnPawnChanged(APawn* InOldPawn, APawn* InNewPawn)
 bool ATBPlayerController::GetIsAnimalPossessed() const
 {
 	return bIsAnimalPossessed;
+}
+
+TWeakInterfacePtr<IPlayerInterface> ATBPlayerController::GetActivePlayerInterface() const
+{
+	return Cast<IPlayerInterface>(GetPawn());
 }
 
 void ATBPlayerController::Move(const FInputActionValue& InputActionValue)
@@ -98,7 +100,8 @@ void ATBPlayerController::Look(const FInputActionValue& InputActionValue)
 
 void ATBPlayerController::Inventory()
 {
-	Cast<APlayerHUD>(GetHUD())->Inventory(this);
+	if (!InventoryComponent.IsValid()) return;
+	InventoryComponent->ToggleInventoryDisplay();
 }
 
 void ATBPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
@@ -123,17 +126,19 @@ void ATBPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 	GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Cyan, *InputTag.ToString());
 }
 
-UBaseAbilitySystemComponent* ATBPlayerController::GetASC() 
+UBaseAbilitySystemComponent* ATBPlayerController::GetASC() const
 {
+	UBaseAbilitySystemComponent* ASC = nullptr;
+	
 	if (bIsAnimalPossessed)
 	{
-		BaseAbilitySystemComponent = Cast<UBaseAbilitySystemComponent>(Cast<ABaseAnimalCharacter>(GetPawn())->GetAbilitySystemComponent());
+		ASC = Cast<UBaseAbilitySystemComponent>(Cast<ABaseAnimalCharacter>(GetPawn())->GetAbilitySystemComponent());
 	}
 	else
 	{
-		BaseAbilitySystemComponent = Cast<UBaseAbilitySystemComponent>(GetPlayerState<AParasitePlayerState>()->GetAbilitySystemComponent());
+		ASC = Cast<UBaseAbilitySystemComponent>(GetPlayerState<AParasitePlayerState>()->GetAbilitySystemComponent());
 	}
-	return BaseAbilitySystemComponent;
+	return ASC;
 }
 
 UAnimalAttributeSet* ATBPlayerController::GetCurrentAnimalsAttributeSet() const
@@ -146,34 +151,3 @@ UAnimalAttributeSet* ATBPlayerController::GetCurrentAnimalsAttributeSet() const
 
 	return nullptr;
 }
-
-void ATBPlayerController::ClientPlayIntroLanding_Implementation()
-{
-	/* if (PlayerCameraManager)
-	{
-		PlayerCameraManager->StartCameraFade(1.f, 0.f, 2.f, FLinearColor::Black, false, true);
-	}
-
-	// 2. Play crash landing sound effect
-	if (CrashLandingSoundCue)
-	{
-		UGameplayStatics::PlaySound2D(this, CrashLandingSoundCue);
-	}
-
-	// 3. Start camera shake if you want turbulence
-	if (CrashLandingCameraShakeClass)
-	{
-		PlayerCameraManager->StartCameraShake(CrashLandingCameraShakeClass, 1.0f);
-	}
-
-	// 4. Trigger crash landing cinematic HUD or VFX
-	if (CrashLandingWidgetClass)
-	{
-		UUserWidget* CrashWidget = CreateWidget<UUserWidget>(this, CrashLandingWidgetClass);
-		if (CrashWidget)
-		{
-			CrashWidget->AddToViewport();
-		}
-	}*/
-}
-

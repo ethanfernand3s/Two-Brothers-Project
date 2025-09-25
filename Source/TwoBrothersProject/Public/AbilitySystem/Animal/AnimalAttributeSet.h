@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/BaseAttributeSet.h"
+#include "AbilitySystem/Base/BaseAttributeSet.h"
 #include "AnimalAttributeSet.generated.h"
 
 /**

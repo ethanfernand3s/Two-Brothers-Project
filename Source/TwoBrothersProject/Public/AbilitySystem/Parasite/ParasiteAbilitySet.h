@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/BaseAbilitySet.h"
+#include "AbilitySystem/Base/BaseAbilitySet.h"
 #include "ParasiteAbilitySet.generated.h"
 
 /**

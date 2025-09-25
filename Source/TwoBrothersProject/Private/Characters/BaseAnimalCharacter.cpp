@@ -4,17 +4,17 @@
 #include "TwoBrothersProject/Public/Characters/BaseAnimalCharacter.h"
 
 
-#include "AbilitySystem/Animal/AnimalAbilitySet.h"
+#include "NiagaraScript.h"
 #include "AbilitySystem/Animal/AnimalAbilitySystemComponent.h"
 #include "AbilitySystem/Animal/AnimalAttributeSet.h"
 #include "AI/AnimalAIController.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "Characters/CharacterContextComponent.h"
-#include "Characters/Data/Gender.h"
+#include "Characters/Components/CharacterContextComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/ParasitePlayerState.h"
+#include "Player/TBPlayerController.h"
 #include "Runtime/AIModule/Classes/AIController.h"
 #include "UI/HUD/PlayerHUD.h"
 #include "UI/Widget/Possession/PossessionChanceUserWidget.h"
@@ -33,6 +33,16 @@ ABaseAnimalCharacter::ABaseAnimalCharacter()
 	CharacterContextComponent = CreateDefaultSubobject<UCharacterContextComponent>(TEXT("CharacterContextComponent"));
 
 	bIsInitialised = false;
+}
+
+void ABaseAnimalCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	if (!HasAuthority()) return;
+	AnimalAIController = Cast<AAnimalAIController>(NewController);
+
+	AnimalAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
+	AnimalAIController->RunBehaviorTree(BehaviorTree);
 }
 
 void ABaseAnimalCharacter::BeginPlay()
@@ -76,17 +86,17 @@ void ABaseAnimalCharacter::InitActorInfo()
 	}
 	else
 	{
-		if (APlayerController* PC = Cast<APlayerController>(NewController))
+		if (ATBPlayerController* PC = Cast<ATBPlayerController>(NewController))
 		{
 			if (AParasitePlayerState* PS = PC->GetPlayerState<AParasitePlayerState>())
 			{
-				AnimalAbilitySystemComponent-> InitAbilityActorInfo(PS,this);
+				AnimalAbilitySystemComponent->InitAbilityActorInfo(PS,this);
 				SetOwner(PC);
 				if (!HasAuthority())
 				{
 					if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD()))
 					{
-						PlayerHUD->InitOverlay(PC);
+						PlayerHUD->InitUI(PC);
 					}
 				}
 			}
@@ -109,24 +119,8 @@ void ABaseAnimalCharacter::LoadProgress()
 
 	if (!bIsInitialised)
 	{
-		CharacterContextComponent->InitializeCharacterContext(
-		FText::FromString("Neo"),                      // Name
-		1,                                             // Level
-		0,                                             // XP
-		FTribeData(
-			FText::FromString("NONE"),					// Tribe Name
-			FText::FromString(""),						// Tribe Desc
-			nullptr,									// Icon (null for now)
-			FLinearColor::Gray							// Tribe Color
-		),
-		ECharacterGender::Male,							// Gender
-		0
-		);
-		
-		CharacterContextComponent->InitializeCombatRelatedVars();
 		AnimalAbilitySystemComponent->AddIvsToAttributes(CharacterContextComponent->GetIVSet());
 		AnimalAbilitySystemComponent->SetBaseStats(CharacterContextComponent->GetBaseCombatPower(), CharacterContextComponent->GetLevel());
-		EnsureAbilitiesAreInitialized();
 		
 		bIsInitialised = true;
 	}
@@ -154,60 +148,18 @@ bool ABaseAnimalCharacter::CanBePossessedBy() const
 {
 	// TODO: Later on add level checks on player and query enemy and player states / statuses,
 	// and check where the player is coming from hole wise to make sure its possible.
-
 	
 	return !GetOwner();
 }
 
-int32 ABaseAnimalCharacter::GetXP() const
+UCharacterContextComponent* ABaseAnimalCharacter::GetCharacterContextComponent() const
 {
-	return CharacterContextComponent->GetXP();
-}
-
-int32 ABaseAnimalCharacter::GetAttributePointsReward(int32 Level) const
-{
-	// TODO: Maybe change this to return attribute points reward based on level
-	return 1;
-}
-
-void ABaseAnimalCharacter::AddToXP(int32 XpToAdd)
-{
-	CharacterContextComponent->AddToXP(XpToAdd);
-}
-
-void ABaseAnimalCharacter::AddToPlayerLevel(int32 LevelsToAdd)
-{
-	CharacterContextComponent->AddToLevel(LevelsToAdd);
-}
-
-void ABaseAnimalCharacter::AddToAttributePoints(int32 AttributePointsToAdd)
-{
-	CharacterContextComponent->AddToAttributePoints(AttributePointsToAdd);
-}
-
-int32 ABaseAnimalCharacter::GetAttributePoints() const
-{
-	return CharacterContextComponent->GetAttributePoints();
-}
-
-int32 ABaseAnimalCharacter::GetLevel()
-{
-	return CharacterContextComponent->GetLevel();
-}
-
-EGrowthRate ABaseAnimalCharacter::GetGrowthRate() const
-{
-	return CharacterContextComponent->GetGrowthRate();
+	return CharacterContextComponent;
 }
 
 bool ABaseAnimalCharacter::GetIsInhabited() const
 {
 	return (GetOwner()) ? true : false;
-}
-
-int32 ABaseAnimalCharacter::GetBaseXP() const
-{
-	return CharacterContextComponent->GetBaseXP();
 }
 
 float ABaseAnimalCharacter::GetXPMultiplierAmount()
@@ -295,12 +247,4 @@ void ABaseAnimalCharacter::UpdatePossessionChance(FName SocketName, float NewCha
 			Widget->SetPossessionChance(NewChance);
 		}
 	}
-}
-
-void ABaseAnimalCharacter::EnsureAbilitiesAreInitialized()
-{
-	if (!HasAuthority()) return;
-	
-	AnimalAbilitySystemComponent->AddCharacterAbilities(StartupAbilitySet->Abilities);
-	AnimalAbilitySystemComponent->AddCharacterPassiveAbilities(StartupPassiveAbilitySet->Abilities);
 }

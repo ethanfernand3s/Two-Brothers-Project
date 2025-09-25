@@ -7,7 +7,7 @@
 #include "AnimalAIController.generated.h"
 
 class UBehaviorTreeComponent;
-
+class UBlackboardComponent;
 UCLASS()
 class TWOBROTHERSPROJECT_API AAnimalAIController : public AAIController
 {
@@ -18,4 +18,5 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UBehaviorTreeComponent> BehaviorTreeComponent;
+	
 };

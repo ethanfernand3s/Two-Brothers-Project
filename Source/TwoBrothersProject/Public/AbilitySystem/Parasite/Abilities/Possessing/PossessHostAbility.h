@@ -3,13 +3,14 @@
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
 #include "GameplayTagContainer.h"
-#include "AbilitySystem/BaseGameplayAbility.h"
-#include "AbilitySystem/BaseGameplayAbility_ClientToServer.h"
 #include "Characters/BaseAnimalCharacter.h"
 #include "GameplayCueManager.h" 
+#include "AbilitySystem/Base/Abilities/BaseGameplayAbility_ClientToServer.h"
 #include "PossessHostAbility.generated.h"
 
 
+class URarityDataAsset;
+enum class ERarity : uint8;
 class AParasiteCharacter;
 class USeekHostAbility;
 class ABaseAnimalCharacter;
@@ -65,8 +66,7 @@ private:
 #pragma endregion Launching Functions
 
 #pragma region MiniGame Functions
-
-    void AttachParasiteToAnimal();
+    
     void StartBurrowCue();
     
     void SendBurrowDepthUpdate(float NewDepth);
@@ -134,7 +134,7 @@ private:
     
     float CachedAnimalCombatPower = 0.f;
     
-    FColor CachedAnimalAuraColor = FColor::White;
+    FGameplayTag CachedAnimalRarity = FGameplayTag::EmptyTag;
 
     FPossessionSocketData CachedAnimalSocketData;
     
