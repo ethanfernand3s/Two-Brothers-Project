@@ -8,6 +8,7 @@
 #include "UI/Widget/Inventory/Slots/SlotPanelUserWidget.h"
 #include "CharacterDetailsUserWidget.generated.h"
 
+struct FTribeData;
 class USlotPanelUserWidget;
 class UCanvasPanel;
 class UButton;
@@ -65,7 +66,8 @@ public:
 	void OnCharacterNameChanged(const FText& NewCharacterName);
 	void OnCharacterIconChanged(UTexture2D* NewCharacterIcon);
 	void OnLevelChanged(int32 NewLevel);
-	void OnTribeDataChanged(const FText& NewTribeText);
+	void OnTribeDataChanged(const FTribeData& NewTribeData);
+	void SetTribeName(const FText& NewTribeName);
 
 #pragma endregion Character Context Listeners
 	
@@ -81,11 +83,9 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	USlotContainerUserWidget* MainAbility_SlotContainer;
 
-	UPROPERTY(EditDefaultsOnly, meta = (BindWidget))
+	UPROPERTY(meta = (BindWidget))
 	USlotContainerUserWidget* DefaultAbilities_SlotContainer;
 
-#pragma endregion Ability Bar
-	
 #pragma region Passive Ability Bar
 	
 	UPROPERTY(meta = (BindWidget))
@@ -99,6 +99,8 @@ private:
 	UWidgetAnimation* ExpandPassiveBarAnim;
 
 #pragma endregion Passive Ability Bar
+	
+#pragma endregion Ability Bar
 	
 #pragma region Stats
 
@@ -144,9 +146,6 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> Image_Gender;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> Image_Icon;
 
 #pragma endregion Character Context Variables
 

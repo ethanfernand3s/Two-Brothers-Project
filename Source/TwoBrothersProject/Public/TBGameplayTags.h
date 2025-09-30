@@ -159,10 +159,11 @@ struct FTBGameplayTags
 
 #pragma region Items
 
-	/* Combination of the seekhost and trypossess ! see trello ! */
+	/* Combination of the seekhost and trypossess ! see trello ! */ // TODO: Come back to... woowwww....
 	FGameplayTag Items_Abilities_Defaults_Possess;
+	FGameplayTag Items_Abilities_Defaults_SeekHost;
 
-	FGameplayTag Items_Craftables_TEST;
+	FGameplayTag Items_AbilityCardholder;
 	
 #pragma endregion Items
 

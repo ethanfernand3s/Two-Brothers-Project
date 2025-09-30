@@ -38,7 +38,7 @@ struct FTB_InventoryFastArray : public FFastArraySerializer
 	// FFastArray contract
 	void PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 /*FinalSize*/);
 	void PostReplicatedAdd(const TArrayView<int32> AddedIndices, int32 /*FinalSize*/);
-
+	
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
 		return FastArrayDeltaSerialize<FTB_InventoryEntry, FTB_InventoryFastArray>(Entries, DeltaParms, *this);
@@ -46,6 +46,7 @@ struct FTB_InventoryFastArray : public FFastArraySerializer
 
 	// Helpers
 	TArray<UTBInventoryItem*> GetAllItems() const;
+	
 	UTBInventoryItem* AddEntry(UTBInventoryItem* NewItem);
 	UTBInventoryItem* AddEntry(UTBItemComponent* ItemComponent);
 	void RemoveEntry(UTBInventoryItem* Item);

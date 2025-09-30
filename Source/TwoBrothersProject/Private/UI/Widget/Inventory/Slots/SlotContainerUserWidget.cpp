@@ -79,7 +79,7 @@ FSlotAvailabilityResult USlotContainerUserWidget::HasRoomForItem(UTBItemComponen
     return HasRoomForItem(ItemComponent->GetItemManifest());
 }
 
-FSlotAvailabilityResult USlotContainerUserWidget::HasRoomForItem(UTBInventoryItem* Item, int32 StackAmountOverride, int32 RequestedIndexStartOverride)
+FSlotAvailabilityResult USlotContainerUserWidget::HasRoomForItem(const UTBInventoryItem* Item, int32 StackAmountOverride, int32 RequestedIndexStartOverride)
 {
     return HasRoomForItem(Item->GetItemManifest(), StackAmountOverride, RequestedIndexStartOverride);
 }
@@ -204,7 +204,7 @@ int32 USlotContainerUserWidget::GetStackAmount(const USlotUserWidget* GridSlot)
     return CurrentSlotStackCount;
 }
 
-void USlotContainerUserWidget::AddItem(UTBInventoryItem* Item)
+void USlotContainerUserWidget::AddItem(const UTBInventoryItem* Item)
 {
     if(!IsValid(Item) || Item->GetPreferredSlotContainerTag() != ItemCategory || !DoesItemMeetContainerRequirement(Item)) return;
     
@@ -217,7 +217,7 @@ bool USlotContainerUserWidget::DoesItemMeetContainerRequirement(const UTBInvento
     return (HasCategoryPreference()) ? MatchesCategory(Item) : true;
 }
 
-void USlotContainerUserWidget::AddItemToIndices(FSlotAvailabilityResult AvailabilityResult, UTBInventoryItem* Item)
+void USlotContainerUserWidget::AddItemToIndices(FSlotAvailabilityResult AvailabilityResult,const UTBInventoryItem* Item)
 {
    for (const auto& SlotAvailability : AvailabilityResult.SlotAvailabilities)
    {
@@ -226,7 +226,7 @@ void USlotContainerUserWidget::AddItemToIndices(FSlotAvailabilityResult Availabi
    }
 }
 
-void USlotContainerUserWidget::AddItemAtIndex(UTBInventoryItem* Item, const int32 Index, const bool bStackable,
+void USlotContainerUserWidget::AddItemAtIndex(const UTBInventoryItem* Item, const int32 Index, const bool bStackable,
                                               const int32 StackAmount)
 {
     if (!IsValid(Item) || !IsValid(InventoryWidgetController))  return;
@@ -240,13 +240,11 @@ void USlotContainerUserWidget::AddItemAtIndex(UTBInventoryItem* Item, const int3
     bool PlacementSucceeded = GridSlots[Index]->SetSlottedItem(NewSlottedItem);
     if (!PlacementSucceeded) return;
     
-    InventoryWidgetController->TryUnlockItem(Item, HasCategoryPreference());
-    
     // Store new widget in a container
     SlottedItems.Add(Index, NewSlottedItem);
 }
 
-void USlotContainerUserWidget::UpdateGridSlot(UTBInventoryItem* Item, int32 Index, bool bStackableItem, const int32 StackAmount)
+void USlotContainerUserWidget::UpdateGridSlot(const UTBInventoryItem* Item, int32 Index, bool bStackableItem, const int32 StackAmount)
 {
     if (!IsValid(Item))
     {
@@ -265,7 +263,7 @@ void USlotContainerUserWidget::UpdateGridSlot(UTBInventoryItem* Item, int32 Inde
 }
 
 
-USlottedItemUserWidget* USlotContainerUserWidget::CreateSlottedItem(UTBInventoryItem* Item, const bool bStackable,
+USlottedItemUserWidget* USlotContainerUserWidget::CreateSlottedItem(const UTBInventoryItem* Item, const bool bStackable,
                                                                     const int32 StackAmount, const int32 Index)
 {
     /* Material/Image Fragment and Rarity Fragment are REQUIRED !!! */
@@ -303,25 +301,20 @@ USlottedItemUserWidget* USlotContainerUserWidget::CreateSlottedItem(UTBInventory
     SlottedItem->SetGridIndex(Index);
     if (Item->GetItemStatus() == Tags.Status_Locked)
     {
-        SlottedItem->SetUnlocked(false);
+        UnlockSlottedItem(SlottedItem, false);
     }
     else
     {
-        SlottedItem->SetUnlocked(true);
+        UpdateItemStatus(Item);
     }
-    
-    
-    SlottedItem->OnRequestQuickMove.BindUObject(this, &ThisClass::TryQuickMove);
-    SlottedItem->OnRequestItemInfo.BindUObject(this, &ThisClass::DisplayItemInfo);
-    SlottedItem->OnRequestPickup.BindUObject(this, &ThisClass::RequestPickup);
-    SlottedItem->OnRequestDrop.BindUObject(this, &ThisClass::DropItemFromSlottedItem);
-    SlottedItem->OnDragRejected.BindUObject(this, &ThisClass::DragRejected);
     
     return SlottedItem;
 }
 
-void USlotContainerUserWidget::UpdateItemStatus(UTBInventoryItem* Item) const
+void USlotContainerUserWidget::UpdateItemStatus(const UTBInventoryItem* Item)
 {
+    if (!IsValid(Item)) return;
+    
     auto& Tags = FTBGameplayTags::Get();
     for (auto& SlottedItemPair : SlottedItems)
     {
@@ -330,13 +323,13 @@ void USlotContainerUserWidget::UpdateItemStatus(UTBInventoryItem* Item) const
         {
             if (SlottedItem->IsUnlocked() && Item->GetItemStatus() == Tags.Status_Locked)
             {
-                SlottedItem->SetUnlocked(false);
+                UnlockSlottedItem(SlottedItem, false);
             }
             else if (!SlottedItem->IsUnlocked() && ((Item->GetItemStatus() == Tags.Status_Unlocked)
                                                 || (Item->GetItemStatus() == Tags.Status_Equipped)))
                                                     
             {
-                SlottedItem->SetUnlocked(true);
+                UnlockSlottedItem(SlottedItem, true);
             }
             
             // Let ASC know the ability status has changed
@@ -346,7 +339,31 @@ void USlotContainerUserWidget::UpdateItemStatus(UTBInventoryItem* Item) const
                 const FGameplayTag& SlotInputTag = GridSlots[SlottedItem->GetGridIndex()]->GetSlotInputTag();
                 InventoryWidgetController->HandleAbilityStatusChanged(Item, SlotInputTag);
             }
+
+            SlottedItem->SetInventoryItem(Item);
         }
+    }
+}
+
+void USlotContainerUserWidget::UnlockSlottedItem(USlottedItemUserWidget* SlottedItem, bool bShouldUnlock)
+{
+    if (bShouldUnlock)
+    {
+        SlottedItem->SetUnlocked(true);
+        SlottedItem->OnRequestQuickMove.BindUObject(this, &ThisClass::TryQuickMove);
+        SlottedItem->OnRequestItemInfo.BindUObject(this, &ThisClass::DisplayItemInfo);
+        SlottedItem->OnRequestPickup.BindUObject(this, &ThisClass::RequestPickup);
+        SlottedItem->OnRequestDrop.BindUObject(this, &ThisClass::DropItemFromSlottedItem);
+        SlottedItem->OnDragRejected.BindUObject(this, &ThisClass::DragRejected);
+    }
+    else
+    {
+        SlottedItem->SetUnlocked(false);
+        SlottedItem->OnRequestQuickMove.Unbind();
+        SlottedItem->OnRequestItemInfo.Unbind();
+        SlottedItem->OnRequestPickup.Unbind();
+        SlottedItem->OnRequestDrop.Unbind();
+        SlottedItem->OnDragRejected.Unbind();
     }
 }
 
@@ -376,7 +393,7 @@ void USlotContainerUserWidget::AddStacks(const FSlotAvailabilityResult& Result)
 void USlotContainerUserWidget::DisplayItemInfo(int32 GridIndex)
 {
     check(GridSlots.IsValidIndex(GridIndex));
-    UTBInventoryItem* ClickedInventoryItem = GridSlots[GridIndex]->GetInventoryItem().Get();
+    const UTBInventoryItem* ClickedInventoryItem = GridSlots[GridIndex]->GetInventoryItem().Get();
     
    if (IsValid(GetItemInfo()) && IsValid(ClickedInventoryItem))
    {
@@ -389,7 +406,7 @@ void USlotContainerUserWidget::DisplayItemInfo(int32 GridIndex)
 void USlotContainerUserWidget::TryQuickMove(int32 GridIndex)
 {
     check(GridSlots.IsValidIndex(GridIndex));
-    UTBInventoryItem* ClickedInventoryItem = GridSlots[GridIndex]->GetInventoryItem().Get();
+    const UTBInventoryItem* ClickedInventoryItem = GridSlots[GridIndex]->GetInventoryItem().Get();
 
     UInventoryUserWidget* InventoryWidget = UInventoryStatics::GetInventoryWidget(GetOwningPlayer());
     // Must be valid, error otherwise
@@ -404,7 +421,8 @@ void USlotContainerUserWidget::TryQuickMove(int32 GridIndex)
         if (Result.SlotAvailabilities.Num() == 0 ||
             !DestinationContainer->DoesItemMeetContainerRequirement(ClickedInventoryItem)) return;
 
-        ClickedInventoryItem->SetPreferredSlotContainerTag(Result.PreferredContainerTag);
+        // Top 10 Illegal things... Ever
+        const_cast<UTBInventoryItem*>(ClickedInventoryItem)->SetPreferredSlotContainerTag(Result.PreferredContainerTag);
         DestinationContainer->AddItem(ClickedInventoryItem);
         RemoveItemFromGrid(GridIndex);
     }
@@ -414,7 +432,7 @@ void USlotContainerUserWidget::RequestPickup(int32 GridIndex, int32 RequestedPic
 {
     check(GridSlots.IsValidIndex(GridIndex));
     
-    UTBInventoryItem* ClickedInventoryItem = GridSlots[GridIndex]->GetInventoryItem().Get();
+    const UTBInventoryItem* ClickedInventoryItem = GridSlots[GridIndex]->GetInventoryItem().Get();
     if (!IsValid(ClickedInventoryItem)) return;
 
     const auto& ItemManifest = ClickedInventoryItem->GetItemManifest();
@@ -436,7 +454,7 @@ void USlotContainerUserWidget::RequestPickup(int32 GridIndex, int32 RequestedPic
                 if (TempIndex == GridIndex || !HasValidItem(GridSlots[TempIndex]) || (SlottedStackAmount == MaxStackSize))
                 { TempIndex++; continue; }
 
-                UTBInventoryItem* SlottedInventoryItem = GridSlots[TempIndex]->GetInventoryItem().Get();
+                const UTBInventoryItem* SlottedInventoryItem = GridSlots[TempIndex]->GetInventoryItem().Get();
                 if (DoesItemTypeMatch(SlottedInventoryItem, ItemTypeTag))
                 {
                     int32 SpaceLeftToFill = MaxStackSize - RequestedPickupAmount;
@@ -466,7 +484,7 @@ void USlotContainerUserWidget::OnInventoryMenuToggled(bool bOpen)
     }
 }
 
-void USlotContainerUserWidget::PickUp(UTBInventoryItem* Item, int32 GridIndex, int32 AmountToPickup,
+void USlotContainerUserWidget::PickUp(const UTBInventoryItem* Item, int32 GridIndex, int32 AmountToPickup,
                                       UDragDropOperation*& InputDragOperation, bool bIsLeftClickDrag)
 {
     if (!IsValid(Item))
@@ -526,7 +544,7 @@ void USlotContainerUserWidget::SetGridSlotsCompatibilityTints(bool bIsPickup, co
     }
 }
 
-void USlotContainerUserWidget::AssignHoverItem(UTBInventoryItem* Item, int32 PreviousGridIndex, int32 AmountToPickup,
+void USlotContainerUserWidget::AssignHoverItem(const UTBInventoryItem* Item, int32 PreviousGridIndex, int32 AmountToPickup,
                                                UDragDropOperation*& InputDragOperation, bool bIsLeftClickDrag)
 {
     if (!IsValid(Item))
@@ -541,7 +559,7 @@ void USlotContainerUserWidget::AssignHoverItem(UTBInventoryItem* Item, int32 Pre
     HoverItem->UpdateStackCount(Item->IsStackable() ? AmountToPickup : 0);
 }
 
-void USlotContainerUserWidget::AssignHoverItem(UTBInventoryItem* Item, UDragDropOperation*& InputDragOperation,
+void USlotContainerUserWidget::AssignHoverItem(const UTBInventoryItem* Item, UDragDropOperation*& InputDragOperation,
                                                bool bIsLeftClickDrag)
 {
     checkf(HoverItemClass, TEXT("Must set HoverItemClass BP."));
@@ -604,7 +622,7 @@ void USlotContainerUserWidget::HoverItemOpposingMouseLetGo()
 
 void USlotContainerUserWidget::RemoveItemAmountFromGrid(int32 AmountToRemove, int32 GridIndex)
 {
-    UTBInventoryItem* Item = GridSlots[GridIndex]->GetInventoryItem().Get();
+    const UTBInventoryItem* Item = GridSlots[GridIndex]->GetInventoryItem().Get();
     if (!IsValid(Item)) return;
     if (!Item->IsStackable()) return;
     
@@ -762,7 +780,7 @@ void USlotContainerUserWidget::ShowHoverItem()
 bool USlotContainerUserWidget::TryAddItemToSlottedItem(UHoverItemUserWidget* ExternalHoverItem, int32 GridIndex, int32 RequestedAmountPlacement, bool bIsDrop)
 {
     check(GridSlots.IsValidIndex(GridIndex));
-    UTBInventoryItem* InventoryItemInSlot = GridSlots[GridIndex]->GetInventoryItem().Get();
+    const UTBInventoryItem* InventoryItemInSlot = GridSlots[GridIndex]->GetInventoryItem().Get();
     if (!IsValid(InventoryItemInSlot)) return false;
     
     if (IsSameStackable(ExternalHoverItem, InventoryItemInSlot))
@@ -890,10 +908,11 @@ UHoverItemUserWidget* USlotContainerUserWidget::GetActiveHoverItem() const
 
 void USlotContainerUserWidget::DropItemFromSlottedItem(int32 GridIndex, int32 AmountToDrop)
 {
-    UTBInventoryItem* ItemToDrop = GridSlots[GridIndex]->GetInventoryItem().Get();
+    const UTBInventoryItem* ItemToDrop = GridSlots[GridIndex]->GetInventoryItem().Get();
     if (!IsValid(ItemToDrop)) return;
 
-    InventoryComponent->Server_DropItem(ItemToDrop, AmountToDrop);
+    // Top 10 Illegal things pt 2 #kill me now
+    InventoryComponent->Server_DropItem(const_cast<UTBInventoryItem*>(ItemToDrop), AmountToDrop);
     RemoveItemAmountFromGrid(AmountToDrop, GridIndex);
 }
 
@@ -936,7 +955,7 @@ bool USlotContainerUserWidget::IsConsumableAsXP(UHoverItemUserWidget* ExternalHo
     return false; // Not implemented yet //TODO: Implement
 }
 
-bool USlotContainerUserWidget::SwapWithHoverItem(UHoverItemUserWidget* ExternalHoverItem, UTBInventoryItem* Item, const int32 GridIndex)
+bool USlotContainerUserWidget::SwapWithHoverItem(UHoverItemUserWidget* ExternalHoverItem, const UTBInventoryItem* Item, const int32 GridIndex)
 {
     if (!IsValid(ExternalHoverItem) || !GridSlots.IsValidIndex(GridIndex)) return false;
     

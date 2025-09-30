@@ -38,6 +38,7 @@ public:
 	int32 GetAmountOfPreviousSelectedSlots();
 	void ClearSelectedSlots();
 	void AddNewSelectedSlot(USlotContainerUserWidget* OwningSlotContainer, USlotUserWidget* NewestSlot);
+	
 protected:
 	
 	virtual void NativeOnInitialized() override;

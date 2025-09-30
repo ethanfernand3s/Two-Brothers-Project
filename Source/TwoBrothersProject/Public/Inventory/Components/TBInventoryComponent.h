@@ -12,7 +12,7 @@ class ATBPlayerController;
 class UInventoryUserWidget;
 class UTBInventoryItem;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FInventoryItemChanged, UTBInventoryItem* /* Item*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FInventoryItemChanged, const UTBInventoryItem* /* Item*/);
 DECLARE_MULTICAST_DELEGATE(FNoRoomInInventory);
 DECLARE_MULTICAST_DELEGATE_OneParam(FStackChange, const FSlotAvailabilityResult&);
 
@@ -39,6 +39,7 @@ public:
 	// Getters
 	
 	// Data
+	/* !! Client RPC is temporary for getting working !! */
 	UFUNCTION(Client, Reliable)
 	void TryAddItem(UTBItemComponent* ItemComponent);
 
@@ -53,8 +54,9 @@ public:
 	void SpawnDroppedItem(UTBInventoryItem* Item, int32 StackCount);
 
 	// Change to UInventorySlot or just query but index and get item/slot info once secure replication is put into place
+	// Note: Optional CharacterContext var passed in for deciding between multiple characters
 	UFUNCTION(Server, Reliable)
-	void Server_TryUnlockItem(UTBInventoryItem* Item, bool bIsEquippableSlot, const UCharacterContextComponent* CharacterContext);
+	void Server_UpdateItemStatus(UTBInventoryItem* Item, bool bIsEquippableSlot, const UCharacterContextComponent* CharacterContext = nullptr);
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	void AddRepSubObj(UObject* SubObj);

@@ -64,11 +64,11 @@ public:
 	void SetAvailable(bool InbAvailable) { bAvailable = InbAvailable; }
 	bool GetAvailable() const { return bAvailable; }
 
-	/* For holding the item ptr */
-	void SetInventoryItem(UTBInventoryItem* Item);
+	/* For holding the item ptr */ 
+	void SetInventoryItem(const UTBInventoryItem* Item);
 	
 	/* For getting the item ptr */
-	TWeakObjectPtr<UTBInventoryItem> GetInventoryItem() const;
+	TWeakObjectPtr<const UTBInventoryItem> GetInventoryItem() const;
 
 	void SetStackCount(int32 InStackCount) { StackCount = InStackCount; }
 	int32 GetStackCount() const { return StackCount; }
@@ -113,7 +113,7 @@ private:
 	int32 StackCount{0};
 	bool bAvailable{true};
 	bool bIsSelected{false};
-	TWeakObjectPtr<UTBInventoryItem> InventoryItem;
+	TWeakObjectPtr<const UTBInventoryItem> InventoryItem;
 	FGameplayTag ItemCategoryPreference{};
 	FGameplayTag SlotInputTag{};
 	/* This is the same as the upper left index since the slots are only 1x1 */

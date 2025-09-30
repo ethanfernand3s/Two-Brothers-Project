@@ -211,7 +211,7 @@ bool USlottedItemUserWidget::IsDropInputPressed(const FKeyEvent& KeyEvent) const
 	return false;
 }
 
-void USlottedItemUserWidget::SetInventoryItem(UTBInventoryItem* Item)
+void USlottedItemUserWidget::SetInventoryItem(const UTBInventoryItem* Item)
 {
 	InventoryItem = Item;
 }

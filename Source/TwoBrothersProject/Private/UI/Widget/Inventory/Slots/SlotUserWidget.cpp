@@ -79,7 +79,7 @@ void USlotUserWidget::SetTint(const EGridSlotState& NewSlotState)
 	}
 }
 
-TWeakObjectPtr<UTBInventoryItem> USlotUserWidget::GetInventoryItem() const
+TWeakObjectPtr<const UTBInventoryItem> USlotUserWidget::GetInventoryItem() const
 {
 	return InventoryItem;
 }
@@ -236,7 +236,7 @@ void USlotUserWidget::NativeConstruct()
 	SetTint(SlotState);
 }
 
-void USlotUserWidget::SetInventoryItem(UTBInventoryItem* NewItem)
+void USlotUserWidget::SetInventoryItem(const UTBInventoryItem* NewItem)
 {
 	InventoryItem = NewItem;
 }

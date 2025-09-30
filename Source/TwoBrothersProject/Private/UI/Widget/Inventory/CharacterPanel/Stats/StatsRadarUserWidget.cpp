@@ -1,5 +1,7 @@
 
 #include "UI/Widget/Inventory/CharacterPanel/Stats/StatsRadarUserWidget.h"
+
+#include "Components/Image.h"
 #include "Components/PanelWidget.h"
 #include "UI/Widget/Inventory/CharacterPanel/Stats/StatsRadarWidget.h"
 
@@ -25,4 +27,9 @@ void UStatsRadarUserWidget::UpdateSingleRadarStat(int32 Index, float Value)
 	{
 		RadarWidget->UpdateStatNormalizedValue(Index, Value);
 	}
+}
+
+void UStatsRadarUserWidget::SetCharacterIcon(UTexture2D* NewCharacterIcon)
+{
+	Image_CharacterIcon->SetBrushFromTexture(NewCharacterIcon);
 }

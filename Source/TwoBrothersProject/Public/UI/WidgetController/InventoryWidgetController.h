@@ -21,14 +21,6 @@ struct FTBAttributeInfo;
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAttributeCurrentAndMaxChangedSignature, const FTBAttributeInfo&, const FTBAttributeInfo&, bool bIsParasiteVal);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAttributeValueChangedSignature, const FTBAttributeInfo&, bool bIsParasiteVal);
 
-// Character Context Delegates
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnIntChanged, int32, bool bIsParasiteVal);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnTextChangedSignature, const FText&, bool bIsParasiteVal);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FTextureDelegateSignature, UTexture2D*, bool bIsParasiteVal);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnTagChangedSignature, const FGameplayTag&, bool bIsParasiteVal);
-
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCreatureTypesSetSignature, const struct FGameplayTagContainer&, bool bIsParasiteVal);
-
 UCLASS()
 class TWOBROTHERSPROJECT_API UInventoryWidgetController : public UBaseWidgetController
 {
@@ -38,6 +30,7 @@ public:
 	
 	virtual void BroadcastInitialValues() override;
 	virtual void BindCallbacksToDependencies() override;
+	virtual void UnBindCallbacks() override;
 	
 	// GAS attr upgrades
 	void UpgradeAttribute(const FGameplayTag& AttributeTag) const;
@@ -50,16 +43,6 @@ public:
 	FOnAttributeCurrentAndMaxChangedSignature CurrentAndMax_AttributeInfoDelegate;
 	FOnAttributeValueChangedSignature         Single_AttributeInfoDelegate;
 
-	// Character Context Delegates
-	FOnIntChanged					   OnAttributePointsChangedDelegate;
-	FOnIntChanged					   OnLevelChangedDelegate;
-	FOnTextChangedSignature            OnCharacterNameChangedDelegate;
-	FTextureDelegateSignature		   CharacterIconChanged;
-	FOnTextChangedSignature            OnTribeNameChangedDelegate;
-	FOnTagChangedSignature             OnGenderSetDelegate;
-	FOnCreatureTypesSetSignature       OnCreatureTypesSetDelegate;
-	FOnTagChangedSignature             OnRaritySetDelegate;
-
 private:
 
 									/* Broadcast and Bind Helpers */
@@ -67,17 +50,13 @@ private:
 	/* Attribute Set */
 	void BroadcastAllAttributes(UBaseAttributeSet* AttributeSet, bool bIsParasiteVal) const;
 	void BindAllAttributeCallbacks(UAbilitySystemComponent* ASC, UBaseAttributeSet* AttributeSet,
-								   bool bIsParasiteVal) const;
+								   bool bIsParasiteVal);
 	void BindAttributeCallback(UAbilitySystemComponent* ASC, const FTagAttributeBinding& Binding,
-							   UBaseAttributeSet* AttributeSet, bool bIsParasiteVal) const;
+							   UBaseAttributeSet* AttributeSet, bool bIsParasiteVal);
 	void BroadcastAttributePair(const FTagAttributeBinding& Binding, UBaseAttributeSet* AttributeSet,
 								bool bIsParasiteVal) const;
 	void BroadcastSingleAttribute(const FTagAttributeBinding& Binding, UBaseAttributeSet* AttributeSet,
 								  bool bIsParasiteVal) const;
-
-	/* Character Context */
-	void BroadcastCharacterContext(UCharacterContextComponent* CharacterContextComponent, bool bIsParasiteVal) const;
-	void BindAllCharacterContext(UCharacterContextComponent* CharacterContextComponent, bool bIsParasiteVal) const;
 	
 	TWeakObjectPtr<UTBInventoryComponent> CachedInventory;
 	bool bIsParasiteFocusedCharacter = true;

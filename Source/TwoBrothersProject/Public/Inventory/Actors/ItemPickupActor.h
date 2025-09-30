@@ -15,6 +15,7 @@ class TWOBROTHERSPROJECT_API AItemPickupActor : public AActor
 	GENERATED_BODY()
 
 public:
+	
 	AItemPickupActor();
 	UTBItemComponent* GetItemComponent() const { return ItemComponent.Get(); }
 	UStaticMeshComponent* GetMeshComponent() const { return MeshComp; }
@@ -23,6 +24,7 @@ public:
 
 	void TryBobbleFloat(float DeltaTime);
 	void TryMagneticFloatToAttractingPawn(float DeltaTime);
+	
 protected:
 	
 	virtual void BeginPlay() override;
@@ -45,7 +47,7 @@ private:
 	
 	float SpawnTime{0.f};
 	float PickupDelay{.5f};
-	float MinPickupDistanceThreshold{115.f};
+	float MinPickupDistanceThresholdSquared{2.f};
 	bool bCanBePickedUp{false};
 	bool bIsFloatingToAttractingPawn{false};
 
@@ -59,4 +61,9 @@ private:
 	float BobbleAmplitude{4.f}; // Amplitude
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess=true), Category="Bobble")
 	float BobbleSpinAnglePerSecond{30.f};
+
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess=true), Category="Attraction")
+	float AttractionStrength = 0.45f;
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess=true), Category="Attraction")
+	float MaxAttractionSpeed  = 1000.f;
 };

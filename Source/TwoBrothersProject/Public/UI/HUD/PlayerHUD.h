@@ -29,7 +29,7 @@ class TWOBROTHERSPROJECT_API APlayerHUD : public AHUD
 	GENERATED_BODY()
 
 public:
-
+	
 	/* Called in init actor info */
 	void InitUI(ATBPlayerController* PC);
 	
@@ -42,6 +42,7 @@ public:
 	UInventoryWidgetController* GetInventoryWidgetController(ATBPlayerController* PC);
 
 	void SetupWidgetParams(ATBPlayerController* PC);
+	void UpdateAnimalWidgetParams(ATBPlayerController* PC);
 	
 private:
 	

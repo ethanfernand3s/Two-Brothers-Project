@@ -5,6 +5,8 @@
 #include "TB_ItemManifest.h"
 #include "TBInventoryItem.generated.h"
 
+class UTBInventoryComponent;
+
 UCLASS()
 class TWOBROTHERSPROJECT_API UTBInventoryItem : public UObject
 {
@@ -29,7 +31,8 @@ public:
 
 	FGameplayTag GetItemStatus() const {return ItemStatusTag;}
 	void SetItemStatus(const FGameplayTag& Tag) { ItemStatusTag = Tag; }
-	
+
+	void SetOwningInventoryComponent(UTBInventoryComponent* InventoryComponent);
 	/* Needed for networking */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
 	virtual bool IsSupportedForNetworking() const override { return true; }
@@ -42,10 +45,15 @@ private:
 	/* This data is temporary while in the inventory, only item manifest is copied to pickup actor */
 	UPROPERTY(Replicated)
 	FGameplayTag PreferredSlotContainerTag = FGameplayTag::EmptyTag;
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing=OnRep_ItemStatus)
 	FGameplayTag ItemStatusTag = FGameplayTag::EmptyTag;
+	UFUNCTION()
+	void OnRep_ItemStatus() const;
 	UPROPERTY(Replicated)
 	int32 TotalStackCount{0};
+
+	/* Inventory Component */
+	TWeakObjectPtr<UTBInventoryComponent> OwningInventoryComp;
 };
 
 /* O(n) search for getting the desired fragment from the items manifest by using a gameplay tag */

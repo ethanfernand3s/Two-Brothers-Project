@@ -9,7 +9,8 @@
 
 class USlotContainerUserWidget;
 /**
- * 
+ * Used for visually decorating the slot container by designers choice
+ * ex. A Background Image with the slot container.
  */
 UCLASS()
 class TWOBROTHERSPROJECT_API USlotPanelUserWidget : public UBaseUserWidget

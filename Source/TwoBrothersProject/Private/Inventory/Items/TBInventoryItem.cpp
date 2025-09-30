@@ -1,6 +1,7 @@
 #include "Inventory/Items/TBInventoryItem.h"
 
 #include "TBGameplayTags.h"
+#include "Inventory/Components/TBInventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 
 UTBInventoryItem::UTBInventoryItem()
@@ -21,6 +22,11 @@ bool UTBInventoryItem::IsStackable() const
 	return Stackable != nullptr;
 }
 
+void UTBInventoryItem::SetOwningInventoryComponent(UTBInventoryComponent* InventoryComponent)
+{
+	OwningInventoryComp = InventoryComponent;
+}
+
 void UTBInventoryItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -28,4 +34,9 @@ void UTBInventoryItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UTBInventoryItem, TotalStackCount);
 	DOREPLIFETIME(UTBInventoryItem, PreferredSlotContainerTag);
 	DOREPLIFETIME(UTBInventoryItem, ItemStatusTag);
+}
+
+void UTBInventoryItem::OnRep_ItemStatus() const
+{
+	OwningInventoryComp->OnItemStatusChanged.Broadcast(this);
 }

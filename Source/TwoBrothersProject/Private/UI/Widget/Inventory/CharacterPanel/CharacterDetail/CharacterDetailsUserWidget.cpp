@@ -6,6 +6,7 @@
 #include "TBGameplayTags.h"
 #include "AbilitySystem/Data/CharacterCombatValues.h"
 #include "Blueprint/WidgetTree.h"
+#include "Characters/Data/TribeData.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
@@ -28,16 +29,16 @@ void UCharacterDetailsUserWidget::NativeOnInitialized()
 
 void UCharacterDetailsUserWidget::OnWidgetControllerSet()
 {	
-	if (Button_EquippablePassiveAbilitiesContainerToggle)
+	if (IsValid(Button_EquippablePassiveAbilitiesContainerToggle))
 	{
 		Button_EquippablePassiveAbilitiesContainerToggle->OnClicked.AddDynamic(this, &UCharacterDetailsUserWidget::ToggleDropdown);
 	}
 
 	SetupStatButtons();
 	
-	PassivePanel->SetWidgetController(WidgetController);
-	MainAbility_SlotContainer->SetWidgetController(WidgetController);
-	DefaultAbilities_SlotContainer->SetWidgetController(WidgetController);
+	if (IsValid(PassivePanel)) PassivePanel->SetWidgetController(WidgetController);
+	if (IsValid(MainAbility_SlotContainer)) MainAbility_SlotContainer->SetWidgetController(WidgetController);
+	if (IsValid(DefaultAbilities_SlotContainer)) DefaultAbilities_SlotContainer->SetWidgetController(WidgetController);
 }
 
 void UCharacterDetailsUserWidget::SetupStatButtons()
@@ -71,7 +72,7 @@ void UCharacterDetailsUserWidget::SetSingleStat(const FTBAttributeInfo& Attribut
 			Binding->StatButton->SetStatText(StatValueText);
 		}
 
-		if (StatsRadar && Binding->RadarIndex != INDEX_NONE)
+		if ((IsValid(StatsRadar) && Binding->RadarIndex != INDEX_NONE))
 		{
 			const float Normalized = FMath::Clamp(AttributeInfo.AttributeValue / FCharacterCombatValues::MaxValueAmount, 0.f, 1.f);
 			StatsRadar->UpdateSingleRadarStat(Binding->RadarIndex, Normalized);
@@ -98,13 +99,13 @@ void UCharacterDetailsUserWidget::SetHealthStat(const FTBAttributeInfo& CurrentA
 			FText::AsNumber(NewMaxHealth, &Format)
 		);
 		
-		StatButton_Health->SetStatText(FormattedAttributeValue);
+		if (IsValid(StatButton_Health)) StatButton_Health->SetStatText(FormattedAttributeValue);
 
 		// Refresh Widget only if Max Health was changed
 		if (PreviousMaxHealth != NewMaxHealth)
 		{
 			PreviousMaxHealth = NewMaxHealth;
-			if (StatsRadar)
+			if (IsValid(StatsRadar))
 			{
 				const float Normalized = FMath::Clamp(NewMaxHealth / FCharacterCombatValues::MaxValueAmount, 0.f, 1.f);
 				StatsRadar->UpdateSingleRadarStat(0, Normalized);
@@ -116,7 +117,7 @@ void UCharacterDetailsUserWidget::SetHealthStat(const FTBAttributeInfo& CurrentA
 
 void UCharacterDetailsUserWidget::SetType(const FGameplayTagContainer& CreatureTypeTags)
 {
-	if (!InventoryWidgetController || !InventoryWidgetController->GetUIDataAsset()) return;
+	if (!IsValid(InventoryWidgetController) || !IsValid(InventoryWidgetController->GetUIDataAsset())) return;
 	
 	for (const auto& Tag : CreatureTypeTags)
 	{
@@ -155,29 +156,29 @@ void UCharacterDetailsUserWidget::SetType(const FGameplayTagContainer& CreatureT
 
 void UCharacterDetailsUserWidget::OnGenderSet(const FGameplayTag& InGenderTag)
 {
-	if (InventoryWidgetController &&  InventoryWidgetController->GetUIDataAsset())
+	if (!IsValid(InventoryWidgetController) || !IsValid(InventoryWidgetController->GetUIDataAsset())) return;
+	
+	if (UTexture2D* GenderImage = InventoryWidgetController->GetUIDataAsset()->GetGenderTexture(InGenderTag))
 	{
-		if (UTexture2D* GenderImage = InventoryWidgetController->GetUIDataAsset()->GetGenderTexture(InGenderTag))
-		{
-			Image_Gender->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			Image_Gender->SetBrushFromTexture(GenderImage);
-		}
+		Image_Gender->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Image_Gender->SetBrushFromTexture(GenderImage);
 	}
 }
 
 void UCharacterDetailsUserWidget::OnRaritySet(const FGameplayTag& InRarityTag)
 {
-	if (InventoryWidgetController && InventoryWidgetController->GetUIDataAsset())
+	if (!IsValid(InventoryWidgetController) || !IsValid(InventoryWidgetController->GetUIDataAsset())) return;
+	
+	if (const FLinearColor* RarityColor =InventoryWidgetController->GetUIDataAsset()->GetRarityColor(InRarityTag))
 	{
-		if (const FLinearColor* RarityColor =InventoryWidgetController->GetUIDataAsset()->GetRarityColor(InRarityTag))
-		{
-			TextBlock_CharacterName->SetColorAndOpacity(*RarityColor);
-		}
+		TextBlock_CharacterName->SetColorAndOpacity(*RarityColor);
 	}
 }
 
 void UCharacterDetailsUserWidget::OnAttributePointsChanged(int NewAttributePoints)
 {
+	if (!IsValid(TextBlock_AttributePoints)) return;
+	
 	TextBlock_AttributePoints->SetText(FText::AsNumber(NewAttributePoints));
 	
 	if (NewAttributePoints == 0)
@@ -203,34 +204,42 @@ void UCharacterDetailsUserWidget::UpdateAllButtons(bool bShouldEnable)
 
 void UCharacterDetailsUserWidget::OnCharacterNameChanged(const FText& NewCharacterName)
 {
+	if (!IsValid(TextBlock_CharacterName)) return;
 	TextBlock_CharacterName->SetText(NewCharacterName);
 }
 
 void UCharacterDetailsUserWidget::OnCharacterIconChanged(UTexture2D* NewCharacterIcon)
 {
-	Image_Icon->SetBrushFromTexture(NewCharacterIcon);
+	if (!IsValid(NewCharacterIcon) || !IsValid(StatsRadar)) return;
+	StatsRadar->SetCharacterIcon(NewCharacterIcon);
 }
 
 void UCharacterDetailsUserWidget::OnLevelChanged(int32 NewLevel)
 {
+	if (!IsValid(TextBlock_Level)) return;
 	TextBlock_Level->SetText(FText::AsNumber(NewLevel));
 }
 
-void UCharacterDetailsUserWidget::OnTribeDataChanged(const FText& NewTribeText)
+void UCharacterDetailsUserWidget::OnTribeDataChanged(const FTribeData& NewTribeData)
 {
+	SetTribeName(NewTribeData.TribeName);
+}
+
+void UCharacterDetailsUserWidget::SetTribeName(const FText& NewTribeName)
+{
+	if (!IsValid(TextBlock_TribeName)) return;
 	static const FText TribeFormat =
 		NSLOCTEXT("StatsPanel", "TribeFormat", "of {0}");
 
-	const FText DisplayText = FText::Format(TribeFormat, NewTribeText);
+	const FText DisplayText = FText::Format(TribeFormat, NewTribeName);
 	TextBlock_TribeName->SetText(DisplayText);
 }
 
 void UCharacterDetailsUserWidget::OnStatButtonPressed(const FGameplayTag& StatTag) const
 {
-	if(InventoryWidgetController)
-	{
-		InventoryWidgetController->UpgradeAttribute(StatTag);
-	}
+	if(!IsValid(InventoryWidgetController)) return;
+	
+	InventoryWidgetController->UpgradeAttribute(StatTag);
 }
 
 void UCharacterDetailsUserWidget::PlayStatIncreasedEffects()

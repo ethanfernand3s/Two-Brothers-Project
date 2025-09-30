@@ -12,6 +12,7 @@
 #include "Characters/Components/CharacterContextComponent.h"
 #include "Inventory/Components/TBInventoryComponent.h"
 #include "Player/ParasitePlayerState.h"
+#include "Player/TBPlayerController.h"
 #include "UI/HUD/PlayerHUD.h"
 
 void UInventoryWidgetController::BroadcastInitialValues()
@@ -21,25 +22,17 @@ void UInventoryWidgetController::BroadcastInitialValues()
 	{
 		BroadcastAllAttributes(ParasiteAS.Get(), true);
 	}
-	if (ParasitePI.IsValid() && ParasitePI->GetCharacterContextComponent())
-	{
-		BroadcastCharacterContext(ParasitePI->GetCharacterContextComponent(), true);
-	}
 	
 	// Animal
 	if (AnimalAS.IsValid())
 	{
 		BroadcastAllAttributes(AnimalAS.Get(),false);
 	}
-	if (AnimalPI.IsValid() && AnimalPI->GetCharacterContextComponent())
-	{
-		BroadcastCharacterContext(AnimalPI->GetCharacterContextComponent(), false);
-	}
 
 	// Inventory
-	if (ParasitePS.IsValid())
+	if (TBPC.IsValid())
 	{
-		if (UTBInventoryComponent* Inv = ParasitePS->FindComponentByClass<UTBInventoryComponent>())
+		if (UTBInventoryComponent* Inv = TBPC->FindComponentByClass<UTBInventoryComponent>())
 		{
 			CachedInventory = Inv;
 		}
@@ -64,16 +57,11 @@ void UInventoryWidgetController::BroadcastAllAttributes(UBaseAttributeSet* Attri
 
 void UInventoryWidgetController::BindCallbacksToDependencies()
 {
-	// Bind Character Context
-	
+									/* Bind Character Context */
 	// Parasite
 	if (ParasiteASC.IsValid() && ParasiteAS.IsValid())
 	{
 		BindAllAttributeCallbacks(ParasiteASC.Get(), ParasiteAS.Get(), true);
-	}
-	if (ParasitePI.IsValid() && ParasitePI->GetCharacterContextComponent())
-	{
-		BindAllCharacterContext(ParasitePI->GetCharacterContextComponent(), true);
 	}
 	
 	// Animal
@@ -81,15 +69,26 @@ void UInventoryWidgetController::BindCallbacksToDependencies()
 	{
 		BindAllAttributeCallbacks(AnimalASC.Get(), AnimalAS.Get(), false);
 	}
-	if (AnimalPI.IsValid() && AnimalPI->GetCharacterContextComponent())
+	
+}
+
+void UInventoryWidgetController::UnBindCallbacks()
+{
+	Super::UnBindCallbacks();
+	for (const auto& KVP : AnimalAttributeHandles)
 	{
-		BindAllCharacterContext(AnimalPI->GetCharacterContextComponent(), false);
+		AnimalASC->GetGameplayAttributeValueChangeDelegate(KVP.Key).Remove(KVP.Value);
 	}
+	AnimalAttributeHandles.Empty();
+	
+	AnimalASC = nullptr;
+	AnimalAS = nullptr;
+	AnimalPI = nullptr;
 }
 
 // Loop over all bindings in an AttributeSet and bind callbacks
 void UInventoryWidgetController::BindAllAttributeCallbacks(UAbilitySystemComponent* ASC, UBaseAttributeSet* AttributeSet,
-														   bool bIsParasiteVal) const
+														   bool bIsParasiteVal)
 {
 	for (const FTagAttributeBinding& Binding : AttributeSet->TagsToCombatAttributes)
 	{
@@ -101,12 +100,12 @@ void UInventoryWidgetController::BindAllAttributeCallbacks(UAbilitySystemCompone
 void UInventoryWidgetController::BindAttributeCallback( UAbilitySystemComponent* ASC,
 														const FTagAttributeBinding& Binding,
 														UBaseAttributeSet* AttributeSet,
-														bool bIsParasiteVal) const
+														bool bIsParasiteVal)
 {
 	const FGameplayAttribute PrimaryAttribute = Binding.PrimaryAttributeFunc();
 
 	// Bind Primary
-	ASC->GetGameplayAttributeValueChangeDelegate(PrimaryAttribute).AddLambda(
+	FDelegateHandle PrimaryHandle = ASC->GetGameplayAttributeValueChangeDelegate(PrimaryAttribute).AddLambda(
 		[this, Binding, AttributeSet, bIsParasiteVal](const FOnAttributeChangeData& Data)
 		{
 			if (Binding.HasSecondary())
@@ -120,17 +119,28 @@ void UInventoryWidgetController::BindAttributeCallback( UAbilitySystemComponent*
 		}
 	);
 
+	if (!bIsParasiteVal)
+	{
+		// Only track Animal handles
+		AnimalAttributeHandles.Add(PrimaryAttribute, PrimaryHandle);
+	}
+
 	// Bind Secondary (if it exists)
 	if (Binding.HasSecondary())
 	{
 		const FGameplayAttribute SecondaryAttribute = Binding.SecondaryAttributeFunc();
 
-		ASC->GetGameplayAttributeValueChangeDelegate(SecondaryAttribute).AddLambda(
+		FDelegateHandle SecondaryHandle = ASC->GetGameplayAttributeValueChangeDelegate(SecondaryAttribute).AddLambda(
 			[this, Binding, AttributeSet, bIsParasiteVal](const FOnAttributeChangeData& Data)
 			{
 				BroadcastAttributePair(Binding, AttributeSet, bIsParasiteVal);
 			}
 		);
+
+		if (!bIsParasiteVal)
+		{
+			AnimalAttributeHandles.Add(SecondaryAttribute, SecondaryHandle);
+		}
 	}
 }
 
@@ -159,51 +169,6 @@ void UInventoryWidgetController::BroadcastSingleAttribute(const FTagAttributeBin
 	Single_AttributeInfoDelegate.Broadcast(Info, bIsParasiteVal);
 }
 
-void UInventoryWidgetController::BroadcastCharacterContext(UCharacterContextComponent* CharacterContextComponent, bool bIsParasiteVal) const
-{
-	OnAttributePointsChangedDelegate.Broadcast(CharacterContextComponent->GetAttributePoints(), bIsParasiteVal);
-	OnCharacterNameChangedDelegate.Broadcast(CharacterContextComponent->GetCharacterName(), bIsParasiteVal);
-	OnLevelChangedDelegate.Broadcast(CharacterContextComponent->GetLevel(), bIsParasiteVal);
-	OnTribeNameChangedDelegate.Broadcast(CharacterContextComponent->GetTribeData().TribeName, bIsParasiteVal);
-	OnRaritySetDelegate.Broadcast(CharacterContextComponent->GetRarity(), bIsParasiteVal);
-
-	OnGenderSetDelegate.Broadcast(CharacterContextComponent->GetGender(), bIsParasiteVal);
-	OnCreatureTypesSetDelegate.Broadcast(CharacterContextComponent->GetCreatureTypes(), bIsParasiteVal);
-}
-
-void UInventoryWidgetController::BindAllCharacterContext(UCharacterContextComponent* CharacterContextComponent, bool bIsParasiteVal) const
-{
-	CharacterContextComponent->OnAttributePointsChanged.AddLambda(
-		[this, bIsParasiteVal](int NewAttributePoints)
-		{
-			OnAttributePointsChangedDelegate.Broadcast(NewAttributePoints, bIsParasiteVal);
-		});
-
-	CharacterContextComponent->OnCharacterNameChanged.AddLambda(
-		[this, bIsParasiteVal](const FText& NewCharacterName)
-		{
-			OnCharacterNameChangedDelegate.Broadcast(NewCharacterName, bIsParasiteVal);
-		});
-
-	CharacterContextComponent->OnCharacterIconChanged.AddLambda(
-		[this, bIsParasiteVal](UTexture2D* NewCharacterIcon)
-		{
-			CharacterIconChanged.Broadcast(NewCharacterIcon, bIsParasiteVal);
-		});
-
-	CharacterContextComponent->OnLevelChanged.AddLambda(
-		[this, bIsParasiteVal](int NewLevel)
-		{
-			OnLevelChangedDelegate.Broadcast(NewLevel, bIsParasiteVal);
-		});
-
-	CharacterContextComponent->OnTribeDataChanged.AddLambda(
-		[this, bIsParasiteVal](const FTribeData& TribeData)
-		{
-			OnTribeNameChangedDelegate.Broadcast(TribeData.TribeName, bIsParasiteVal);
-		});
-}
-
 void UInventoryWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag) const
 {
 	UBaseAbilitySystemComponent* ActiveASC = GetActiveASC(!bIsParasiteFocusedCharacter);
@@ -213,13 +178,15 @@ void UInventoryWidgetController::UpgradeAttribute(const FGameplayTag& AttributeT
 
 void UInventoryWidgetController::TryUnlockItem(UTBInventoryItem* Item, bool bIsEquippableSlot) const
 {
+	if (!CachedInventory.IsValid()) return;
+	
 	IPlayerInterface* ActivePI = GetActivePI(!bIsParasiteFocusedCharacter);
 	if (!ActivePI) return;
 	
 	const UCharacterContextComponent* CharacterContextComp = ActivePI->GetCharacterContextComponent();
 	if (!IsValid(CharacterContextComp)) return;
 	
-	CachedInventory->Server_TryUnlockItem(Item, bIsEquippableSlot, CharacterContextComp);
+	CachedInventory->Server_UpdateItemStatus(Item, bIsEquippableSlot, CharacterContextComp);
 }
 
 void UInventoryWidgetController::HandleAbilityStatusChanged(const UTBInventoryItem* Item, FGameplayTag SlotInputTag)

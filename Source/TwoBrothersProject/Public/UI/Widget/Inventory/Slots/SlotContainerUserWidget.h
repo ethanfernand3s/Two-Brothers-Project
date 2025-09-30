@@ -34,7 +34,7 @@ public:
 
 	/* HasRoomForItem-Funnels */
 	FSlotAvailabilityResult HasRoomForItem(UTBItemComponent* ItemComponent);
-	FSlotAvailabilityResult HasRoomForItem(UTBInventoryItem* Item, int32 StackAmountOverride = -1, int32 RequestedIndexStartOverride = -1);
+	FSlotAvailabilityResult HasRoomForItem(const UTBInventoryItem* Item, int32 StackAmountOverride = -1, int32 RequestedIndexStartOverride = -1);
 	/* ~HasRoomForItem-Funnels~ */
 
 	/** Returns an FSlotAvailabilityResult containing the slot info needed for adding an item. */
@@ -53,19 +53,15 @@ public:
 	/* ~HasRoomForItem-Helpers~ */
 
 	/* Add Item */
-    void AddItem(UTBInventoryItem* Item);
+    void AddItem(const UTBInventoryItem* Item);
 	bool DoesItemMeetContainerRequirement(const UTBInventoryItem* Item) const;
-    void UpdateGridSlot(UTBInventoryItem* Item, int32 Index, bool bStackableItem, const int32 StackAmount);
-	void AddItemToIndices(FSlotAvailabilityResult AvailabilityResult, UTBInventoryItem* Item);
-	void AddItemAtIndex(UTBInventoryItem* Item, const int32 Index, const bool bStackable, const int32 StackAmount);
-	USlottedItemUserWidget* CreateSlottedItem(UTBInventoryItem* Item, const bool bStackable,
+    void UpdateGridSlot(const UTBInventoryItem* Item, int32 Index, bool bStackableItem, const int32 StackAmount);
+	void AddItemToIndices(FSlotAvailabilityResult AvailabilityResult, const UTBInventoryItem* Item);
+	void AddItemAtIndex(const UTBInventoryItem* Item, const int32 Index, const bool bStackable, const int32 StackAmount);
+	USlottedItemUserWidget* CreateSlottedItem(const UTBInventoryItem* Item, const bool bStackable,
                                               const int32 StackAmount, const int32 Index);
-	void UpdateItemStatus(UTBInventoryItem* Item) const;
-	// Creature Type is optional
-	void HandleAbilityEquipped(UTBInventoryItem* Item, const FAbilityFragment* AbilityFragment,
-							   const FLevelFragment* LevelFragment, const FGameplayTag& SlotInputTag,
-							   const FCreatureTypeFragment* CreatureTypeFragment = nullptr);
-							   
+	void UpdateItemStatus(const UTBInventoryItem* Item);
+	void UnlockSlottedItem(USlottedItemUserWidget* SlottedItem, bool bShouldUnlock = true);
 							   
 	/* ~Add Item~ */
 
@@ -91,12 +87,12 @@ public:
 	void OnInventoryMenuToggled(bool bOpen);
 	
 	/* Hover Item */
-	void PickUp(UTBInventoryItem* Item, int32 GridIndex, int32 AmountToPickup,
+	void PickUp(const UTBInventoryItem* Item, int32 GridIndex, int32 AmountToPickup,
 		UDragDropOperation*& InputDragOperation, bool bIsLeftClickDrag);
 	void SetGridSlotsCompatibilityTints(bool bIsPickup, const UTBInventoryItem* ItemToCheck = nullptr);
-	void AssignHoverItem(UTBInventoryItem* Item, int32 PreviousGridIndex, int32 AmountToPickup,
+	void AssignHoverItem(const UTBInventoryItem* Item, int32 PreviousGridIndex, int32 AmountToPickup,
 		UDragDropOperation*& InputDragOperation, bool bIsLeftClickDrag);
-	void AssignHoverItem(UTBInventoryItem* Item, UDragDropOperation*& InputDragOperation, bool bIsLeftClickDrag);
+	void AssignHoverItem(const UTBInventoryItem* Item, UDragDropOperation*& InputDragOperation, bool bIsLeftClickDrag);
 	void HoverItemOpposingMouseLetGo();
 	void RemoveItemAmountFromGrid(int32 AmountToRemove, int32 GridIndex);
 	void RemoveItemFromGrid(int32 GridIndex);
@@ -110,7 +106,7 @@ public:
 	void ShowHoverItem();
 	bool IsSameStackable(UHoverItemUserWidget* ExternalHoverItem, const UTBInventoryItem* Item) const;
 	bool IsConsumableAsXP(UHoverItemUserWidget* ExternalHoverItem, const UTBInventoryItem* Item) const;
-	bool SwapWithHoverItem(UHoverItemUserWidget* ExternalHoverItem, UTBInventoryItem* Item, const int32 GridIndex);
+	bool SwapWithHoverItem(UHoverItemUserWidget* ExternalHoverItem, const UTBInventoryItem* Item, const int32 GridIndex);
 	bool ShouldSwapStackCounts(int32 RoomInClickedSlot, int32 HoveredStackCount, int32 MaxStackSize) const;
 	bool SwapStackCounts(UHoverItemUserWidget* ExternalHoverItem, int32 ItemInSlotStackCount, int32 HoveredStackCount, int32 GridIndex);
 	void PutHoverItemBack(UHoverItemUserWidget* ExternalHoverItem);

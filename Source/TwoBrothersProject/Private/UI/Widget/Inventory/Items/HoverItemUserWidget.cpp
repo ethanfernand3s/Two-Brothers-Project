@@ -51,7 +51,7 @@ void UHoverItemUserWidget::HandleOpposingMouseUp()
 	OnOpposingMouseLetGo.Broadcast();
 }
 
-void UHoverItemUserWidget::SetInventoryItem(UTBInventoryItem* Item)
+void UHoverItemUserWidget::SetInventoryItem(const UTBInventoryItem* Item)
 {
 	InventoryItem = Item;
 }

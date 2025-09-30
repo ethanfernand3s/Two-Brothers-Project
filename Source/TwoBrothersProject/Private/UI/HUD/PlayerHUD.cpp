@@ -1,9 +1,7 @@
 #include "UI/HUD/PlayerHUD.h"
 
 #include "AbilitySystem/Animal/AnimalAbilitySystemComponent.h"
-#include "AbilitySystem/Animal/AnimalAttributeSet.h"
 #include "AbilitySystem/Parasite/ParasiteAbilitySystemComponent.h"
-#include "AbilitySystem/Parasite/ParasiteAttributeSet.h"
 #include "Blueprint/UserWidget.h"
 #include "Inventory/Components/TBInventoryComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -13,17 +11,31 @@
 #include "UI/Widget/Inventory/InventoryUserWidget.h"
 #include "UI/WidgetController/InventoryWidgetController.h"
 #include "UI/WidgetController/OverlayWidgetController.h"
+#include "AbilitySystem/Animal/AnimalAttributeSet.h"
 
 void APlayerHUD::InitUI(ATBPlayerController* PC)
 {
-	WCParams.Reset();
+	if (!IsValid(PC)) return;
+	
+	if (WCParams == nullptr) SetupWidgetParams(PC);
+	else UpdateAnimalWidgetParams(PC);
+	
 	InitOverlay(PC);
-
-	// Doing it this way for the moment since the inventory still needs the widget params that are
-	// handled by the HUD.
-	if (PC->GetInventoryComponent())
+	
+	if (IsValid(PC->GetInventoryComponent()) && PC->GetInventoryComponent()->GetInventoryWidget() == nullptr)
 	{
 		PC->GetInventoryComponent()->SetInventoryWidget(InitInventory(PC));
+	}
+	
+	if (OverlayWidgetController != nullptr)
+    {
+    	OverlayWidgetController->SetWidgetControllerParams(WCParams);
+    	OverlayWidgetController->RebindToDependencies();
+    }
+	if (InventoryWidgetController != nullptr)
+	{
+		InventoryWidgetController->SetWidgetControllerParams(WCParams);
+		InventoryWidgetController->RebindToDependencies();
 	}
 
 	// Setup Input
@@ -52,10 +64,6 @@ UOverlayWidgetController* APlayerHUD::GetOverlayWidgetController(ATBPlayerContro
 	if (OverlayWidgetController == nullptr)
 	{
 		OverlayWidgetController = NewObject<UOverlayWidgetController>(this, OverlayWidgetControllerClass);
-		if (WCParams == nullptr)
-		{
-			SetupWidgetParams(PC);
-		};
 		OverlayWidgetController->SetWidgetControllerParams(WCParams);
 		OverlayWidgetController->BindCallbacksToDependencies();
 	}
@@ -90,10 +98,6 @@ UInventoryWidgetController* APlayerHUD::GetInventoryWidgetController(ATBPlayerCo
 	if (InventoryWidgetController == nullptr)
 	{
 		InventoryWidgetController = NewObject<UInventoryWidgetController>(this, InventoryWidgetControllerClass);
-		if (WCParams == nullptr)
-		{
-			SetupWidgetParams(PC);
-		}
 		InventoryWidgetController->SetWidgetControllerParams(WCParams);
 		InventoryWidgetController->BindCallbacksToDependencies();
 	}
@@ -111,6 +115,13 @@ void APlayerHUD::SetupWidgetParams(ATBPlayerController* PC)
 	if (!IsValid(TBPC) || !WCParams.IsValid()) return;
 
 	/* Mutable */
+	UpdateAnimalWidgetParams(TBPC);
+}
+
+void APlayerHUD::UpdateAnimalWidgetParams(ATBPlayerController* TBPC)
+{
+	if (!WCParams.IsValid()) return;
+	
 	if (IsValid(TBPC) && TBPC->GetIsAnimalPossessed())
 	{
 		WCParams->AnimalASC = Cast<UAnimalAbilitySystemComponent>(TBPC->GetASC());

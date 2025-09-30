@@ -44,7 +44,7 @@ public:
 	void SetPreviousGridIndex(int32 Index) { PreviousGridIndex = Index; }
 	
 	UTBInventoryItem* GetInventoryItem() const { return InventoryItem.Get(); }
-	void SetInventoryItem(UTBInventoryItem* Item);
+	void SetInventoryItem(const UTBInventoryItem* Item);
 
 	USlotContainerUserWidget* GetOwningSlotContainer() const { return OwningSlotContainer.Get(); }
 	void SetOwningSlotContainer(USlotContainerUserWidget* Item);
@@ -79,7 +79,7 @@ private:
 
 	int32 PreviousGridIndex;
 	TWeakObjectPtr<USlotContainerUserWidget> OwningSlotContainer;
-	TWeakObjectPtr<UTBInventoryItem> InventoryItem;
+	TWeakObjectPtr<const UTBInventoryItem> InventoryItem;
 	TWeakObjectPtr<UWidget> HoveredOverWidget;
 	
 	bool bIsStackable{false};

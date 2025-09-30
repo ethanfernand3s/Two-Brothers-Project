@@ -21,6 +21,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	void UpdateSingleRadarStat(int32 Index, float Value);
 
+	void SetCharacterIcon(UTexture2D* NewCharacterIcon);
+	
 protected:
 
 	virtual void NativePreConstruct() override;
@@ -43,5 +45,5 @@ private:
 
 	/** Image of current character */
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> Image_CurrentCharacterIcon;
+	TObjectPtr<UImage> Image_CharacterIcon;
 };

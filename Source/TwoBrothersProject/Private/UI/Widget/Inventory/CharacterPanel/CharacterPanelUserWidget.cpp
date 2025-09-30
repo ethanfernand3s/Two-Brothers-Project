@@ -79,7 +79,7 @@ void UCharacterPanelUserWidget::OnWidgetControllerSet()
                 );
             });
 
-	    InventoryWidgetController->CharacterIconChanged.AddLambda(
+	    InventoryWidgetController->OnCharacterIconChanged.AddLambda(
             [this](UTexture2D* NewIcon, bool bIsParasiteVal)
             {
                 ForwardToChild<UCharacterDetailsUserWidget>(
@@ -99,13 +99,13 @@ void UCharacterPanelUserWidget::OnWidgetControllerSet()
                 );
             });
 
-        InventoryWidgetController->OnTribeNameChangedDelegate.AddLambda(
-            [this](const FText& TribeName, bool bIsParasiteVal)
+        InventoryWidgetController->OnTribeDataChangedDelegate.AddLambda(
+            [this](const FTribeData& TribeData, bool bIsParasiteVal)
             {
                 ForwardToChild<UCharacterDetailsUserWidget>(
                     bIsParasiteVal,
                     &UCharacterDetailsUserWidget::OnTribeDataChanged,
-                    TribeName
+                    TribeData
                 );
             });
 

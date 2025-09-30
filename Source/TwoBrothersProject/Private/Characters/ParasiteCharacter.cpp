@@ -45,11 +45,11 @@ void AParasiteCharacter::InitActorInfo()
 	CachedPlayerController = GetController<ATBPlayerController>();
 	if (!CachedPlayerController.IsValid()) return;
 	
-	CachedPlayerHUD = Cast<APlayerHUD>((CachedPlayerController->GetHUD()));
-	if (!CachedPlayerHUD.IsValid()) return;
-	
 	if (IsLocallyControlled())
 	{
+		CachedPlayerHUD = Cast<APlayerHUD>((CachedPlayerController->GetHUD()));
+     	if (!CachedPlayerHUD.IsValid()) return;
+		
 		CachedPlayerHUD->InitUI(CachedPlayerController.Get());
 	}
 

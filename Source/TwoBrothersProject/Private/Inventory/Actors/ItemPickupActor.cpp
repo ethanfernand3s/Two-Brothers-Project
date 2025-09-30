@@ -15,7 +15,7 @@ AItemPickupActor::AItemPickupActor()
 	SetRootComponent(MeshComp);
 
 	MeshComp->SetSimulatePhysics(true);
-	MeshComp->SetEnableGravity(true);
+	MeshComp->SetEnableGravity(true); 
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
 	MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
@@ -130,12 +130,18 @@ void AItemPickupActor::TryMagneticFloatToAttractingPawn(float DeltaTime)
 {
 	if (!IsValid(AttractingActor) || !bCanBePickedUp) return;
 	
-	FVector Target = AttractingActor->GetActorLocation();
-	FVector NewLoc = FMath::VInterpTo(GetActorLocation(), Target, DeltaTime, 6.f);
-	SetActorLocation(NewLoc, true);
-
-	const float Dist = FVector::Dist(Target, GetActorLocation());
-	if (Dist <= MinPickupDistanceThreshold)
+	FVector TargetLocation = AttractingActor->GetActorLocation();
+	FVector ItemLocation = GetActorLocation();
+	FVector Distance = TargetLocation - ItemLocation;
+	
+	const float DistanceSquared = (TargetLocation - ItemLocation).SizeSquared();
+	FVector Direction = Distance.GetSafeNormal();
+	
+	FVector NewVelocity = FMath::Lerp(GetVelocity(), Direction * MaxAttractionSpeed, AttractionStrength);
+	FVector NewPosition = ItemLocation + NewVelocity * DeltaTime;
+	SetActorLocation(NewPosition, true);
+	
+	if (DistanceSquared < MinPickupDistanceThresholdSquared)
 	{
 		// Server gives item
 		if (UTBItemComponent* ItemComp = FindComponentByClass<UTBItemComponent>())

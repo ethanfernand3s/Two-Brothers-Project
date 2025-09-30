@@ -47,7 +47,7 @@ public:
 	void SetGridIndex(int32 Index) { GridIndex = Index; }
 	int32 GetGridIndex() const { return GridIndex; }
 
-	void SetInventoryItem(UTBInventoryItem* Item);
+	void SetInventoryItem(const UTBInventoryItem* Item);
 	UTBInventoryItem* GetInventoryItem() const { return InventoryItem.Get(); }
 
 #pragma endregion Accessors
@@ -109,7 +109,7 @@ private:
 	// Could add another image widget for the lock but try to implement it in the material first
 
 	int32 GridIndex;
-	TWeakObjectPtr<UTBInventoryItem> InventoryItem;
+	TWeakObjectPtr<const UTBInventoryItem> InventoryItem;
 	bool bIsStackable{false};
 	bool bHasLevel{false};
 	bool bIsUnlocked{false};

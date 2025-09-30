@@ -295,13 +295,16 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 
 	GameplayTags.Items_Abilities_Defaults_Possess = UGameplayTagsManager::Get().AddNativeGameplayTag(
 	FName("Items.Abilities.Defaults.Possess"),
-	FString("This ability allows the user to enter a hunting mode showing nearby inhabitants. "
-		 "If the ability is activated again within the duration the user will be launched forward. "
+	FString("This ability allows the user to launch forward. "
 		 "If a hole in a potential inhabitants body is hit the user has the chance to possess."));
+
+	GameplayTags.Items_Abilities_Defaults_SeekHost = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Items.Abilities.Defaults.SeekHost"),
+	FString("This ability allows the user to enter a hunting mode showing nearby inhabitants."));
 	
-	GameplayTags.Items_Craftables_TEST = UGameplayTagsManager::Get().AddNativeGameplayTag(
-	FName("Items.Craftables.TEST"),
-	FString("Test Craftable."));
+	GameplayTags.Items_AbilityCardholder = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Items.AbilityCardholder"),
+	FString("Used for crafting an ability card."));
 	
 #pragma endregion Items
 

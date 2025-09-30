@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/TBPlayerController.h"
+#include "Player/Interfaces/PlayerInterface.h"
 #include "UI/Widget/Inventory/InventoryUserWidget.h"
 
 
@@ -26,6 +27,12 @@ void UTBInventoryComponent::BeginPlay()
 	Super::BeginPlay();
 
 	OwningController = Cast<ATBPlayerController>(GetOwner());
+}
+
+void UTBInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ThisClass, InventoryList);
 }
 
 void UTBInventoryComponent::SetInventoryWidget(const TObjectPtr<UInventoryUserWidget>& InventoryUserWidgetIn)
@@ -119,68 +126,26 @@ void UTBInventoryComponent::SpawnDroppedItem(UTBInventoryItem* Item, int32 Stack
 	ItemManifest.SpawnPickupActor(this, SpawnLocation, SpawnRotation, RotatedForward);
 }
 
-void UTBInventoryComponent::Server_TryUnlockItem_Implementation(UTBInventoryItem* Item, bool bIsEquippableSlot, const UCharacterContextComponent* CharacterContext)
-{
-	const FGameplayTag& PreviousItemStatus = Item->GetItemStatus();
-	// bool bIsEquippableSlot = Slot->IsEquippableSlot; // Assuming the slot is already unlocked since this func is meant to deal with the item.
-	auto& Tags = FTBGameplayTags::Get();
-	if (const FRequirementsFragment* RequirementsFragment = GetFragment<FRequirementsFragment>(Item, Tags.Fragments_Requirements))
-	{
-		if (RequirementsFragment->MeetsItemRequirements(CharacterContext->GetLevel(),
-														CharacterContext->GetBodyPartTags(),
-														CharacterContext->GetCreatureTypes()))
-		{
-			if (bIsEquippableSlot)
-			{
-				if (PreviousItemStatus != Tags.Status_Equipped) Item->SetItemStatus(Tags.Status_Equipped);
-			}
-			else
-			{
-				if (PreviousItemStatus != Tags.Status_Unlocked) Item->SetItemStatus(Tags.Status_Unlocked);
-			}
-		}
-		else
-		{
-			if (PreviousItemStatus != Tags.Status_Locked) Item->SetItemStatus(Tags.Status_Locked);
-		}
-	}
-	else
-	{
-		if (bIsEquippableSlot)
-		{
-			if (PreviousItemStatus != Tags.Status_Equipped) Item->SetItemStatus(Tags.Status_Equipped);
-		}
-		else
-		{
-			if (PreviousItemStatus != Tags.Status_Unlocked) Item->SetItemStatus(Tags.Status_Unlocked);
-		}
-	}
-	if (PreviousItemStatus != Item->GetItemStatus()) OnItemStatusChanged.Broadcast(Item);
-}
-
-void UTBInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ThisClass, InventoryList);
-}
-
 void UTBInventoryComponent::Server_AddNewItem_Implementation(UTBItemComponent* ItemComponent, int32 StackCount, int32 Remainder, const FGameplayTag& PreferredContainerTag)
 {
 	if (!IsValid(ItemComponent)) return;
 	
 	UTBInventoryItem* NewItem = InventoryList.AddEntry(ItemComponent);
+	if (!IsValid(NewItem)) return;
+
+	NewItem->SetOwningInventoryComponent(this);
 	NewItem->SetPreferredSlotContainerTag(PreferredContainerTag);
 	NewItem->SetTotalStackCount(StackCount);
-	NewItem->SetItemStatus(FTBGameplayTags::Get().Status_Locked);
-	
-	if (!IsValid(NewItem)) return;
+	// TODO: Temporary change to something more safe this doesn't scale well
+	bool bIsEquippableSlot =
+		!(PreferredContainerTag.MatchesTagExact(FGameplayTag::RequestGameplayTag(FName("ItemCategories.None"))));
+	Server_UpdateItemStatus(NewItem, bIsEquippableSlot);
 	
 	if (GetOwner()->GetNetMode() == NM_ListenServer || GetOwner()->GetNetMode() == NM_Standalone)
 	{
 		OnItemAdded.Broadcast(NewItem);
 	}
 	
-	// TODO: Tell the Item Component to destroy its owning actor.
 	if (Remainder == 0)
 	{
 		ItemComponent->PickedUp();
@@ -188,6 +153,78 @@ void UTBInventoryComponent::Server_AddNewItem_Implementation(UTBItemComponent* I
 	else if (FStackableFragment* StackableFragment = ItemComponent->GetItemManifest().GetFragmentOfTypeMutable<FStackableFragment>())
 	{
 		StackableFragment->SetStackCount(Remainder);
+	}
+}
+
+void UTBInventoryComponent::Server_UpdateItemStatus_Implementation(UTBInventoryItem* Item, bool bIsEquippableSlot, const UCharacterContextComponent* CharacterContext)
+{
+	if (!IsValid(Item)) return;
+	
+	const FGameplayTag& PreviousItemStatus = Item->GetItemStatus();
+	auto& Tags = FTBGameplayTags::Get();
+	bool bMeetsItemRequirements{false};
+	if (const FRequirementsFragment* RequirementsFragment = GetFragment<FRequirementsFragment>(Item, Tags.Fragments_Requirements))
+	{
+		APlayerController* PC = Cast<APlayerController>(GetOwner());
+		if (!PC)
+		{
+			// Inventory not held by player/character (ex. chest)
+			bMeetsItemRequirements = true;
+		}
+		else
+		{
+			IPlayerInterface* PlayerInterface = Cast<IPlayerInterface>(PC->GetPawn());
+			if (PlayerInterface)
+			{
+				UCharacterContextComponent* CharacterContextComp = PlayerInterface->GetCharacterContextComponent();
+				if (RequirementsFragment->MeetsItemRequirements(CharacterContextComp->GetLevel(),
+																CharacterContextComp->GetBodyPartTags(),
+																CharacterContextComp->GetCreatureTypes()))
+				{
+					bMeetsItemRequirements = true;
+				}
+			}
+		}
+	}
+	else
+	{
+		bMeetsItemRequirements = true;
+	}
+	
+	if (bMeetsItemRequirements)
+	{
+		if (bIsEquippableSlot && (PreviousItemStatus != Tags.Status_Equipped))
+		{
+			// Let Client and server know
+			Item->SetItemStatus(Tags.Status_Equipped);
+
+			// Let Client and server know
+			if (GetOwner()->GetNetMode() == NM_ListenServer || GetOwner()->GetNetMode() == NM_Standalone)
+			{
+				OnItemStatusChanged.Broadcast(Item);
+			}
+		}
+		else if (!bIsEquippableSlot && PreviousItemStatus != Tags.Status_Unlocked)
+		{
+			// Let Client and server know
+			Item->SetItemStatus(Tags.Status_Unlocked);
+			
+			if (GetOwner()->GetNetMode() == NM_ListenServer || GetOwner()->GetNetMode() == NM_Standalone)
+			{
+				OnItemStatusChanged.Broadcast(Item);
+			}
+		}
+	}
+	else if (PreviousItemStatus != Tags.Status_Locked)
+	{
+		Item->SetItemStatus(Tags.Status_Locked);
+		
+		// Let Client and server know
+		InventoryList.ChangeEntry(Item);
+		if (GetOwner()->GetNetMode() == NM_ListenServer || GetOwner()->GetNetMode() == NM_Standalone)
+		{
+			OnItemStatusChanged.Broadcast(Item);
+		}
 	}
 }
 
