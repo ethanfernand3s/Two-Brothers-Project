@@ -7,6 +7,7 @@
 #include "BaseCharacter.h"
 #include "GameplayTagContainer.h"
 #include "AbilitySystem/Interfaces/IPossessable.h"
+#include "Inventory/Interfaces/InventoryInterface.h"
 #include "Player/Interfaces/PlayerInterface.h"
 #include "BaseAnimalCharacter.generated.h"
 
@@ -32,8 +33,8 @@ USTRUCT(BlueprintType)
 };
 
 UCLASS()
-class TWOBROTHERSPROJECT_API ABaseAnimalCharacter : public ABaseCharacter, public IAbilitySystemInterface,
-	public IPossessable, public IPlayerInterface
+class TWOBROTHERSPROJECT_API ABaseAnimalCharacter : public ABaseCharacter,
+	public IPossessable, public IPlayerInterface, public IInventoryInterface
 {
 	GENERATED_BODY()
 
@@ -41,6 +42,7 @@ public:
 
 	ABaseAnimalCharacter();
 	virtual void PossessedBy(AController* NewController) override;
+	
 	// ASC Interface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAnimalAttributeSet* GetAttributeSet() const;
@@ -55,6 +57,10 @@ public:
 	virtual bool GetIsInhabited() const override;
 	virtual float GetXPMultiplierAmount() override;
 	//~End of Player Interface
+
+	/*Inventory Interface*/
+	virtual UTBInventoryComponent* GetInventoryComponent() const override;
+	/*~End of Inventory Interface~*/
 	
 	FPossessionSocketData FindClosestPossessionSocket(const FVector& TraceImpactPoint) const;
 	FVector GetCurrentSocketLocation(FGameplayTag SocketName) const;
@@ -103,12 +109,6 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class AAIController> SavedAIController;
-
-	// Start Abilities
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UAnimalAbilitySet> StartupAbilitySet;
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UAnimalAbilitySet> StartupPassiveAbilitySet;
 	
 private:
 

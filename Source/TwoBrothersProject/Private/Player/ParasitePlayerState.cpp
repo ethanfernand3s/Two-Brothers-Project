@@ -36,7 +36,7 @@ void AParasitePlayerState::LoadProgress()
 	if (!bIsInitialised)
 	{
 		ParasiteAbilitySystem->SetBaseStats(FCharacterCombatValues(50, 50, 50, 50, 50, 50));
-		CharacterContextComponent->InitializeCombatRelatedVars(ParasiteAttributeSet->CalculateCombatPower());
+		CharacterContextComponent->InitializeCharacterContext(ParasiteAttributeSet->CalculateCombatPower());
 		ParasiteAbilitySystem->AddIvsToAttributes(CharacterContextComponent->GetIVSet());
 		
 		bIsInitialised = true;

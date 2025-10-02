@@ -31,13 +31,15 @@ public:
 	virtual void BroadcastInitialValues() override;
 	virtual void BindCallbacksToDependencies() override;
 	virtual void UnBindCallbacks() override;
+
 	
 	// GAS attr upgrades
 	void UpgradeAttribute(const FGameplayTag& AttributeTag) const;
-	void TryUnlockItem(UTBInventoryItem* Item, bool bIsEquippableSlot) const;
+	void UpdateItemStatus(const UTBInventoryItem* Item, bool bIsEquippableSlot) const;
 	// TODO: Change to set Grid Status and make each grid have grid data like slotted items have item data
 	// void TryUnlockGridSlot(UInventoryGridSlot* GridSlot) const; // TODO: Implement
 	void HandleAbilityStatusChanged(const UTBInventoryItem* Item, FGameplayTag SlotInputTag); // TODO: Move to equipment component
+	void UnEquipAbility(const UTBInventoryItem* Item); // TODO: Move to equipment component
 	
 	// Attribute Set Delegates
 	FOnAttributeCurrentAndMaxChangedSignature CurrentAndMax_AttributeInfoDelegate;
@@ -48,16 +50,14 @@ private:
 									/* Broadcast and Bind Helpers */
 
 	/* Attribute Set */
-	void BroadcastAllAttributes(UBaseAttributeSet* AttributeSet, bool bIsParasiteVal) const;
+	void BroadcastAllAttributes(UAbilitySystemComponent* ASC, UBaseAttributeSet* AttributeSet, bool bIsParasiteVal) const;
 	void BindAllAttributeCallbacks(UAbilitySystemComponent* ASC, UBaseAttributeSet* AttributeSet,
 								   bool bIsParasiteVal);
-	void BindAttributeCallback(UAbilitySystemComponent* ASC, const FTagAttributeBinding& Binding,
-							   UBaseAttributeSet* AttributeSet, bool bIsParasiteVal);
-	void BroadcastAttributePair(const FTagAttributeBinding& Binding, UBaseAttributeSet* AttributeSet,
+	void BindAttributeCallback(UAbilitySystemComponent* ASC, const FTagAttributeBinding& Binding, bool bIsParasiteVal);
+	void BroadcastAttributePair( UAbilitySystemComponent* ASC, const FTagAttributeBinding& Binding,
 								bool bIsParasiteVal) const;
-	void BroadcastSingleAttribute(const FTagAttributeBinding& Binding, UBaseAttributeSet* AttributeSet,
+	void BroadcastSingleAttribute( UAbilitySystemComponent* ASC, const FTagAttributeBinding& Binding,
 								  bool bIsParasiteVal) const;
 	
 	TWeakObjectPtr<UTBInventoryComponent> CachedInventory;
-	bool bIsParasiteFocusedCharacter = true;
 };

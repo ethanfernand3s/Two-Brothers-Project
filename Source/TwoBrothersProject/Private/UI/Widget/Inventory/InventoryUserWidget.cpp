@@ -10,22 +10,30 @@
 #include "UI/Widget/Inventory/CharacterPanel/CharacterDetail/CharacterDetailsUserWidget.h"
 #include "UI/Widget/Inventory/Items/HoverItemUserWidget.h"
 #include "UI/Widget/Inventory/Slots/SlotPanelUserWidget.h"
+#include "UI/WidgetController/BaseWidgetController.h"
+#include "UI/WidgetController/InventoryWidgetController.h"
 
 void UInventoryUserWidget::SetWidgetController(UBaseWidgetController* InWidgetController)
 {
+    Super::SetWidgetController(InWidgetController);
     if (IsValid(CharacterPanel)) { CharacterPanel->SetWidgetController(InWidgetController); }
     if (IsValid(InventoryPanel)) { InventoryPanel->SetWidgetController(InWidgetController); }
-    Super::SetWidgetController(InWidgetController);
 }
 
 FSlotAvailabilityResult UInventoryUserWidget::HasRoomForItem(UTBItemComponent* ItemComponent) const
 {
     const FGameplayTag ItemCategory(UInventoryStatics::GetItemCategoryFromItemComp(ItemComponent));
-    if (const TWeakObjectPtr<USlotContainerUserWidget>* SlotContainerPtr = SlotContainers.Find(ItemCategory))
+    if (const SlotContainerPair* SlotContainerPairPtr = EquippableSlotContainers.Find(ItemCategory))
     {
-        if (SlotContainerPtr->IsValid())
+        // Choose parasite or animal side
+        const TWeakObjectPtr<USlotContainerUserWidget>& ChosenSlotContainer =
+            (WidgetController->IsAnimalInhabited())
+                ? SlotContainerPairPtr->Value
+                : SlotContainerPairPtr->Key;
+        
+        if (ChosenSlotContainer.IsValid())
         {
-            if (USlotContainerUserWidget* Container = SlotContainerPtr->Get())
+            if (USlotContainerUserWidget* Container = ChosenSlotContainer.Get())
             {
                 const FSlotAvailabilityResult& PreferredContainerResult = Container->HasRoomForItem(ItemComponent);
                 if (PreferredContainerResult.SlotAvailabilities.Num() > 0) return PreferredContainerResult;
@@ -52,44 +60,13 @@ void UInventoryUserWidget::NativeOnInitialized()
 { 
     Super::NativeOnInitialized();
 
-    if (!IsValid(CharacterPanel) || !IsValid(InventoryPanel)) return;
-    
-    const auto& Tags = FTBGameplayTags::Get();
+    if (!IsValid(CharacterPanel) || !IsValid(CharacterPanel->GetParasiteDetailsUserWidget())) return;
+    SetupParasiteContainers(CharacterPanel->GetParasiteDetailsUserWidget());
 
-    UCharacterDetailsUserWidget* ParasiteCharacterDetails = CharacterPanel->GetParasiteDetailsUserWidget();
-    if (!IsValid(ParasiteCharacterDetails)) return;
-
-    /* This is optional based on if a animal is inhabited or not */
-    UCharacterDetailsUserWidget* AnimalCharacterDetails = CharacterPanel->GetAnimalDetailsUserWidget();
-    
-    /* Note: Inventory can take any ItemCategory tag as long as its of ItemCategories */
-    SlotContainers.Add({Tags.ItemCategories_None, InventoryPanel->GetSlotContainer()});
-
-    
-    SlotContainers.Add({Tags.ItemCategories_Abilities_Main, ParasiteCharacterDetails->GetMainAbilitySlotContainer()});
-    SlotContainers.Add({Tags.ItemCategories_Abilities_Default, ParasiteCharacterDetails->GetDefaultAbilitySlotContainer()});
-    SlotContainers.Add({Tags.ItemCategories_Abilities_Passive, ParasiteCharacterDetails->GetPassiveAbilitySlotContainer()});
-
-    if (IsValid(AnimalCharacterDetails))
-    {
-        SlotContainers.Add({Tags.ItemCategories_Abilities_Main, AnimalCharacterDetails->GetMainAbilitySlotContainer()});
-        SlotContainers.Add({Tags.ItemCategories_Abilities_Default, AnimalCharacterDetails->GetDefaultAbilitySlotContainer()});
-        SlotContainers.Add({Tags.ItemCategories_Abilities_Passive, AnimalCharacterDetails->GetPassiveAbilitySlotContainer()});
-    }
-    
-    for (auto& SlotContainerPair : SlotContainers)
-    {
-        SlotContainerPair.Value->SetOwningCanvasPanel(CanvasPanel);
-        USlotContainerUserWidget* const SlotContainer = SlotContainerPair.Value.Get();
-        
-        DimmedBackground->OnHoverItemDrop.AddLambda([SlotContainer](int32 AmountToDrop)
-        {
-            if (SlotContainer->HasHoverItemActive())
-            {
-                SlotContainer->DropItemFromHoverItem(AmountToDrop);
-            }
-        });
-    }
+    if (!IsValid(InventoryPanel)) return;
+    InventoryPanel->GetSlotContainer()->SetContainerOwner(true);
+    InventoryPanel->GetSlotContainer()->SetOwningCanvasPanel(CanvasPanel);
+    DimmedBackground->OnHoverItemDrop.AddUObject(this, &UInventoryUserWidget::HandleHoverItemDrop, InventoryPanel->GetSlotContainer());
 }
 
 bool UInventoryUserWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent,
@@ -111,17 +88,109 @@ void UInventoryUserWidget::NativeDestruct()
     ClearSelectedSlots();
 }
 
+void UInventoryUserWidget::OnWidgetControllerSet()
+{
+    ResolveAnimalInhabitance(WidgetController->IsAnimalInhabited());
+}
+
+void UInventoryUserWidget::OnWidgetControllerRebound(bool bIsAnimalInhabited)
+{
+    ResolveAnimalInhabitance(bIsAnimalInhabited);
+}
+
+void UInventoryUserWidget::ResolveAnimalInhabitance(bool bIsAnimalInhabited)
+{
+    const auto& Tags = FTBGameplayTags::Get();
+    UCharacterDetailsUserWidget* AnimalDetails = CharacterPanel->GetAnimalDetailsUserWidget();
+    if (!IsValid(AnimalDetails)) return;
+
+    if (bIsAnimalInhabited)
+    {
+        auto AddAnimalSlot = [&](const FGameplayTag& Category, USlotContainerUserWidget* Container)
+        {
+            if (IsValid(Container))
+            {
+                SlotContainerPair& Pair = EquippableSlotContainers.FindOrAdd(Category);
+                Pair.Value = Container; // assign Animal slot
+
+                Container->SetContainerOwner(false);
+                Container->SetOwningCanvasPanel(CanvasPanel);
+                // bind delegate w/ handle
+                FDelegateHandle Handle = DimmedBackground->OnHoverItemDrop.AddUObject(
+                    this, &UInventoryUserWidget::HandleHoverItemDrop, Container);
+
+                AnimalDropDelegateHandles.Add(Category, Handle);
+            }
+        };
+
+        AddAnimalSlot(Tags.ItemCategories_Abilities_Main,    AnimalDetails->GetMainAbilitySlotContainer());
+        AddAnimalSlot(Tags.ItemCategories_Abilities_Default, AnimalDetails->GetDefaultAbilitySlotContainer());
+        AddAnimalSlot(Tags.ItemCategories_Abilities_Passive, AnimalDetails->GetPassiveAbilitySlotContainer());
+    }
+    else
+    {
+        // Clear animal side of the pair + unbind delegates
+        for (auto& HandlePair : AnimalDropDelegateHandles)
+        {
+            DimmedBackground->OnHoverItemDrop.Remove(HandlePair.Value);
+
+            if (SlotContainerPair* Pair = EquippableSlotContainers.Find(HandlePair.Key))
+            {
+                Pair->Value = nullptr; // clear Animal slot
+            }
+        }
+        AnimalDropDelegateHandles.Reset();
+    }
+}
+
+
+void UInventoryUserWidget::SetupParasiteContainers(const UCharacterDetailsUserWidget* ParasiteDetails)
+{
+    const auto& Tags = FTBGameplayTags::Get();
+
+    EquippableSlotContainers.FindOrAdd(Tags.ItemCategories_Abilities_Main).Key   = ParasiteDetails->GetMainAbilitySlotContainer();
+    EquippableSlotContainers.FindOrAdd(Tags.ItemCategories_Abilities_Default).Key = ParasiteDetails->GetDefaultAbilitySlotContainer();
+    EquippableSlotContainers.FindOrAdd(Tags.ItemCategories_Abilities_Passive).Key = ParasiteDetails->GetPassiveAbilitySlotContainer();
+
+    for (auto& EquippableSlotContainer : EquippableSlotContainers)
+    {
+        const TWeakObjectPtr<USlotContainerUserWidget>& ChosenSlotContainer = EquippableSlotContainer.Value.Key;
+        if (ChosenSlotContainer.IsValid())
+        {
+            ChosenSlotContainer->SetOwningCanvasPanel(CanvasPanel);
+            ChosenSlotContainer->SetContainerOwner(true);
+
+            DimmedBackground->OnHoverItemDrop.AddUObject(
+                    this, &UInventoryUserWidget::HandleHoverItemDrop, ChosenSlotContainer.Get());
+        }
+    }
+}
+
+void UInventoryUserWidget::HandleHoverItemDrop(int32 AmountToDrop, USlotContainerUserWidget* Container)
+{
+    if (IsValid(Container) && Container->HasHoverItemActive())
+    {
+        Container->DropItemFromHoverItem(AmountToDrop);
+    }
+}
+
 USlotContainerUserWidget* UInventoryUserWidget::GetDestinationContainer(const USlotContainerUserWidget* OriginSlotContainer, const FGameplayTag& ItemCategory) const
 {
     if (!IsValid(OriginSlotContainer) || !ItemCategory.IsValid()) return nullptr;
 	
     if (OriginSlotContainer->HasCategoryPreference())  return InventoryPanel->GetSlotContainer();
     
-    if (const TWeakObjectPtr<USlotContainerUserWidget>* SlotContainerPtr = SlotContainers.Find(ItemCategory))
+    if (const SlotContainerPair* SlotContainerPairPtr = EquippableSlotContainers.Find(ItemCategory))
     {
-        if (SlotContainerPtr->IsValid())
+        // Choose parasite or animal side
+        const TWeakObjectPtr<USlotContainerUserWidget>& ChosenSlotContainer =
+            (WidgetController->IsAnimalInhabited())
+                ? SlotContainerPairPtr->Value
+                : SlotContainerPairPtr->Key;
+        
+        if (ChosenSlotContainer.IsValid())
         {
-            if (USlotContainerUserWidget* Container = SlotContainerPtr->Get())
+            if (USlotContainerUserWidget* Container = ChosenSlotContainer.Get())
             {
                 return Container;
             }
@@ -133,9 +202,16 @@ USlotContainerUserWidget* UInventoryUserWidget::GetDestinationContainer(const US
 
 void UInventoryUserWidget::SetAllGridSlotsCompatibilityTints(bool bIsPickup, const UTBInventoryItem* ItemToCheck)
 {
-    for (auto& SlotContainerPair : SlotContainers)
+    for (auto& SlotContainerPair : EquippableSlotContainers)
     {
-        SlotContainerPair.Value->SetGridSlotsCompatibilityTints(bIsPickup, ItemToCheck);
+        if (InventoryWidgetController && InventoryWidgetController->IsParasiteFocusedCharacter())
+        {
+            if (SlotContainerPair.Value.Key.IsValid()) SlotContainerPair.Value.Key->SetGridSlotsCompatibilityTints(bIsPickup, ItemToCheck);
+        }
+        else
+        {
+            if (SlotContainerPair.Value.Value.IsValid()) SlotContainerPair.Value.Value->SetGridSlotsCompatibilityTints(bIsPickup, ItemToCheck);
+        }
     }
 }
 

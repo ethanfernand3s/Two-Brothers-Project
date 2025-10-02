@@ -8,9 +8,12 @@
 #include "UI/Widget/BaseUserWidget.h"
 #include "StatButton.generated.h"
 
-DECLARE_DELEGATE_OneParam(FOnStatButtonClicked, const FGameplayTag& /* StatTag */);
+class UStatButton;
+
 class UTextBlock;
 class UButton;
+
+DECLARE_DELEGATE_OneParam(FOnStatButtonClicked, const UStatButton* /* StatButton */);
 /**
  * 
  */

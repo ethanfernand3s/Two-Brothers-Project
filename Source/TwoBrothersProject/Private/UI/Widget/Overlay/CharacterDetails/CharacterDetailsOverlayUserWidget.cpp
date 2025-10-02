@@ -30,7 +30,12 @@ void UCharacterDetailsOverlayUserWidget::OnAttributePointsUpdated(int32 NewAttri
 void UCharacterDetailsOverlayUserWidget::OnCharacterIconChanged(UTexture2D* CharacterIcon)
 {
 	if (!IsValid(CharacterIcon) || !IsValid(Image_Icon)) return;
-	Image_Icon->SetBrushFromTexture(CharacterIcon);
+	
+	FSlateBrush Brush;
+	Brush.SetResourceObject(CharacterIcon);
+	Brush.ImageSize = FVector2D(CharacterIcon->GetSizeX(), CharacterIcon->GetSizeY());
+	Brush.DrawAs = ESlateBrushDrawType::Image;
+	Image_Icon->SetBrush(Brush);
 }
 
 void UCharacterDetailsOverlayUserWidget::OnLevelUpdated(int32 NewLevel)
@@ -67,24 +72,24 @@ void UCharacterDetailsOverlayUserWidget::OnMaxHealthUpdated(float NewMaxHealth)
 	}
 }
 
-void UCharacterDetailsOverlayUserWidget::OnEnergyUpdated(float NewEnergy)
+void UCharacterDetailsOverlayUserWidget::OnAuraUpdated(float NewAura)
 {
-	if (!IsValid(ProgressBar_Energy)) return;
-	Energy = NewEnergy;
+	if (!IsValid(ProgressBar_Aura)) return;
+	Aura = NewAura;
 
-	if (MaxEnergy > 0)
+	if (MaxAura > 0)
 	{
-		ProgressBar_Energy->SetPercent(Energy / MaxEnergy);
+		ProgressBar_Aura->SetPercent(Aura / MaxAura);
 	}
 }
 
-void UCharacterDetailsOverlayUserWidget::OnMaxEnergyUpdated(float NewMaxEnergy)
+void UCharacterDetailsOverlayUserWidget::OnMaxAuraUpdated(float NewMaxAura)
 {
-	if (!IsValid(ProgressBar_Energy)) return;
-	MaxEnergy = NewMaxEnergy;
+	if (!IsValid(ProgressBar_Aura)) return;
+	MaxAura = NewMaxAura;
 
-	if (MaxEnergy > 0)
+	if (MaxAura > 0)
 	{
-		ProgressBar_Energy->SetPercent(Energy / MaxEnergy);
+		ProgressBar_Aura->SetPercent(Aura / MaxAura);
 	}
 }

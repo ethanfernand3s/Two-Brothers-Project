@@ -18,24 +18,34 @@ void UOverlayWidgetController::BroadcastInitialValues()
     // Parasite
     if (ParasiteAS.IsValid())
     {
-        HealthChanged.Broadcast(ParasiteAS->GetHealth(), true);
-        MaxHealthChanged.Broadcast(ParasiteAS->GetMaxHealth(), true);
-        EnergyChanged.Broadcast(ParasiteAS->GetEnergy(), true);
-        MaxEnergyChanged.Broadcast(ParasiteAS->GetMaxEnergy(), true);
+        HealthChanged.Broadcast(
+            ParasiteASC->GetNumericAttribute(ParasiteAS->GetHealthAttribute()), true);
+        MaxHealthChanged.Broadcast(
+            ParasiteASC->GetNumericAttribute(ParasiteAS->GetMaxHealthAttribute()), true);
+        AuraChanged.Broadcast(
+            ParasiteASC->GetNumericAttribute(ParasiteAS->GetAuraAttribute()), true);
+        MaxAuraChanged.Broadcast(
+            ParasiteASC->GetNumericAttribute(ParasiteAS->GetMaxAuraAttribute()), true);
     }
 
     // Animal
     if (AnimalAS.IsValid())
     {
-        HealthChanged.Broadcast(AnimalAS->GetHealth(), false);
-        MaxHealthChanged.Broadcast(AnimalAS->GetMaxHealth(), false);
-        EnergyChanged.Broadcast(AnimalAS->GetEnergy(), false);
-        MaxEnergyChanged.Broadcast(AnimalAS->GetMaxEnergy(), false);
+        HealthChanged.Broadcast(
+            AnimalASC->GetNumericAttribute(AnimalAS->GetHealthAttribute()), false);
+        MaxHealthChanged.Broadcast(
+            AnimalASC->GetNumericAttribute(AnimalAS->GetMaxHealthAttribute()), false);
+        AuraChanged.Broadcast(
+            AnimalASC->GetNumericAttribute(AnimalAS->GetAuraAttribute()), false);
+        MaxAuraChanged.Broadcast(
+            AnimalASC->GetNumericAttribute(AnimalAS->GetMaxAuraAttribute()), false);
     }
 }
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
 {
+    Super::BindCallbacksToDependencies();
+    
     // Parasite
     if (ParasiteASC.IsValid() && ParasiteAS.IsValid())
     {
@@ -66,15 +76,15 @@ void UOverlayWidgetController::BindSelectedAttributes(
             MaxHealthChanged.Broadcast(Data.NewValue, bIsParasiteVal);
         });
 
-    ASC->GetGameplayAttributeValueChangeDelegate(AS->GetEnergyAttribute()).AddLambda(
+    ASC->GetGameplayAttributeValueChangeDelegate(AS->GetAuraAttribute()).AddLambda(
         [this, bIsParasiteVal](const FOnAttributeChangeData& Data)
         {
-            EnergyChanged.Broadcast(Data.NewValue, bIsParasiteVal);
+            AuraChanged.Broadcast(Data.NewValue, bIsParasiteVal);
         });
 
-    ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxEnergyAttribute()).AddLambda(
+    ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxAuraAttribute()).AddLambda(
         [this, bIsParasiteVal](const FOnAttributeChangeData& Data)
         {
-            MaxEnergyChanged.Broadcast(Data.NewValue, bIsParasiteVal);
+            MaxAuraChanged.Broadcast(Data.NewValue, bIsParasiteVal);
         });
 }

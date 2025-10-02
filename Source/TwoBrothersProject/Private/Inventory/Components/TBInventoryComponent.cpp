@@ -197,8 +197,6 @@ void UTBInventoryComponent::Server_UpdateItemStatus_Implementation(UTBInventoryI
 		{
 			// Let Client and server know
 			Item->SetItemStatus(Tags.Status_Equipped);
-
-			// Let Client and server know
 			if (GetOwner()->GetNetMode() == NM_ListenServer || GetOwner()->GetNetMode() == NM_Standalone)
 			{
 				OnItemStatusChanged.Broadcast(Item);
@@ -208,7 +206,6 @@ void UTBInventoryComponent::Server_UpdateItemStatus_Implementation(UTBInventoryI
 		{
 			// Let Client and server know
 			Item->SetItemStatus(Tags.Status_Unlocked);
-			
 			if (GetOwner()->GetNetMode() == NM_ListenServer || GetOwner()->GetNetMode() == NM_Standalone)
 			{
 				OnItemStatusChanged.Broadcast(Item);
@@ -217,10 +214,8 @@ void UTBInventoryComponent::Server_UpdateItemStatus_Implementation(UTBInventoryI
 	}
 	else if (PreviousItemStatus != Tags.Status_Locked)
 	{
-		Item->SetItemStatus(Tags.Status_Locked);
-		
 		// Let Client and server know
-		InventoryList.ChangeEntry(Item);
+		Item->SetItemStatus(Tags.Status_Locked);
 		if (GetOwner()->GetNetMode() == NM_ListenServer || GetOwner()->GetNetMode() == NM_Standalone)
 		{
 			OnItemStatusChanged.Broadcast(Item);

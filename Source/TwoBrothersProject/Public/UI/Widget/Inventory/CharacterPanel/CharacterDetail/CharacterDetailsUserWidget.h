@@ -161,10 +161,11 @@ private:
 
 #pragma region Stat Button Functions
 	
-	void OnStatButtonPressed(const FGameplayTag& StatTag) const;
-	
 	void SetupStatButtons();
 	void UpdateAllButtons(bool bShouldEnable);
+	
+	void OnStatButtonPressed(const UStatButton* PressedButton) const;
+	FGameplayTag GetStatTagFromButton(const UStatButton* PressedButton) const;
 	void PlayStatIncreasedEffects();
 
 #pragma endregion Stat Button Functions

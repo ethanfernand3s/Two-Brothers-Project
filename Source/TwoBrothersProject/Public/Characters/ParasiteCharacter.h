@@ -15,7 +15,7 @@ class ABaseAnimalCharacter;
 class AParasitePlayerState;
 class UParasiteAbilitySystemComponent;
 UCLASS()
-class TWOBROTHERSPROJECT_API AParasiteCharacter : public ABaseCharacter, public IPlayerInterface, public IAbilitySystemInterface, public IInventoryInterface
+class TWOBROTHERSPROJECT_API AParasiteCharacter : public ABaseCharacter, public IPlayerInterface, public IInventoryInterface
 {
 	GENERATED_BODY()
 public:

@@ -29,12 +29,8 @@ void USlotContainerUserWidget::NativeOnInitialized()
 
 void USlotContainerUserWidget::OnWidgetControllerSet()
 {
-    if(InventoryWidgetController = Cast<UInventoryWidgetController>(WidgetController))
-    {
-        ConstructGrid();
-        
-        // Bind any communications from ASC here
-    }
+    InventoryWidgetController = Cast<UInventoryWidgetController>(WidgetController);
+    ConstructGrid();
 }
 
 void USlotContainerUserWidget::ConstructGrid()
@@ -63,10 +59,7 @@ void USlotContainerUserWidget::ConstructGrid()
             {
                 // InventoryWidgetController->TryUnlockGridSlot(ItemCategory, GridSlot->GetTileIndex());
             }
-            else
-            {
-                GridSlot->SetLocked();
-            }
+           
             Grid->AddChildToUniformGrid(GridSlot, j, i);
             
             GridSlots.Add(GridSlot);
@@ -206,15 +199,24 @@ int32 USlotContainerUserWidget::GetStackAmount(const USlotUserWidget* GridSlot)
 
 void USlotContainerUserWidget::AddItem(const UTBInventoryItem* Item)
 {
-    if(!IsValid(Item) || Item->GetPreferredSlotContainerTag() != ItemCategory || !DoesItemMeetContainerRequirement(Item)) return;
+    if(!IsValid(Item)) return;
+
+    if (!IsMeantForContainer() || Item->GetPreferredSlotContainerTag() != ItemCategory || !DoesItemMeetContainerRequirement(Item)) return;
     
     FSlotAvailabilityResult AvailabilityResult = HasRoomForItem(Item);
     AddItemToIndices(AvailabilityResult, Item);
 }
 
+bool USlotContainerUserWidget::IsMeantForContainer()
+{
+    if (!IsValid(WidgetController)) return false;
+
+    return (HasCategoryPreference()) ? WidgetController->IsParasiteFocusedCharacter() == bIsParasiteContainerOwner : true;
+}
+
 bool USlotContainerUserWidget::DoesItemMeetContainerRequirement(const UTBInventoryItem* Item) const
 {
-    return (HasCategoryPreference()) ? MatchesCategory(Item) : true;
+    return (HasCategoryPreference()) ? (MatchesCategory(Item) && (Item->GetItemStatus() != FTBGameplayTags::Get().Status_Locked)) : true;
 }
 
 void USlotContainerUserWidget::AddItemToIndices(FSlotAvailabilityResult AvailabilityResult,const UTBInventoryItem* Item)
@@ -229,7 +231,7 @@ void USlotContainerUserWidget::AddItemToIndices(FSlotAvailabilityResult Availabi
 void USlotContainerUserWidget::AddItemAtIndex(const UTBInventoryItem* Item, const int32 Index, const bool bStackable,
                                               const int32 StackAmount)
 {
-    if (!IsValid(Item) || !IsValid(InventoryWidgetController))  return;
+    if (!IsValid(Item))  return;
     
     // Create and fill out the slotted item
     USlottedItemUserWidget* NewSlottedItem = CreateSlottedItem(Item, bStackable, StackAmount, Index);
@@ -242,6 +244,15 @@ void USlotContainerUserWidget::AddItemAtIndex(const UTBInventoryItem* Item, cons
     
     // Store new widget in a container
     SlottedItems.Add(Index, NewSlottedItem);
+    
+    if (Item->GetItemStatus() == FTBGameplayTags::Get().Status_Locked)
+    {
+        UnlockSlottedItem(NewSlottedItem, false);
+    }
+    else
+    {
+        ResolveItemStatus(Item);
+    }
 }
 
 void USlotContainerUserWidget::UpdateGridSlot(const UTBInventoryItem* Item, int32 Index, bool bStackableItem, const int32 StackAmount)
@@ -268,7 +279,7 @@ USlottedItemUserWidget* USlotContainerUserWidget::CreateSlottedItem(const UTBInv
 {
     /* Material/Image Fragment and Rarity Fragment are REQUIRED !!! */
     checkf(SlottedItemClass, TEXT("Must set SlottedItemClass BP."));
-    if (!IsValid(InventoryWidgetController->GetUIDataAsset()) || !IsValid(Item)) return nullptr;
+    if (!IsValid(WidgetController->GetUIDataAsset()) || !IsValid(Item)) return nullptr;
     
     USlottedItemUserWidget* SlottedItem = CreateWidget<USlottedItemUserWidget>(GetOwningPlayer(), SlottedItemClass);
 
@@ -279,7 +290,7 @@ USlottedItemUserWidget* USlotContainerUserWidget::CreateSlottedItem(const UTBInv
     const FRarityFragment* RarityFragment = GetFragment<FRarityFragment>(Item, Tags.Fragments_Rarity);
     if (!IconFragment || !RarityFragment) return nullptr;
     
-    const FLinearColor* RarityColor = InventoryWidgetController->GetUIDataAsset()->GetRarityColor(RarityFragment->GetRarity());
+    const FLinearColor* RarityColor = WidgetController->GetUIDataAsset()->GetRarityColor(RarityFragment->GetRarity());
     if (!RarityColor) return nullptr;
     
     SlottedItem->SetIcon(IconFragment->GetMaterial(), *RarityColor);
@@ -299,16 +310,25 @@ USlottedItemUserWidget* USlotContainerUserWidget::CreateSlottedItem(const UTBInv
     SlottedItem->SetIsStackable(bStackable);
     SlottedItem->SetInventoryItem(Item);
     SlottedItem->SetGridIndex(Index);
-    if (Item->GetItemStatus() == Tags.Status_Locked)
+    
+    return SlottedItem;
+}
+
+void USlotContainerUserWidget::ResolveItemStatus(const UTBInventoryItem* Item)
+{
+    bool bIsEquippableSlotContainer = HasCategoryPreference();
+    auto& Tags = FTBGameplayTags::Get();
+    if ((Item->GetItemStatus() == Tags.Status_Unlocked && bIsEquippableSlotContainer) ||
+         (Item->GetItemStatus() == Tags.Status_Equipped && !bIsEquippableSlotContainer))
     {
-        UnlockSlottedItem(SlottedItem, false);
+        /* Item status needs to be changed by server */
+        InventoryWidgetController->UpdateItemStatus(Item, bIsEquippableSlotContainer);
     }
     else
     {
+        /* Client can take it from here, item status doesn't need to be changed by server */
         UpdateItemStatus(Item);
     }
-    
-    return SlottedItem;
 }
 
 void USlotContainerUserWidget::UpdateItemStatus(const UTBInventoryItem* Item)
@@ -331,16 +351,18 @@ void USlotContainerUserWidget::UpdateItemStatus(const UTBInventoryItem* Item)
             {
                 UnlockSlottedItem(SlottedItem, true);
             }
-            
-            // Let ASC know the ability status has changed
-            if (((Item->GetItemStatus() == Tags.Status_Unlocked) || (Item->GetItemStatus() == Tags.Status_Equipped))
-                && GetFragment<FAbilityFragment>(Item, Tags.Fragments_Ability))
+
+            if ((Item->GetItemStatus() != Tags.Status_Equipped) && HasCategoryPreference())
             {
-                const FGameplayTag& SlotInputTag = GridSlots[SlottedItem->GetGridIndex()]->GetSlotInputTag();
-                InventoryWidgetController->HandleAbilityStatusChanged(Item, SlotInputTag);
+                // Remove from this container and bring to default
+                // return
             }
 
-            SlottedItem->SetInventoryItem(Item);
+            if (((Item->GetItemStatus() == Tags.Status_Unlocked) || ((Item->GetItemStatus() == Tags.Status_Equipped))
+                && GetFragment<FAbilityFragment>(Item, Tags.Fragments_Ability)))
+            {
+                if (IsValid(InventoryWidgetController)) InventoryWidgetController->HandleAbilityStatusChanged(Item, GridSlots[SlottedItemPair.Key]->GetSlotInputTag());
+            }
         }
     }
 }
@@ -421,9 +443,8 @@ void USlotContainerUserWidget::TryQuickMove(int32 GridIndex)
         if (Result.SlotAvailabilities.Num() == 0 ||
             !DestinationContainer->DoesItemMeetContainerRequirement(ClickedInventoryItem)) return;
 
-        // Top 10 Illegal things... Ever
-        const_cast<UTBInventoryItem*>(ClickedInventoryItem)->SetPreferredSlotContainerTag(Result.PreferredContainerTag);
-        DestinationContainer->AddItem(ClickedInventoryItem);
+        const UTBInventoryItem* NewItem = Result.Item.Get();
+        DestinationContainer->AddItem(NewItem);
         RemoveItemFromGrid(GridIndex);
     }
 }
@@ -487,7 +508,7 @@ void USlotContainerUserWidget::OnInventoryMenuToggled(bool bOpen)
 void USlotContainerUserWidget::PickUp(const UTBInventoryItem* Item, int32 GridIndex, int32 AmountToPickup,
                                       UDragDropOperation*& InputDragOperation, bool bIsLeftClickDrag)
 {
-    if (!IsValid(Item))
+    if (!IsValid(Item) || Item->GetItemStatus() == FGameplayTag::RequestGameplayTag(FName("Status.Locked")))
     {
         return;
     }
@@ -576,8 +597,8 @@ void USlotContainerUserWidget::AssignHoverItem(const UTBInventoryItem* Item, UDr
     // Rarity tag for setting the rarity alpha color and level text color
     const FRarityFragment* RarityFragment = GetFragment<FRarityFragment>(Item, Tags.Fragments_Rarity);
     
-    if (!IsValid(InventoryWidgetController)) return;
-    const FLinearColor* RarityColor = InventoryWidgetController->GetUIDataAsset()->GetRarityColor(RarityFragment->GetRarity());
+    if (!IsValid(WidgetController)) return;
+    const FLinearColor* RarityColor = WidgetController->GetUIDataAsset()->GetRarityColor(RarityFragment->GetRarity());
     
     if (!IconFragment || !RarityFragment || !RarityColor) return;
 
@@ -589,13 +610,6 @@ void USlotContainerUserWidget::AssignHoverItem(const UTBInventoryItem* Item, UDr
         HoverItem->SetHasLevel(true);
         HoverItem->SetLevel(LevelFragment->GetCurrentLevel(), *RarityColor);
         HoverItem->SetLevelProgress(LevelFragment->GetProgressPercentage());
-    }
-    
-    // For setting a locked tint and a lock icon if the current creature doesn't meet all the requirements
-    if (const FRequirementsFragment* RequirementsFragment = GetFragment<FRequirementsFragment>(Item, Tags.Fragments_Requirements))
-    {
-        // TODO: Fill out using current creatures info
-        // HoverItem->SetUnlocked(RequirementsFragment->MeetsItemRequirements(/* Creatures Requirements */));
     }
     
     HoverItem->SetIsStackable(Item->IsStackable());
@@ -640,6 +654,9 @@ void USlotContainerUserWidget::RemoveItemAmountFromGrid(int32 AmountToRemove, in
 
 void USlotContainerUserWidget::RemoveItemFromGrid(int32 GridIndex)
 {
+    if (!GridSlots.IsValidIndex(GridIndex)) return;
+
+    if (IsValid(InventoryWidgetController) && HasCategoryPreference()) InventoryWidgetController->UnEquipAbility(GridSlots[GridIndex]->GetInventoryItem().Get());
     GridSlots[GridIndex]->SetInventoryItem(nullptr);
     GridSlots[GridIndex]->SetStackCount(0);
     GridSlots[GridIndex]->RemoveSlottedItem();
@@ -850,7 +867,7 @@ void USlotContainerUserWidget::PutHoverItemBack(UHoverItemUserWidget* ExternalHo
     
     FSlotAvailabilityResult Result = ExternalHoverItem->GetOwningSlotContainer()
         ->HasRoomForItem(ExternalHoverItem->GetInventoryItem(), ExternalHoverItem->GetStackCount(), ExternalHoverItem->GetPreviousGridIndex());
-    Result.Item = ExternalHoverItem->GetInventoryItem();
+    Result.Item = const_cast<UTBInventoryItem*>(ExternalHoverItem->GetInventoryItem()); // Illegal pt3
     Result.Item->SetPreferredSlotContainerTag(Result.PreferredContainerTag);
     
     ExternalHoverItem->GetOwningSlotContainer()->AddStacks(Result);
@@ -927,7 +944,7 @@ void USlotContainerUserWidget::DropItemFromHoverItem(int32 AmountToDrop)
         return;
     }
 
-    InventoryComponent->Server_DropItem(HoverItem->GetInventoryItem(), AmountToDrop);
+    InventoryComponent->Server_DropItem(const_cast<UTBInventoryItem*>(HoverItem->GetInventoryItem()), AmountToDrop); // Illegal pt5
 
     int32 NewHoverItemStackCount = HoverItem->GetStackCount() - AmountToDrop;
     if (NewHoverItemStackCount > 0)
@@ -957,11 +974,14 @@ bool USlotContainerUserWidget::IsConsumableAsXP(UHoverItemUserWidget* ExternalHo
 
 bool USlotContainerUserWidget::SwapWithHoverItem(UHoverItemUserWidget* ExternalHoverItem, const UTBInventoryItem* Item, const int32 GridIndex)
 {
-    if (!IsValid(ExternalHoverItem) || !GridSlots.IsValidIndex(GridIndex)) return false;
+    if (!IsValid(ExternalHoverItem) || !GridSlots.IsValidIndex(GridIndex) || !IsValid(Item)) return false;
     
-    UTBInventoryItem* HoverItemInventoryItem = ExternalHoverItem->GetInventoryItem();
+    const UTBInventoryItem* HoverItemInventoryItem = ExternalHoverItem->GetInventoryItem();
     int32 HoverItemStartingGridIndex = ExternalHoverItem->GetPreviousGridIndex();
 
+    if (!IsValid(HoverItemInventoryItem) ||
+        !ExternalHoverItem->GetOwningSlotContainer()->GridSlots.IsValidIndex(HoverItemStartingGridIndex)) return false;
+    
     // Check if slots items meet the opposing slots requirements
     if (!GridSlots[GridIndex]->CanAcceptItem(HoverItemInventoryItem) ||
         !ExternalHoverItem->GetOwningSlotContainer()->GridSlots[HoverItemStartingGridIndex]->CanAcceptItem(Item))

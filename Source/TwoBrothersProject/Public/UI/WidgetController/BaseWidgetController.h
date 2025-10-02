@@ -19,6 +19,8 @@ class UAnimalAttributeSet;
 class UUIDataAsset;
 
 // Character Context Delegates
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRebind, bool bIsAnimalInhabited);
+
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnIntChangedWithSourceSignature, int32,  bool bIsParasiteVal);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnFloatChangedWithSourceSignature, float, bool bIsParasiteVal);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnTextChangedWithSourceSignature, const FText&, bool bIsParasiteVal);
@@ -79,12 +81,16 @@ public:
 	virtual void UnBindCallbacks();
 	void UnbindAnimalCharacterContext();
 
+	void SetIsParasiteFocusedCharacter(bool InbIsParasiteFocusedCharacter) {bIsParasiteFocusedCharacter = InbIsParasiteFocusedCharacter;}
+	bool IsParasiteFocusedCharacter() const {return bIsParasiteFocusedCharacter;}
 	const UUIDataAsset* GetUIDataAsset() const;
 	bool IsAnimalInhabited() const;
 	UBaseAbilitySystemComponent* GetActiveASC(bool bIsAnimalPriority) const;
 	UBaseAttributeSet* GetActiveAS(bool bIsAnimalPriority) const;
 	IPlayerInterface* GetActivePI(bool bIsAnimalPriority) const;
 
+	FOnRebind OnWidgetControllerRebound;
+	
 							/* Character Context Delegates */
 	// Updating Vars
 	FOnIntChangedWithSourceSignature			   OnAttributePointsChangedDelegate;
@@ -119,6 +125,7 @@ protected:
 	TMap<FGameplayAttribute, FDelegateHandle> AnimalAttributeHandles;
 	// For context
 	TOptional<FCharacterContextHandles> AnimalContextHandles;
+	bool bIsParasiteFocusedCharacter = true;
 
 private:
 

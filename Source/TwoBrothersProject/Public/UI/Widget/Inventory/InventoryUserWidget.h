@@ -2,6 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "CharacterPanel/CharacterDetail/CharacterDetailsUserWidget.h"
 #include "Inventory/Types/GridTypes.h"
 #include "Slots/SlotContainerUserWidget.h"
 #include "Slots/SlotPanelUserWidget.h"
@@ -44,10 +45,14 @@ protected:
 	virtual void NativeOnInitialized() override;
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 	virtual void NativeDestruct() override;
+	virtual void OnWidgetControllerSet() override;
+	virtual void OnWidgetControllerRebound(bool bIsAnimalInhabited) override;
 	
 private:
 	
-	
+	void ResolveAnimalInhabitance(bool bIsAnimalInhabited);
+	void SetupParasiteContainers(const UCharacterDetailsUserWidget* ParasiteDetails);
+	void HandleHoverItemDrop(int32 AmountToDrop, USlotContainerUserWidget* Container);
 	// Widget Controller
 	UPROPERTY() UInventoryWidgetController* InventoryWidgetController = nullptr;
 	
@@ -67,6 +72,10 @@ private:
 	TObjectPtr<UInventoryBackgroundUserWidget> DimmedBackground = nullptr;
 
 	// Cached Vals
-	TMap<FGameplayTag, TWeakObjectPtr<USlotContainerUserWidget>> SlotContainers;
+	typedef TPair<TWeakObjectPtr<USlotContainerUserWidget> /*ParasiteContainer*/, TWeakObjectPtr<USlotContainerUserWidget> /*AnimalContainer*/> SlotContainerPair;
+	TMap<FGameplayTag, SlotContainerPair> EquippableSlotContainers;
 	TArray<TPair<TWeakObjectPtr<USlotContainerUserWidget>, TWeakObjectPtr<USlotUserWidget>>> SelectedGridSlots;
+	
+	/** Delegate handles for Animal slot containers so we can unbind later */
+	TMap<FGameplayTag, FDelegateHandle> AnimalDropDelegateHandles;
 };

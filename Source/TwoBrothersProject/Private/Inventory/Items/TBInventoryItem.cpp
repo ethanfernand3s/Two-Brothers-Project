@@ -38,5 +38,5 @@ void UTBInventoryItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void UTBInventoryItem::OnRep_ItemStatus() const
 {
-	OwningInventoryComp->OnItemStatusChanged.Broadcast(this);
+	if (OwningInventoryComp.IsValid()) OwningInventoryComp->OnItemStatusChanged.Broadcast(this);
 }

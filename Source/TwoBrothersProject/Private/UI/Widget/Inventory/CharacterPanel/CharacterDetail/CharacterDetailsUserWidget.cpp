@@ -28,7 +28,9 @@ void UCharacterDetailsUserWidget::NativeOnInitialized()
 }
 
 void UCharacterDetailsUserWidget::OnWidgetControllerSet()
-{	
+{
+	InventoryWidgetController = Cast<UInventoryWidgetController>(WidgetController);
+	
 	if (IsValid(Button_EquippablePassiveAbilitiesContainerToggle))
 	{
 		Button_EquippablePassiveAbilitiesContainerToggle->OnClicked.AddDynamic(this, &UCharacterDetailsUserWidget::ToggleDropdown);
@@ -45,7 +47,7 @@ void UCharacterDetailsUserWidget::SetupStatButtons()
 {
 	// Map stats for quick lookup
 	const auto Tags = FTBGameplayTags::Get();
-	MappedStatBindings.Add(Tags.Attributes_Health,       {StatButton_Health,       0});
+	MappedStatBindings.Add(Tags.Attributes_MaxHealth,       {StatButton_Health,       0});
 	MappedStatBindings.Add(Tags.Attributes_Strength,     {StatButton_Strength,     1});
 	MappedStatBindings.Add(Tags.Attributes_Defense,      {StatButton_Defense,      2});
 	MappedStatBindings.Add(Tags.Attributes_Speed,        {StatButton_Speed,        3});
@@ -82,7 +84,7 @@ void UCharacterDetailsUserWidget::SetSingleStat(const FTBAttributeInfo& Attribut
 	}
 }
 
-void UCharacterDetailsUserWidget::SetHealthStat(const FTBAttributeInfo& CurrentAttributeInfo,	const FTBAttributeInfo& MaxAttributeInfo)
+void UCharacterDetailsUserWidget::SetHealthStat(const FTBAttributeInfo& CurrentAttributeInfo, const FTBAttributeInfo& MaxAttributeInfo)
 {
 	const float NewCurrentHealth{CurrentAttributeInfo.AttributeValue};
 	const float NewMaxHealth{MaxAttributeInfo.AttributeValue}; 
@@ -235,11 +237,27 @@ void UCharacterDetailsUserWidget::SetTribeName(const FText& NewTribeName)
 	TextBlock_TribeName->SetText(DisplayText);
 }
 
-void UCharacterDetailsUserWidget::OnStatButtonPressed(const FGameplayTag& StatTag) const
+void UCharacterDetailsUserWidget::OnStatButtonPressed(const UStatButton* PressedButton) const
 {
-	if(!IsValid(InventoryWidgetController)) return;
-	
-	InventoryWidgetController->UpgradeAttribute(StatTag);
+	if (!IsValid(InventoryWidgetController)) return;
+
+	FGameplayTag StatTag = GetStatTagFromButton(PressedButton);
+	if (StatTag.IsValid())
+	{
+		InventoryWidgetController->UpgradeAttribute(StatTag);
+	}
+}
+
+FGameplayTag UCharacterDetailsUserWidget::GetStatTagFromButton(const UStatButton* PressedButton) const
+{
+	for (const auto& KVP : MappedStatBindings)
+	{
+		if (KVP.Value.StatButton == PressedButton)
+		{
+			return KVP.Key;
+		}
+	}
+	return FGameplayTag(); // return invalid if not found
 }
 
 void UCharacterDetailsUserWidget::PlayStatIncreasedEffects()

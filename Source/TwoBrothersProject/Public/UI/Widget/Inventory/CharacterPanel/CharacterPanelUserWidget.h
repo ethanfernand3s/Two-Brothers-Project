@@ -24,8 +24,11 @@ protected:
 	
 	virtual void NativeOnInitialized() override;
 	virtual void OnWidgetControllerSet() override;
+	virtual void OnWidgetControllerRebound(bool bIsAnimalInhabited) override;
+
+	void ResolveAnimalInhabitance(bool bIsAnimalInhabited);
 	UFUNCTION()
-	void SwitchCharacter();
+	void SwitchCharacterPreview();
 
 private:
 	

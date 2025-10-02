@@ -51,15 +51,17 @@ public:
                                      const USlotUserWidget* GridSlot);
     static int32 GetStackAmount(const USlotUserWidget* GridSlot);
 	/* ~HasRoomForItem-Helpers~ */
-
+	
 	/* Add Item */
     void AddItem(const UTBInventoryItem* Item);
+	bool IsMeantForContainer();
 	bool DoesItemMeetContainerRequirement(const UTBInventoryItem* Item) const;
     void UpdateGridSlot(const UTBInventoryItem* Item, int32 Index, bool bStackableItem, const int32 StackAmount);
 	void AddItemToIndices(FSlotAvailabilityResult AvailabilityResult, const UTBInventoryItem* Item);
 	void AddItemAtIndex(const UTBInventoryItem* Item, const int32 Index, const bool bStackable, const int32 StackAmount);
 	USlottedItemUserWidget* CreateSlottedItem(const UTBInventoryItem* Item, const bool bStackable,
                                               const int32 StackAmount, const int32 Index);
+	void ResolveItemStatus(const UTBInventoryItem* Item);
 	void UpdateItemStatus(const UTBInventoryItem* Item);
 	void UnlockSlottedItem(USlottedItemUserWidget* SlottedItem, bool bShouldUnlock = true);
 							   
@@ -128,7 +130,8 @@ public:
 
 	/* Cached Setters */
 	void SetOwningCanvasPanel(UCanvasPanel* InOwningCanvasPanel);
-
+	void SetContainerOwner(bool InbIsParasiteContainerOwner) { bIsParasiteContainerOwner = InbIsParasiteContainerOwner;}
+	
 	/* Helpers */
 	bool HasCategoryPreference() const;
 	
@@ -188,4 +191,5 @@ private:
     /* Cached Vars */
 	TWeakObjectPtr<UTBInventoryComponent> InventoryComponent;
     TWeakObjectPtr<UCanvasPanel> OwningCanvasPanel;
+	bool bIsParasiteContainerOwner{false};
 };

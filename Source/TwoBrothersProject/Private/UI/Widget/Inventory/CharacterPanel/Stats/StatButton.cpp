@@ -73,5 +73,5 @@ void UStatButton::NativeOnInitialized()
 
 void UStatButton::StatButtonClicked()
 {
-	OnStatButtonClicked.ExecuteIfBound(GameplayTag);
+	OnStatButtonClicked.ExecuteIfBound(this);
 }

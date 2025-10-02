@@ -25,5 +25,6 @@ public:
 protected:
 
 	virtual void OnWidgetControllerSet();
+	virtual void OnWidgetControllerRebound(bool bIsAnimalInhabited);
 	
 };

@@ -48,14 +48,14 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 		FString("Affects movement speed")
 	);
 	
-	GameplayTags.Attributes_Energy = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Energy"),
-		FString("Current energy level")
+	GameplayTags.Attributes_Aura = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.Aura"),
+		FString("Current Aura level")
 	);
 
-	GameplayTags.Attributes_MaxEnergy = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.MaxEnergy"),
-		FString("Maximum energy level")
+	GameplayTags.Attributes_MaxAura = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.MaxAura"),
+		FString("Maximum Aura level")
 	);
 
 	GameplayTags.Attributes_Oxygen = UGameplayTagsManager::Get().AddNativeGameplayTag(
@@ -98,6 +98,10 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 		FName("Abilities.Parasite.TryPossess"),
 		FString("Ability for trying to possess a host")
 	);
+
+	GameplayTags.Abilities_Fireball =  UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Abilities.Fireball"),
+		FString("Ability for Shooting a fireball"));
 	
 #pragma endregion Abilities
 	
@@ -149,7 +153,7 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 		FString("State for seeking a new inhabitant"));
 	
 #pragma endregion States
-
+ 
 #pragma region Gameplay Cues
 	
 #pragma region PossessionAbiltyState
@@ -301,6 +305,10 @@ void FTBGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Items_Abilities_Defaults_SeekHost = UGameplayTagsManager::Get().AddNativeGameplayTag(
 	FName("Items.Abilities.Defaults.SeekHost"),
 	FString("This ability allows the user to enter a hunting mode showing nearby inhabitants."));
+
+	GameplayTags.Items_Abilities_Defaults_Fireball = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Items.Abilities.Defaults.Fireball"),
+	FString("This ability Shoots a fireball"));
 	
 	GameplayTags.Items_AbilityCardholder = UGameplayTagsManager::Get().AddNativeGameplayTag(
 	FName("Items.AbilityCardholder"),

@@ -48,7 +48,7 @@ public:
 	int32 GetGridIndex() const { return GridIndex; }
 
 	void SetInventoryItem(const UTBInventoryItem* Item);
-	UTBInventoryItem* GetInventoryItem() const { return InventoryItem.Get(); }
+	const UTBInventoryItem* GetInventoryItem() const { return InventoryItem.Get(); }
 
 #pragma endregion Accessors
 

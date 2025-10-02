@@ -16,14 +16,17 @@ AItemPickupActor::AItemPickupActor()
 
 	MeshComp->SetSimulatePhysics(true);
 	MeshComp->SetEnableGravity(true); 
-	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // Needed because of need for simulate physics
 	MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
 	MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
-	MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // don’t block pawns
+	MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // don’t block pawns Or any visibility
+	MeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	MeshComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	MeshComp->SetRelativeScale3D(FVector(0.15f));
 
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("PickupSphere"));
 	SphereComp->SetupAttachment(MeshComp);
-	SphereComp->InitSphereRadius(100.f);
+	SphereComp->InitSphereRadius(1000.f);
 	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	SphereComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
@@ -65,7 +68,8 @@ void AItemPickupActor::ItemOverlapped(UPrimitiveComponent* OverlappedComponent, 
 {
 	if (!bCanBePickedUp) return;
 
-	if (OtherActor && OtherActor->GetClass()->ImplementsInterface(UInventoryInterface::StaticClass()))
+	IInventoryInterface* ActorWithInventory = Cast<IInventoryInterface>(OtherActor);
+	if (ActorWithInventory && ActorWithInventory->GetInventoryComponent())
 	{
 		// Set once on server, will replicate to clients and call OnRep_AttractingActor
 		AttractingActor = OtherActor;

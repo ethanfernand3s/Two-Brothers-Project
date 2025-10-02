@@ -36,6 +36,8 @@ struct FSlotAvailabilityResult
 
 	/* Preferred type of container to add to */
 	FGameplayTag PreferredContainerTag;
+	/* Preferred holder */
+	bool bPreferParasiteHolder{false};
 	/* Total room to fill across multiple slots*/
 	int32 TotalRoomToFill{0};
 	/* Slots to fill */

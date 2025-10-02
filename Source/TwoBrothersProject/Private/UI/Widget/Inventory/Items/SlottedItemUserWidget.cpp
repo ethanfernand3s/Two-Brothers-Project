@@ -232,13 +232,14 @@ void USlottedItemUserWidget::UpdateStackCount(int32 InStackCount)
 
 void USlottedItemUserWidget::SetIcon(UMaterialInstance* IconMaterial, const FLinearColor& RarityColor)
 {
-	if (IsValid(IconMaterial))
+	if (IsValid(IconMaterial) && IsValid(Image_Icon))
 	{
+		// Create a dynamic material
 		UMaterialInstanceDynamic* DynamicMaterial = UMaterialInstanceDynamic::Create(IconMaterial, this);
 		DynamicMaterial->SetVectorParameterValue(TEXT("RarityColor"), RarityColor);
 		Image_Icon->SetBrushFromMaterial(DynamicMaterial);
 	}
-	else
+	else if (IsValid(Image_Icon))
 	{
 		Image_Icon->SetVisibility(ESlateVisibility::Collapsed);
 	}

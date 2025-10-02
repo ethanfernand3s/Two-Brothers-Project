@@ -42,9 +42,11 @@ void UBaseWidgetController::SetWidgetControllerParams(const TUniquePtr<FWidgetCo
 
 void UBaseWidgetController::RebindToDependencies()
 {
-	UnBindCallbacks();
-	BroadcastInitialValues();
+	if (!IsAnimalInhabited()) UnBindCallbacks();
+	
 	BindCallbacksToDependencies();
+	BroadcastInitialValues();
+	OnWidgetControllerRebound.Broadcast(IsAnimalInhabited());
 }
 
 void UBaseWidgetController::BroadcastInitialValues()
@@ -159,8 +161,7 @@ const UUIDataAsset* UBaseWidgetController::GetUIDataAsset() const
 
 bool UBaseWidgetController::IsAnimalInhabited() const
 {
-	return AnimalASC.IsValid() && AnimalPI.IsValid() && AnimalAS.IsValid()
-	&& TBPC.IsValid() && TBPC->GetIsAnimalPossessed();
+	return AnimalASC.IsValid() && AnimalPI.IsValid() && AnimalAS.IsValid();
 }
 
 UBaseAbilitySystemComponent* UBaseWidgetController::GetActiveASC(bool bIsAnimalPriority) const

@@ -81,8 +81,9 @@ void UHoverItemUserWidget::SetIsStackable(bool bStacks)
 
 void UHoverItemUserWidget::SetIcon(UMaterialInstance* IconMaterial, const FLinearColor& RarityColor)
 {
-	if (IsValid(IconMaterial))
+	if (IsValid(IconMaterial) && IsValid(Image_Icon))
 	{
+		// Create a dynamic material
 		UMaterialInstanceDynamic* DynamicMaterial = UMaterialInstanceDynamic::Create(IconMaterial, this);
 		DynamicMaterial->SetVectorParameterValue(TEXT("RarityColor"), RarityColor);
 		Image_Icon->SetBrushFromMaterial(DynamicMaterial);
@@ -124,34 +125,6 @@ void UHoverItemUserWidget::SetLevelProgress(float ProgressPercentage)
 	}
 }
 
-void UHoverItemUserWidget::SetUnlocked(bool bMeetsItemRequirements)
-{
-	bIsUnlocked = bMeetsItemRequirements;
-	if (!bIsUnlocked)
-	{
-		UMaterialInstanceDynamic* DynamicMaterial = Image_Icon->GetDynamicMaterial();
-		DynamicMaterial->SetVectorParameterValue(TEXT("OverallTint"), FLinearColor::Gray);
-		
-		TextBlock_StackCount->SetVisibility(ESlateVisibility::Collapsed);
-		TextBlock_Level->SetVisibility(ESlateVisibility::Collapsed);
-		TextBlock_Level_Prefix->SetVisibility(ESlateVisibility::Collapsed);
-		ProgressBar->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	else
-	{
-		UMaterialInstanceDynamic* DynamicMaterial = Image_Icon->GetDynamicMaterial();
-		DynamicMaterial->SetVectorParameterValue(TEXT("OverallTint"), FLinearColor::White);
-		
-		if (bIsStackable) TextBlock_StackCount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-
-		if (bHasLevel)
-		{
-			TextBlock_Level->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			TextBlock_Level_Prefix->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			ProgressBar->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		}
-	}
-}
 
 void UHoverItemUserWidget::SetOwningSlotContainer(USlotContainerUserWidget* SlotContainer)
 {

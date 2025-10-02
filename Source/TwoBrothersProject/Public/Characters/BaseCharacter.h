@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
+class UAnimalAbilitySet;
 class UDeathDropComponent;
 class UTBInventoryComponent;
 class UTBEquipSlotsComponent;
@@ -18,8 +20,9 @@ class UCameraComponent;
 class USpringArmComponent;
 
 UCLASS()
-class TWOBROTHERSPROJECT_API ABaseCharacter : public ACharacter
+class TWOBROTHERSPROJECT_API ABaseCharacter : public ACharacter, public IAbilitySystemInterface
 {
+	
 	GENERATED_BODY()
 
 public:
@@ -43,6 +46,16 @@ public:
 	//interface for return projectile socket spawn point
 
 	virtual FVector GetProjectileCombatSocketLocation();
+
+	// Ability System Interface
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override {return nullptr;} // Override in children
+
+	// Start abilities that shouldn't be items for some reason
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAnimalAbilitySet> StartupPassiveAbilitySet;
+
+	UPROPERTY(EditDefaultsOnly)
+	FName ProjectileTipSocketName;
 protected:
 	
 	virtual void InitActorInfo();
@@ -66,8 +79,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess=true), Category = "Detachment")
 	float DetachmentZOffset{1.f};
 	
-	UPROPERTY(EditDefaultsOnly)
-	FName ProjectileTipSocketName;
+	
 private:
 
 	/** Configs collision for attachment

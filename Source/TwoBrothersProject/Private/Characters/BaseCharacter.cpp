@@ -3,6 +3,8 @@
 
 #include "Characters/BaseCharacter.h"
 
+#include "AbilitySystem/Animal/AnimalAbilitySet.h"
+#include "AbilitySystem/Base/BaseAbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
@@ -74,6 +76,14 @@ void ABaseCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	InitActorInfo();
+	UBaseAbilitySystemComponent* BaseASC = Cast<UBaseAbilitySystemComponent>(GetAbilitySystemComponent());
+	if (IsValid(BaseASC) && IsValid(StartupPassiveAbilitySet))
+	{
+		for (auto& AbilityPair : StartupPassiveAbilitySet->Abilities)
+		{
+			BaseASC->AddCharacterPassiveAbility(AbilityPair.AbilityClass, AbilityPair.AbilityLevel);
+		}
+	}
 }
 
 void ABaseCharacter::OnRep_PlayerState()
@@ -152,7 +162,8 @@ void ABaseCharacter::DetachFromAllActors(AActor* DetachmentActor, FDetachmentTra
 }
 
 FVector ABaseCharacter::GetProjectileCombatSocketLocation()
-{ 
+{
+	check(GetMesh());
 	return GetMesh()->GetSocketLocation(ProjectileTipSocketName);
 }
 

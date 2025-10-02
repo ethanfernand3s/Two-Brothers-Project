@@ -24,11 +24,11 @@ void UCharacterContextComponent::InitializeComponent()
 	InitializeCharacterContext();
 }
 
-void UCharacterContextComponent::InitializeCharacterContext()
+void UCharacterContextComponent::InitializeCharacterContext(float ExternalBaseCombatPower)
 {
 	SetLevel(LevelInfoLibrary::GetLevelFromXP(XP, LevelGrowthRate));
 	SetAttributePoints(Level);
-	InitializeCombatRelatedVars();
+	InitializeCombatRelatedVars(ExternalBaseCombatPower);
 }
 
 void UCharacterContextComponent::InitializeCombatRelatedVars(float ExternalBaseCombatPower)

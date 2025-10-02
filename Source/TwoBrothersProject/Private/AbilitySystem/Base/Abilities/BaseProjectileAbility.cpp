@@ -17,14 +17,14 @@ void UBaseProjectileAbility::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	const bool bIsServer = HasAuthority(&ActivationInfo);
 	if (!bIsServer) return;
 
-	ABaseCharacter* Character = Cast<ABaseCharacter>(GetOwningActorFromActorInfo());
+	ABaseCharacter* Character = Cast<ABaseCharacter>(GetAvatarActorFromActorInfo());
 	if (Character)
 	{
 		const FVector SocketLocation = Character->GetProjectileCombatSocketLocation();
 	
 		FTransform SpawnTransform;
 		SpawnTransform.SetLocation(SocketLocation);
-		//TODO: Set the projectileRoation 
+		//TODO: Set the projectileRotation 
 		AProjectileActor* Projectile = GetWorld()->SpawnActorDeferred<AProjectileActor>(
 			ProjectileActor
 			,SpawnTransform,
@@ -32,7 +32,7 @@ void UBaseProjectileAbility::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 			Cast<APawn>(GetOwningActorFromActorInfo()),
 			ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 		
-		//TODO: Give the Projectile A Gameplay Effect Spec for causeing Damage.
+		//TODO: Give the Projectile A Gameplay Effect Spec for causing Damage.
 		
 		Projectile->FinishSpawning(SpawnTransform);
 	}

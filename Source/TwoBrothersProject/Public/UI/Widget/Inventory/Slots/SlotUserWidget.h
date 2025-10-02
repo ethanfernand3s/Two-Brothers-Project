@@ -115,7 +115,7 @@ private:
 	bool bIsSelected{false};
 	TWeakObjectPtr<const UTBInventoryItem> InventoryItem;
 	FGameplayTag ItemCategoryPreference{};
-	FGameplayTag SlotInputTag{};
+	FGameplayTag SlotInputTag{FGameplayTag::EmptyTag};
 	/* This is the same as the upper left index since the slots are only 1x1 */
 	int32 TileIndex{INDEX_NONE};
 

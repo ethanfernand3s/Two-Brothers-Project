@@ -30,8 +30,8 @@ struct FTBGameplayTags
 	FGameplayTag Attributes_Health;
 	FGameplayTag Attributes_MaxHealth;
 
-	FGameplayTag Attributes_Energy;
-	FGameplayTag Attributes_MaxEnergy;
+	FGameplayTag Attributes_Aura;
+	FGameplayTag Attributes_MaxAura;
 
 	FGameplayTag Attributes_Oxygen;
 	FGameplayTag Attributes_MaxOxygen;
@@ -56,8 +56,8 @@ struct FTBGameplayTags
 
 	FGameplayTag Abilities_Parasite_SeekHost;
 	FGameplayTag Abilities_Parasite_TryPossess;
-
-	FGameplayTag Abilities_Attack;
+	
+	FGameplayTag Abilities_Fireball;
 #pragma endregion Abilities
 	
 #pragma region Input
@@ -162,8 +162,11 @@ struct FTBGameplayTags
 	/* Combination of the seekhost and trypossess ! see trello ! */ // TODO: Come back to... woowwww....
 	FGameplayTag Items_Abilities_Defaults_Possess;
 	FGameplayTag Items_Abilities_Defaults_SeekHost;
-
+	FGameplayTag Items_Abilities_Defaults_Fireball;
+	
 	FGameplayTag Items_AbilityCardholder;
+
+	
 	
 #pragma endregion Items
 

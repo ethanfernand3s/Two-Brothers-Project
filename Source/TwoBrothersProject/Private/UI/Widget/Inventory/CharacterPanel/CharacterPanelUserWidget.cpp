@@ -14,13 +14,21 @@ void UCharacterPanelUserWidget::NativeOnInitialized()
     if (IsValid(Button_SwitchCharacter))
     {
         Button_SwitchCharacter->SetIsEnabled(false);
-        Button_SwitchCharacter->OnClicked.AddDynamic(this, &ThisClass::SwitchCharacter);
+        Button_SwitchCharacter->OnClicked.AddDynamic(this, &ThisClass::SwitchCharacterPreview);
     }
-    
-    // Default to Parasite
-    if (IsValid(WidgetSwitcher_DetailSwitcher)) WidgetSwitcher_DetailSwitcher->SetActiveWidget(ParasiteDetailsUserWidget);
 
     if (IsValid(AnimalDetailsUserWidget)) AnimalDetailsUserWidget->SetVisibility(ESlateVisibility::Hidden);
+
+    if (IsValid(WidgetSwitcher_DetailSwitcher))
+    {
+        for (int32 i = 0; i < WidgetSwitcher_DetailSwitcher->GetNumWidgets(); i++)
+        {
+            WidgetSwitcher_DetailSwitcher->GetWidgetAtIndex(i)->ForceLayoutPrepass();
+        }
+
+        // Default to Parasite
+        WidgetSwitcher_DetailSwitcher->SetActiveWidget(ParasiteDetailsUserWidget);
+    }
 }
 
 void UCharacterPanelUserWidget::OnWidgetControllerSet()
@@ -30,12 +38,7 @@ void UCharacterPanelUserWidget::OnWidgetControllerSet()
 	
 	if(InventoryWidgetController = Cast<UInventoryWidgetController>(WidgetController))
 	{
-	    if (InventoryWidgetController->IsAnimalInhabited())
-	    {
-	        Button_SwitchCharacter->SetIsEnabled(true);
-	        AnimalDetailsUserWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	        SwitchCharacter();
-	    }
+	    ResolveAnimalInhabitance(InventoryWidgetController->IsAnimalInhabited());
 	    
         // Attribute Delegates
         InventoryWidgetController->CurrentAndMax_AttributeInfoDelegate.AddLambda(
@@ -141,13 +144,55 @@ void UCharacterPanelUserWidget::OnWidgetControllerSet()
 	}
 }
 
-void UCharacterPanelUserWidget::SwitchCharacter()
+void UCharacterPanelUserWidget::OnWidgetControllerRebound(bool bIsAnimalInhabited)
 {
-    if (!IsValid(WidgetSwitcher_DetailSwitcher)) return;
+    ResolveAnimalInhabitance(bIsAnimalInhabited);
+}
+
+void UCharacterPanelUserWidget::ResolveAnimalInhabitance(bool bIsAnimalInhabited)
+{
+    Button_SwitchCharacter->SetIsEnabled(bIsAnimalInhabited);
+
+    if (bIsAnimalInhabited)
+    {
+        // Show animal on inhabitance
+        WidgetSwitcher_DetailSwitcher->SetActiveWidget(AnimalDetailsUserWidget);
+        InventoryWidgetController->SetIsParasiteFocusedCharacter(false);
+        AnimalDetailsUserWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        ParasiteDetailsUserWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
+    }
+    else
+    {
+        // Only Parasite details visible when not inhabited
+        WidgetSwitcher_DetailSwitcher->SetActiveWidget(ParasiteDetailsUserWidget);
+        InventoryWidgetController->SetIsParasiteFocusedCharacter(true);
+        ParasiteDetailsUserWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        AnimalDetailsUserWidget->SetVisibility(ESlateVisibility::Collapsed);
+    }
+}
+
+void UCharacterPanelUserWidget::SwitchCharacterPreview()
+{
+    if (!IsValid(WidgetSwitcher_DetailSwitcher) || !IsValid(InventoryWidgetController)) return;
 
     int32 CurrentIndex = WidgetSwitcher_DetailSwitcher->GetActiveWidgetIndex();
 
-    // Toggle between 0 and 1
-    int32 NewIndex = (CurrentIndex == 0) ? 1 : 0;
-    WidgetSwitcher_DetailSwitcher->SetActiveWidgetIndex(NewIndex);
+    if (CurrentIndex == 0) // Is Parasite
+    {
+        InventoryWidgetController->SetIsParasiteFocusedCharacter(false);
+        // Switch to animal details
+        WidgetSwitcher_DetailSwitcher->SetActiveWidget(AnimalDetailsUserWidget);
+
+        AnimalDetailsUserWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        ParasiteDetailsUserWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
+    }
+    else // Is Animal
+    {
+        InventoryWidgetController->SetIsParasiteFocusedCharacter(true);
+        // Switch to parasite details
+        WidgetSwitcher_DetailSwitcher->SetActiveWidget(ParasiteDetailsUserWidget);
+
+        ParasiteDetailsUserWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        AnimalDetailsUserWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
+    }
 }

@@ -29,7 +29,8 @@ public:
 	void AbilityInputTagPressed(const FGameplayTag& InputTag);
 	void AbilityInputTagHeld(const FGameplayTag& InputTag);
 	void AbilityInputTagReleased(const FGameplayTag& InputTag);
-	
+
+	// TODO: Remove, unnecessary
 	void UpgradeAttribute(const FGameplayTag& AttributeTag);
 	UFUNCTION(Server, Reliable)
 	void Server_UpgradeAttribute(const FGameplayTag& AttributeTag);
@@ -37,7 +38,7 @@ public:
 	void HandleAbilityStatusChanged(const UTBInventoryItem* Item, FGameplayTag SlotInputTag);
 	UFUNCTION(Server, Reliable)
 	void Server_HandleAbilityStatusChanged(const UTBInventoryItem* Item, FGameplayTag SlotInputTag);
-	void UnlockAbility(const TSubclassOf<UBaseGameplayAbility>& AbilityClass, int32 AbilityLevel,
+	FGameplayAbilitySpecHandle UnlockAbility(const TSubclassOf<UBaseGameplayAbility>& AbilityClass, int32 AbilityLevel,
 	                   const FGameplayTag& NewStatus,
 	                   const FGameplayTag& CreatureTypeTag);
 	void EquipAbility(FGameplayAbilitySpec* AbilitySpec, const FGameplayTag& SlotInputTag, bool bIsPassiveAbility);
@@ -48,15 +49,19 @@ public:
 	bool AbilityHasAnySlot(const FGameplayAbilitySpec& Spec);
 	FGameplayAbilitySpec* GetSpecWithSlot(const FGameplayTag& Slot);
 	void AssignSlotToAbility(FGameplayAbilitySpec& Spec, const FGameplayTag& Slot);
+
+	// RPC for directly calling from WC
+	UFUNCTION(Server, Reliable)
+	void Server_DirectUnEquipAbility(const UTBInventoryItem* Item);
 	void UnEquipAbility(FGameplayAbilitySpec* AbilitySpec, bool bIsPassiveAbility);
 	void ClearSlot(FGameplayAbilitySpec* Spec);
 	
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastActivatePassiveEffect(const FGameplayTag& AbilityTag, bool bActivate);
 	
-	void AddCharacterAbility(const TSubclassOf<UBaseGameplayAbility>& GameplayAbilityClass,
+	void AddCharacterAbility(const TSubclassOf<UGameplayAbility>& GameplayAbilityClass,
 	                         int32 AbilityLevel, const FGameplayTag& InputTag);
-	void AddCharacterPassiveAbility(const TSubclassOf<UBaseGameplayAbility>& GameplayAbilityClass,
+	void AddCharacterPassiveAbility(const TSubclassOf<UGameplayAbility>& GameplayAbilityClass,
 	int32 AbilityLevel);
 
 	void ForEachAbility(const FForEachAbility& Delegate);

@@ -21,6 +21,7 @@ void FTB_InventoryFastArray::PostReplicatedAdd(const TArrayView<int32> AddedIndi
 	{
 		for (int32 Index : AddedIndices)
 		{
+			if (IsValid(Entries[Index].Item)) Entries[Index].Item->SetOwningInventoryComponent(InventoryComponent);
 			InventoryComponent->OnItemAdded.Broadcast(Entries[Index].Item);
 		}
 	}

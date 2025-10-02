@@ -26,10 +26,10 @@ UBaseAttributeSet::UBaseAttributeSet()
 	));
 
 	TagsToSurvivalAttributes.Add(FTagAttributeBinding(
-		GameplayTags.Attributes_Energy,
-		&UBaseAttributeSet::GetEnergyAttribute,
-		GameplayTags.Attributes_MaxEnergy,
-		&UBaseAttributeSet::GetMaxEnergyAttribute
+		GameplayTags.Attributes_Aura,
+		&UBaseAttributeSet::GetAuraAttribute,
+		GameplayTags.Attributes_MaxAura,
+		&UBaseAttributeSet::GetMaxAuraAttribute
 	));
 
 	TagsToSurvivalAttributes.Add(FTagAttributeBinding(
@@ -87,8 +87,8 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UBaseAttributeSet, Health);
 	DOREPLIFETIME(UBaseAttributeSet, MaxHealth);
-	DOREPLIFETIME(UBaseAttributeSet, Energy);
-	DOREPLIFETIME(UBaseAttributeSet, MaxEnergy);
+	DOREPLIFETIME(UBaseAttributeSet, Aura);
+	DOREPLIFETIME(UBaseAttributeSet, MaxAura);
 	DOREPLIFETIME(UBaseAttributeSet, Oxygen);
 	DOREPLIFETIME(UBaseAttributeSet, MaxOxygen);
 	DOREPLIFETIME(UBaseAttributeSet, Strength);
@@ -119,9 +119,9 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	{
 		SetHealth(FMath::Clamp(GetHealth(), 0, GetMaxHealth()));
 	}
-	else if (Data.EvaluatedData.Attribute == GetEnergyAttribute())
+	else if (Data.EvaluatedData.Attribute == GetAuraAttribute())
 	{
-		SetEnergy(FMath::Clamp(GetEnergy(), 0, GetMaxEnergy()));
+		SetAura(FMath::Clamp(GetAura(), 0, GetMaxAura()));
 	}
 	else if (Data.EvaluatedData.Attribute == GetOxygenAttribute())
 	{
@@ -139,19 +139,37 @@ void UBaseAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, 
 
 	if (Attribute == GetMaxHealthAttribute())
 	{
-		SetHealth(FMath::Clamp(NewValue, 0.f, GetMaxHealth()));
+		AdjustAttributeForMaxChange(Health, MaxHealth, NewValue, GetHealthAttribute());
 	}
-	else if (Attribute == GetMaxEnergyAttribute())
+	else if (Attribute == GetMaxAuraAttribute())
 	{
-		SetEnergy(FMath::Clamp(NewValue, 0.f, GetMaxEnergy()));
+		AdjustAttributeForMaxChange(Aura, MaxAura, NewValue, GetAuraAttribute());
 	}
 	else if (Attribute == GetMaxOxygenAttribute())
 	{
-		SetOxygen(FMath::Clamp(NewValue, 0.f, GetMaxOxygen()));
+		AdjustAttributeForMaxChange(Oxygen, MaxOxygen, NewValue, GetOxygenAttribute());
 	}
 	else if (Attribute == GetMaxDrowsinessAttribute())
 	{
-		SetDrowsiness(FMath::Clamp(NewValue, 0.f, GetMaxDrowsiness()));
+		AdjustAttributeForMaxChange(Drowsiness, MaxDrowsiness, NewValue, GetDrowsinessAttribute());
+	}
+}
+
+void UBaseAttributeSet::AdjustAttributeForMaxChange(
+	const FGameplayAttributeData& AffectedAttribute, 
+	const FGameplayAttributeData& MaxAttribute, 
+	float NewMaxValue, 
+	const FGameplayAttribute& AffectedAttributeProperty)
+{
+	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+	if (!ASC) return;
+
+	const float CurrentMax = MaxAttribute.GetCurrentValue();
+	if (!FMath::IsNearlyEqual(CurrentMax, NewMaxValue) && CurrentMax > 0.f)
+	{
+		const float CurrentValue = AffectedAttribute.GetCurrentValue();
+		const float NewDelta = (CurrentValue * NewMaxValue / CurrentMax) - CurrentValue;
+		ASC->ApplyModToAttribute(AffectedAttributeProperty, EGameplayModOp::Additive, NewDelta);
 	}
 }
 
@@ -166,10 +184,10 @@ void UBaseAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute,
 		SetHealth(FMath::Clamp(GetHealth(), 0, GetMaxHealth()));
 		bTopOffHealth = false;
 	}
-	else if (Attribute == GetMaxEnergyAttribute() && bTopOffEnergy)
+	else if (Attribute == GetMaxAuraAttribute() && bTopOffAura)
 	{
-		SetEnergy(FMath::Clamp(GetEnergy(), 0, GetMaxEnergy()));
-		bTopOffEnergy = false;
+		SetAura(FMath::Clamp(GetAura(), 0, GetMaxAura()));
+		bTopOffAura = false;
 	}
 	else if (Attribute == GetMaxOxygenAttribute() && bTopOffOxygen)
 	{
@@ -308,7 +326,7 @@ void UBaseAttributeSet::HandleIncomingXP(const FEffectProperties& Props)
 			PlayerInterface->GetCharacterContextComponent()->AddToAttributePoints(AttributePointsReward);
 			
 			bTopOffHealth = true;
-			bTopOffEnergy = true;
+			bTopOffAura = true;
 				
 			// PlayerInterface->GetCharacterContextComponent()->LevelUp(); Could Implement if needed
 		}
@@ -342,14 +360,14 @@ void UBaseAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxHealth, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_Energy(const FGameplayAttributeData& OldValue)
+void UBaseAttributeSet::OnRep_Aura(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Energy, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Aura, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_MaxEnergy(const FGameplayAttributeData& OldValue)
+void UBaseAttributeSet::OnRep_MaxAura(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxEnergy, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxAura, OldValue);
 }
 
 void UBaseAttributeSet::OnRep_Oxygen(const FGameplayAttributeData& OldValue)

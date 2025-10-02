@@ -2,6 +2,7 @@
 
 #include "UI/Widget/Inventory/Slots/SlotUserWidget.h"
 
+#include "TBGameplayTags.h"
 #include "Blueprint/DragDropOperation.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/Image.h"
@@ -99,7 +100,7 @@ void USlotUserWidget::NativeOnDragEnter(const FGeometry& InGeometry, const FDrag
 			
 			/* Highlight Slot */
 			// Does slot have a preference
-			if (UTBInventoryItem* HoverInventoryItem = HoverItemUserWidgetPtr->GetInventoryItem(); IsValid(HoverInventoryItem))
+			if (const UTBInventoryItem* HoverInventoryItem = HoverItemUserWidgetPtr->GetInventoryItem(); IsValid(HoverInventoryItem))
 			{
 				if (HasCategoryPreference())
 				{
@@ -145,7 +146,7 @@ bool USlotUserWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 	{
 		HoverItemWidget->SetHoveredOverWidget(nullptr);
 		HoverItemWidget->OnOpposingMouseLetGo.RemoveAll(this);
-		if (UTBInventoryItem* HoverInventoryItem = HoverItemWidget->GetInventoryItem(); IsValid(HoverInventoryItem))
+		if (const UTBInventoryItem* HoverInventoryItem = HoverItemWidget->GetInventoryItem(); IsValid(HoverInventoryItem))
 		{
 			RequestPlaceItemInSlot(HoverItemWidget, HoverInventoryItem, true);
 			return true;
@@ -158,7 +159,7 @@ void USlotUserWidget::HandleOpposingClick(UHoverItemUserWidget* HoverWidget)
 {
 	if (IsValid(HoverWidget))
 	{
-		if (UTBInventoryItem* HoverInventoryItem = HoverWidget->GetInventoryItem(); IsValid(HoverInventoryItem))
+		if (const UTBInventoryItem* HoverInventoryItem = HoverWidget->GetInventoryItem(); IsValid(HoverInventoryItem))
 		{
 			RequestPlaceItemInSlot(HoverWidget, HoverInventoryItem, false);
 		}
@@ -243,7 +244,9 @@ void USlotUserWidget::SetInventoryItem(const UTBInventoryItem* NewItem)
 
 bool USlotUserWidget::CanAcceptItem(const UTBInventoryItem* Item) const
 {
-	return (bAvailable && ((HasCategoryPreference()) ? MatchesCategory(Item) : true));
+	return (bAvailable && ((HasCategoryPreference()) ?
+							(MatchesCategory(Item) && Item->GetItemStatus() != FTBGameplayTags::Get().Status_Locked)
+							: true));
 }
 
 bool USlotUserWidget::MatchesCategory(const UTBInventoryItem* Item) const

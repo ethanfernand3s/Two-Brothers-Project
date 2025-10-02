@@ -38,11 +38,6 @@ ABaseAnimalCharacter::ABaseAnimalCharacter()
 void ABaseAnimalCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	if (!HasAuthority()) return;
-	AnimalAIController = Cast<AAnimalAIController>(NewController);
-
-	AnimalAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
-	AnimalAIController->RunBehaviorTree(BehaviorTree);
 }
 
 void ABaseAnimalCharacter::BeginPlay()
@@ -119,8 +114,9 @@ void ABaseAnimalCharacter::LoadProgress()
 
 	if (!bIsInitialised)
 	{
-		AnimalAbilitySystemComponent->AddIvsToAttributes(CharacterContextComponent->GetIVSet());
+		CharacterContextComponent->InitializeCharacterContext();
 		AnimalAbilitySystemComponent->SetBaseStats(CharacterContextComponent->GetBaseCombatPower(), CharacterContextComponent->GetLevel());
+		AnimalAbilitySystemComponent->AddIvsToAttributes(CharacterContextComponent->GetIVSet());
 		
 		bIsInitialised = true;
 	}
@@ -166,7 +162,18 @@ float ABaseAnimalCharacter::GetXPMultiplierAmount()
 {
 	// TODO: Adjust based on current Multiplier Bonuses
 	return 1;
-};
+}
+
+UTBInventoryComponent* ABaseAnimalCharacter::GetInventoryComponent() const
+{
+	// Temporarily getting inventory from player, in the future both animals and the parasite will contain an inventory without a need for the PC
+	if (ATBPlayerController* TBPC = Cast<ATBPlayerController>(GetController()))
+	{
+		return TBPC->GetInventoryComponent();
+	}
+
+	return nullptr;
+}
 
 FPossessionSocketData ABaseAnimalCharacter::FindClosestPossessionSocket(const FVector& TraceImpactPoint) const
 {

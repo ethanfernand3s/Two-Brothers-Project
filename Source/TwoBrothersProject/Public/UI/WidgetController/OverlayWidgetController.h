@@ -22,6 +22,6 @@ public:
 	
 	FOnStatChangedSignature HealthChanged;
 	FOnStatChangedSignature MaxHealthChanged;
-	FOnStatChangedSignature EnergyChanged;
-	FOnStatChangedSignature MaxEnergyChanged;
+	FOnStatChangedSignature AuraChanged;
+	FOnStatChangedSignature MaxAuraChanged;
 };

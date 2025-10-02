@@ -19,23 +19,23 @@ void APlayerHUD::InitUI(ATBPlayerController* PC)
 	
 	if (WCParams == nullptr) SetupWidgetParams(PC);
 	else UpdateAnimalWidgetParams(PC);
+
+	if (OverlayWidgetController != nullptr)
+	{
+		OverlayWidgetController->SetWidgetControllerParams(WCParams);
+		OverlayWidgetController->RebindToDependencies();
+	}
+	if (InventoryWidgetController != nullptr)
+	{
+		InventoryWidgetController->SetWidgetControllerParams(WCParams);
+		InventoryWidgetController->RebindToDependencies();
+	}
 	
 	InitOverlay(PC);
 	
 	if (IsValid(PC->GetInventoryComponent()) && PC->GetInventoryComponent()->GetInventoryWidget() == nullptr)
 	{
 		PC->GetInventoryComponent()->SetInventoryWidget(InitInventory(PC));
-	}
-	
-	if (OverlayWidgetController != nullptr)
-    {
-    	OverlayWidgetController->SetWidgetControllerParams(WCParams);
-    	OverlayWidgetController->RebindToDependencies();
-    }
-	if (InventoryWidgetController != nullptr)
-	{
-		InventoryWidgetController->SetWidgetControllerParams(WCParams);
-		InventoryWidgetController->RebindToDependencies();
 	}
 
 	// Setup Input
@@ -51,15 +51,21 @@ void APlayerHUD::InitOverlay(ATBPlayerController* PC)
 
 	if (OverlayUserWidget == nullptr)
 	{
+		// Create Widget
 		OverlayUserWidget = CreateWidget<UOverlayUserWidget>(GetWorld(), OverlayWidgetClass);
-		OverlayWidgetController = GetOverlayWidgetController(PC);
+		if (!IsValid(OverlayUserWidget)) return;
+
+		// Setup Widget Params
+		OverlayWidgetController = GetOverlayWidgetController();
 		OverlayUserWidget->SetWidgetController(OverlayWidgetController);
 		OverlayWidgetController->BroadcastInitialValues();
+
+		// Setup Viewport
 		OverlayUserWidget->AddToViewport();
 	}
 }
 
-UOverlayWidgetController* APlayerHUD::GetOverlayWidgetController(ATBPlayerController* PC)
+UOverlayWidgetController* APlayerHUD::GetOverlayWidgetController()
 { 
 	if (OverlayWidgetController == nullptr)
 	{
@@ -82,7 +88,7 @@ UInventoryUserWidget* APlayerHUD::InitInventory(ATBPlayerController* PC)
 	if (!IsValid(InventoryUserWidget)) return nullptr;
 
 	// Setup Widget Params
-	InventoryWidgetController = GetInventoryWidgetController(PC);
+	InventoryWidgetController = GetInventoryWidgetController();
 	InventoryUserWidget->SetWidgetController(InventoryWidgetController);
 	InventoryWidgetController->BroadcastInitialValues();
 
@@ -93,7 +99,7 @@ UInventoryUserWidget* APlayerHUD::InitInventory(ATBPlayerController* PC)
 	return InventoryUserWidget;
 }
 
-UInventoryWidgetController* APlayerHUD::GetInventoryWidgetController(ATBPlayerController* PC)
+UInventoryWidgetController* APlayerHUD::GetInventoryWidgetController()
 {
 	if (InventoryWidgetController == nullptr)
 	{
@@ -128,4 +134,5 @@ void APlayerHUD::UpdateAnimalWidgetParams(ATBPlayerController* TBPC)
 		WCParams->AnimalAS = TBPC->GetCurrentAnimalsAttributeSet();
 		WCParams->AnimalPI = TBPC->GetActivePlayerInterface();
 	}
+	
 }

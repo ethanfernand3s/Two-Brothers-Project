@@ -1,14 +1,32 @@
 #include "UI/Widget/Overlay/OverlayUserWidget.h"
 
+#include "Animation/WidgetAnimation.h"
+#include "UI/Widget/Inventory/Slots/SlotContainerUserWidget.h"
 #include "UI/Widget/Overlay/CharacterDetails/CharacterDetailsOverlayUserWidget.h"
 #include "UI/WidgetController/OverlayWidgetController.h"
+
+void UOverlayUserWidget::SetWidgetController(UBaseWidgetController* InWidgetController)
+{
+	Super::SetWidgetController(InWidgetController);
+	ParasiteDetailsOverlay->SetWidgetController(InWidgetController);
+	AnimalDetailsOverlay->SetWidgetController(InWidgetController);
+
+	MainAbility_SlotContainer_Parasite->SetWidgetController(InWidgetController);
+	MainAbility_SlotContainer_Parasite->SetContainerOwner(true);
+	DefaultAbilities_SlotContainer_Parasite->SetWidgetController(InWidgetController);
+	DefaultAbilities_SlotContainer_Parasite->SetContainerOwner(true);
+
+	MainAbility_SlotContainer_Animal->SetWidgetController(InWidgetController);
+	MainAbility_SlotContainer_Animal->SetContainerOwner(false);
+	DefaultAbilities_SlotContainer_Animal->SetWidgetController(InWidgetController);
+	DefaultAbilities_SlotContainer_Animal->SetContainerOwner(false);
+}
 
 void UOverlayUserWidget::OnWidgetControllerSet()
 {
 	if ((OverlayWidgetController = Cast<UOverlayWidgetController>(WidgetController)))
 	{
-		if (OverlayWidgetController->IsAnimalInhabited()) SwapOverlayPositions(true);
-		else HideAnimalDetailsOverlay();
+		SwapOverlayPositions(OverlayWidgetController->IsAnimalInhabited());
 			
 		// Forward delegates straight to children via lambdas
 		OverlayWidgetController->OnAttributePointsChangedDelegate.AddLambda(
@@ -53,43 +71,55 @@ void UOverlayUserWidget::OnWidgetControllerSet()
 					bIsParasiteVal, &UCharacterDetailsOverlayUserWidget::OnMaxHealthUpdated, NewMaxHealth);
 			});
 
-		OverlayWidgetController->EnergyChanged.AddLambda(
-			[this](float NewEnergy, bool bIsParasiteVal)
+		OverlayWidgetController->AuraChanged.AddLambda(
+			[this](float NewAura, bool bIsParasiteVal)
 			{
 				ForwardToChild<UCharacterDetailsOverlayUserWidget>(
-					bIsParasiteVal, &UCharacterDetailsOverlayUserWidget::OnEnergyUpdated, NewEnergy);
+					bIsParasiteVal, &UCharacterDetailsOverlayUserWidget::OnAuraUpdated, NewAura);
 			});
 
-		OverlayWidgetController->MaxEnergyChanged.AddLambda(
-			[this](float NewMaxEnergy, bool bIsParasiteVal)
+		OverlayWidgetController->MaxAuraChanged.AddLambda(
+			[this](float NewMaxAura, bool bIsParasiteVal)
 			{
 				ForwardToChild<UCharacterDetailsOverlayUserWidget>(
-					bIsParasiteVal, &UCharacterDetailsOverlayUserWidget::OnMaxEnergyUpdated, NewMaxEnergy);
+					bIsParasiteVal, &UCharacterDetailsOverlayUserWidget::OnMaxAuraUpdated, NewMaxAura);
 			});
 	}
 }
 
-void UOverlayUserWidget::HideAnimalDetailsOverlay()
+void UOverlayUserWidget::OnWidgetControllerRebound(bool bIsAnimalInhabited)
 {
-	if (bPositionNeedsSwap)
-	{
-		SwapOverlayPositions(false);
-	}
-	AnimalDetailsOverlay->SetVisibility(ESlateVisibility::Collapsed);
+	SwapOverlayPositions(bIsAnimalInhabited);
 }
 
 void UOverlayUserWidget::SwapOverlayPositions(bool bIsAnimalInhabited)
 {
-	if (bIsAnimalInhabited)
+	if (bIsAnimalInhabited && !bWasAnimalInhabited)
 	{
+		AnimalDetailsOverlay->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		DefaultAbilities_SlotContainer_Animal->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		MainAbility_SlotContainer_Animal->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		
 		// Play Anim forward
 		PlayAnimation(SwapOverlayPositionsAnim);
-		bPositionNeedsSwap = true;
 	}
-	else
+	else if (!bIsAnimalInhabited && bWasAnimalInhabited)
 	{
 		// Play Anim reverse
 		PlayAnimationReverse(SwapOverlayPositionsAnim);
-		bPositionNeedsSwap = false;
+
+		float AnimTime = SwapOverlayPositionsAnim->GetEndTime() - SwapOverlayPositionsAnim->GetStartTime();
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle,[this]()
+		{
+			if (AnimalDetailsOverlay)
+			{
+				AnimalDetailsOverlay->SetVisibility(ESlateVisibility::Collapsed);
+				DefaultAbilities_SlotContainer_Animal->SetVisibility(ESlateVisibility::Collapsed);
+				MainAbility_SlotContainer_Animal->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		},AnimTime, false);
 	}
+
+	bWasAnimalInhabited = bIsAnimalInhabited;
 }

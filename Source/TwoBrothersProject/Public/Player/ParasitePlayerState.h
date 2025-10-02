@@ -46,11 +46,6 @@ public:
 	bool bIsFirstServerEnter = true;
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UCharacterContextComponent> CharacterContextComponent;
-
-	UPROPERTY(EditAnywhere,Category="Ability System")
-	TObjectPtr<UParasiteAbilitySet> StartupAbilitySet;
-	UPROPERTY(EditAnywhere,Category="Ability System")
-	TObjectPtr<UParasiteAbilitySet> StartupPassiveAbilitySet;
 	
 protected:
 	
@@ -59,9 +54,9 @@ protected:
 private:
 	
 	// GAS
-	UPROPERTY(VisibleAnywhere,Category="Ability System")
+	UPROPERTY(EditDefaultsOnly,Category="Ability System")
 	TObjectPtr<UParasiteAbilitySystemComponent> ParasiteAbilitySystem;
 
-	UPROPERTY(VisibleAnywhere,Category="Ability System")
+	UPROPERTY(EditDefaultsOnly,Category="Ability System")
 	UParasiteAttributeSet* ParasiteAttributeSet;
 };

@@ -30,8 +30,8 @@ public:
 	// Attribute Callbacks
 	void OnHealthUpdated(float NewHealth);
 	void OnMaxHealthUpdated(float NewMaxHealth);
-	void OnEnergyUpdated(float NewEnergy);
-	void OnMaxEnergyUpdated(float NewMaxEnergy);
+	void OnAuraUpdated(float NewAura);
+	void OnMaxAuraUpdated(float NewMaxAura);
 	
 private:
 	
@@ -40,7 +40,7 @@ private:
 	TObjectPtr<UProgressBar> ProgressBar_Health;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UProgressBar> ProgressBar_Energy;
+	TObjectPtr<UProgressBar> ProgressBar_Aura;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> ProgressBar_XP;
@@ -66,6 +66,6 @@ private:
 	
 	float Health = 100;
 	float MaxHealth = 100;
-	float Energy = 100;
-	float MaxEnergy = 100;
+	float Aura = 100;
+	float MaxAura = 100;
 };

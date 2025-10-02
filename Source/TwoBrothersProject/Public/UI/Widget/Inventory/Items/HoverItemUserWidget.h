@@ -30,8 +30,6 @@ public:
 	void SetLevel(int32 Level, const FLinearColor& RarityColor);
 	void SetLevelProgress(float ProgressPercentage);
 	
-	void SetUnlocked(bool bMeetsItemRequirements);
-	
 	void UpdateStackCount(const int32 Count);
 	int32 GetStackCount() const { return StackCount; }
 
@@ -43,7 +41,7 @@ public:
 	int32 GetPreviousGridIndex() const { return PreviousGridIndex; }
 	void SetPreviousGridIndex(int32 Index) { PreviousGridIndex = Index; }
 	
-	UTBInventoryItem* GetInventoryItem() const { return InventoryItem.Get(); }
+	const UTBInventoryItem* GetInventoryItem() const { return InventoryItem.Get(); }
 	void SetInventoryItem(const UTBInventoryItem* Item);
 
 	USlotContainerUserWidget* GetOwningSlotContainer() const { return OwningSlotContainer.Get(); }
@@ -84,7 +82,6 @@ private:
 	
 	bool bIsStackable{false};
 	bool bHasLevel{false};
-	bool bIsUnlocked{false};
 	
 	// Current Stack Count
 	int32 StackCount{0};

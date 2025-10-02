@@ -31,19 +31,16 @@ void UBaseAbilitySystemComponent::Server_HandleAbilityStatusChanged_Implementati
 	const FGameplayTag& NewItemStatus = Item->GetItemStatus();
 	const FGameplayTag& AbilityTag = AbilityFragment->GetAbilityTag();
 	FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
-	if (AbilitySpec)
+	
+	if (AbilitySpec) // The ability has already been given to the ASC
 	{
-		const FGameplayTag& OldItemStatus = GetStatusFromSpec(*AbilitySpec);
-		if (OldItemStatus == NewItemStatus) return; // Nothing to change
-		
-		// The ability has already been given to the ASC
-		if (NewItemStatus == Tags.Status_Unlocked && (OldItemStatus == Tags.Status_Equipped))
+		if (NewItemStatus == Tags.Status_Unlocked)
 		{
 			UnEquipAbility(AbilitySpec, bIsPassiveAbility);
 		}
-		else if (NewItemStatus == Tags.Status_Equipped && (OldItemStatus == Tags.Status_Unlocked))
+		else if (NewItemStatus == Tags.Status_Equipped)
 		{
-			EquipAbility(AbilitySpec, SlotInputTag, bIsPassiveAbility);
+			if (SlotInputTag.IsValid()) EquipAbility(AbilitySpec, SlotInputTag, bIsPassiveAbility);
 		}
 		else // New status is locked or none
 		{
@@ -64,21 +61,24 @@ void UBaseAbilitySystemComponent::Server_HandleAbilityStatusChanged_Implementati
 		
 		const TSubclassOf<UBaseGameplayAbility>& AbilityClass = AbilityFragment->GetAbilityClass();
 		
-		UnlockAbility(AbilityClass, AbilityLevel, NewItemStatus, CreatureTypeTag);
+		FGameplayAbilitySpecHandle NewSpecHandle = UnlockAbility(AbilityClass, AbilityLevel, NewItemStatus, CreatureTypeTag);
 		if (NewItemStatus == Tags.Status_Equipped)
 		{
-			EquipAbility(AbilitySpec, SlotInputTag, bIsPassiveAbility);
+			if (FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(NewSpecHandle))
+			{
+				if (SlotInputTag.IsValid())  EquipAbility(Spec, SlotInputTag, bIsPassiveAbility);
+			}
 		}
 	}
 }
 
-void UBaseAbilitySystemComponent::UnlockAbility(
+FGameplayAbilitySpecHandle UBaseAbilitySystemComponent::UnlockAbility(
 	const TSubclassOf<UBaseGameplayAbility>& AbilityClass,
 	int32 AbilityLevel,
 	const FGameplayTag& NewStatus,
 	const FGameplayTag& CreatureTypeTag)
 {
-	if (!AbilityClass) return;
+	if (!AbilityClass) return FGameplayAbilitySpecHandle();
 
 	FGameplayAbilitySpec NewSpec(AbilityClass, AbilityLevel);
 
@@ -93,8 +93,13 @@ void UBaseAbilitySystemComponent::UnlockAbility(
 	}
 
 	// Grant to ASC
-	GiveAbility(NewSpec);
-	MarkAbilitySpecDirty(NewSpec);
+	FGameplayAbilitySpecHandle Handle = GiveAbility(NewSpec);
+	if (Handle.IsValid())
+	{
+		MarkAbilitySpecDirty(NewSpec);
+	}
+
+	return Handle;
 	// TODO: Come back to once local predicted approach is in place
 	// ClientUpdateAbilityStatus(GetAbilityTagFromSpec(NewSpec),FTBGameplayTags::Get().Status_Unlocked, AbilityLevel);
 }
@@ -222,14 +227,42 @@ void UBaseAbilitySystemComponent::AssignSlotToAbility(FGameplayAbilitySpec& Spec
 	Spec.GetDynamicSpecSourceTags().AddTag(Slot);
 }
 
+void UBaseAbilitySystemComponent::Server_DirectUnEquipAbility_Implementation(const UTBInventoryItem* Item)
+{
+	if (!IsValid(Item)) return;
+	
+	const auto& Tags = FTBGameplayTags::Get();
+	
+	const FAbilityFragment* AbilityFragment = GetFragment<FAbilityFragment>(Item, Tags.Fragments_Ability);
+	if (!AbilityFragment) return;
+	
+	const FGameplayTag& AbilityType = Item->GetPreferredSlotContainerTag();
+	bool bIsPassiveAbility = (AbilityType == Tags.ItemCategories_Abilities_Passive);
+	
+	const FGameplayTag& AbilityTag = AbilityFragment->GetAbilityTag();
+	FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
+
+	if (AbilitySpec != nullptr)
+	{
+		UnEquipAbility(AbilitySpec, bIsPassiveAbility);
+	}
+}
+
 void UBaseAbilitySystemComponent::UnEquipAbility(FGameplayAbilitySpec* AbilitySpec, bool bIsPassiveAbility)
 {
+	const FGameplayTag& OldItemStatus = GetStatusFromSpec(*AbilitySpec);
+	if (OldItemStatus != FTBGameplayTags::Get().Status_Equipped) return;
+	
 	if (bIsPassiveAbility)
 	{
 		MulticastActivatePassiveEffect(GetAbilityTagFromSpec(*AbilitySpec), false);
 		DeactivatePassiveEffect.Broadcast(GetAbilityTagFromSpec(*AbilitySpec));
 	}
 	ClearSlot(AbilitySpec);
+	AbilitySpec->GetDynamicSpecSourceTags().RemoveTag(OldItemStatus);
+	AbilitySpec->GetDynamicSpecSourceTags().AddTag(FTBGameplayTags::Get().Status_Unlocked);
+
+	MarkAbilitySpecDirty(*AbilitySpec);
 }
 
 void UBaseAbilitySystemComponent::ClearSlot(FGameplayAbilitySpec* Spec)
@@ -245,7 +278,7 @@ void UBaseAbilitySystemComponent::MulticastActivatePassiveEffect_Implementation(
 	else DeactivatePassiveEffect.Broadcast(AbilityTag);
 }
 
-void UBaseAbilitySystemComponent::AddCharacterAbility(const TSubclassOf<UBaseGameplayAbility>& GameplayAbilityClass,
+void UBaseAbilitySystemComponent::AddCharacterAbility(const TSubclassOf<UGameplayAbility>& GameplayAbilityClass,
                                                       int32 AbilityLevel, const FGameplayTag& InputTag)
 {
 	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(GameplayAbilityClass, AbilityLevel);
@@ -256,7 +289,7 @@ void UBaseAbilitySystemComponent::AddCharacterAbility(const TSubclassOf<UBaseGam
 	AbilitiesGivenDelegate.Broadcast();
 }
 
-void UBaseAbilitySystemComponent::AddCharacterPassiveAbility(const TSubclassOf<UBaseGameplayAbility>& GameplayAbilityClass,
+void UBaseAbilitySystemComponent::AddCharacterPassiveAbility(const TSubclassOf<UGameplayAbility>& GameplayAbilityClass,
 	int32 AbilityLevel)
 {
 	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(GameplayAbilityClass, AbilityLevel);
@@ -432,63 +465,36 @@ void UBaseAbilitySystemComponent::SetBaseStats(float CurrentCombatPower, int32 L
 	}
 
 	// Assign combat stats
-	const float Health        = StatValues[0];
-	const float Strength      = StatValues[1];
-	const float Defense       = StatValues[2];
-	const float AuraStrength  = StatValues[3];
-	const float AuraDefense   = StatValues[4];
-	const float Speed         = StatValues[5];
+	FCharacterCombatValues CombatValues;
+	CombatValues.Health = StatValues[0];
+	CombatValues.Strength = StatValues[1];
+	CombatValues.Defense = StatValues[2];
+	CombatValues.AuraStrength = StatValues[3];
+	CombatValues.AuraDefense = StatValues[4];
+	CombatValues.Speed = StatValues[5];
 
-	// Build GameplayEffectSpec
-	FGameplayEffectSpecHandle SpecH =
-		MakeOutgoingSpec(ApplyIvsGameplayEffect, 1.f, MakeEffectContext());
-
-	FGameplayEffectSpec* Spec = SpecH.Data.Get();
-	if (!Spec) return;
-
-	const static FTBGameplayTags GameplayTags = FTBGameplayTags::Get();
-
-	// Survival
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Energy, 100.f);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxEnergy, 100.f);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Oxygen, 100.f);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxOxygen, 100.f);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Drowsiness, 100.f);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxDrowsiness, 100.f);
-
-	// Combat
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Health, Health);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxHealth, Health);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Strength, Strength);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_AuraStrength, AuraStrength);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Defense, Defense);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_AuraDefense, AuraDefense);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Speed, Speed);
-
-	ApplyGameplayEffectSpecToSelf(*Spec);
+	SetBaseStats(CombatValues);
 }
 
 void UBaseAbilitySystemComponent::SetBaseStats(const FCharacterCombatValues& CustomCombatValues)
 {
 	FGameplayEffectSpecHandle SpecH =
-		MakeOutgoingSpec(ApplyIvsGameplayEffect, 1.f, MakeEffectContext());
+		MakeOutgoingSpec(BaseStatsGameplayEffect, 1.f, MakeEffectContext());
 
 	FGameplayEffectSpec* Spec = SpecH.Data.Get();
 	if (!Spec) return;
 
 	const static FTBGameplayTags GameplayTags = FTBGameplayTags::Get();
 
+	// @Note: Current Attributes are clamped to max in attribute set
+	
 	// Survival Stats
 	// TODO: Change later to have these be different with each animal
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Energy, 100.f);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxEnergy, 100.f);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Oxygen, 100.f);
+	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxAura, 100.f);
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxOxygen, 100.f);
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Drowsiness, 100.f);
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxDrowsiness, 100.f);
 
 	// Combat Stats
-	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Health, CustomCombatValues.Health);
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_MaxHealth, CustomCombatValues.Health);
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_Strength, CustomCombatValues.Strength);
 	Spec->SetSetByCallerMagnitude(GameplayTags.Attributes_AuraStrength, CustomCombatValues.AuraStrength);
@@ -509,6 +515,8 @@ void UBaseAbilitySystemComponent::AddIvsToAttributes(const FCharacterCombatValue
 
 	const static FTBGameplayTags GameplayTags = FTBGameplayTags::Get();
 
+	// @Note: Current Attributes are clamped to max in attribute set
+	
 	// Combat Stats
 	Spec->SetSetByCallerMagnitude(
 		GameplayTags.Attributes_MaxHealth, CharIvSet.Health);
@@ -525,7 +533,6 @@ void UBaseAbilitySystemComponent::AddIvsToAttributes(const FCharacterCombatValue
 	
 	Spec->SetSetByCallerMagnitude(
 		GameplayTags.Attributes_Speed, CharIvSet.Speed);
-	
 	
 	ApplyGameplayEffectSpecToSelf(*Spec);
 }

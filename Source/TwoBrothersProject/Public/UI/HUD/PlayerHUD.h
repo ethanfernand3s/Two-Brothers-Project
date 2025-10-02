@@ -35,11 +35,11 @@ public:
 	
 	/** @remark Must be called after actor info is initialized*/
 	void InitOverlay(ATBPlayerController* PC);
-	UOverlayWidgetController* GetOverlayWidgetController(ATBPlayerController* PC);
+	UOverlayWidgetController* GetOverlayWidgetController();
 
 	/** @remark Must be called after actor info is initialized*/
 	UInventoryUserWidget* InitInventory(ATBPlayerController* PC);
-	UInventoryWidgetController* GetInventoryWidgetController(ATBPlayerController* PC);
+	UInventoryWidgetController* GetInventoryWidgetController();
 
 	void SetupWidgetParams(ATBPlayerController* PC);
 	void UpdateAnimalWidgetParams(ATBPlayerController* PC);

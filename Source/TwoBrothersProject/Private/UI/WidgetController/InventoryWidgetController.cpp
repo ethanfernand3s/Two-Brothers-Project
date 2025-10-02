@@ -17,16 +17,18 @@
 
 void UInventoryWidgetController::BroadcastInitialValues()
 {
+	Super::BroadcastInitialValues();
+	
 	// Parasite
 	if (ParasiteAS.IsValid())
 	{
-		BroadcastAllAttributes(ParasiteAS.Get(), true);
+		BroadcastAllAttributes(ParasiteASC.Get(), ParasiteAS.Get(), true);
 	}
 	
 	// Animal
 	if (AnimalAS.IsValid())
 	{
-		BroadcastAllAttributes(AnimalAS.Get(),false);
+		BroadcastAllAttributes(AnimalASC.Get(), AnimalAS.Get(),false);
 	}
 
 	// Inventory
@@ -40,23 +42,25 @@ void UInventoryWidgetController::BroadcastInitialValues()
 }
 
 // Loop over all bindings in an AttributeSet and broadcast values
-void UInventoryWidgetController::BroadcastAllAttributes(UBaseAttributeSet* AttributeSet, bool bIsParasiteVal) const
+void UInventoryWidgetController::BroadcastAllAttributes(UAbilitySystemComponent* ASC, UBaseAttributeSet* AttributeSet, bool bIsParasiteVal) const
 {
 	for (const FTagAttributeBinding& Binding : AttributeSet->TagsToCombatAttributes)
 	{
 		if (Binding.HasSecondary())
 		{
-			BroadcastAttributePair(Binding, AttributeSet, bIsParasiteVal);
+			BroadcastAttributePair(ASC, Binding, bIsParasiteVal);
 		}
 		else
 		{
-			BroadcastSingleAttribute(Binding, AttributeSet, bIsParasiteVal);
+			BroadcastSingleAttribute(ASC, Binding, bIsParasiteVal);
 		}
 	}
 }
 
 void UInventoryWidgetController::BindCallbacksToDependencies()
 {
+	Super::BindCallbacksToDependencies();
+	
 									/* Bind Character Context */
 	// Parasite
 	if (ParasiteASC.IsValid() && ParasiteAS.IsValid())
@@ -75,6 +79,7 @@ void UInventoryWidgetController::BindCallbacksToDependencies()
 void UInventoryWidgetController::UnBindCallbacks()
 {
 	Super::UnBindCallbacks();
+	if (!AnimalAttributeHandles.IsEmpty()) return;
 	for (const auto& KVP : AnimalAttributeHandles)
 	{
 		AnimalASC->GetGameplayAttributeValueChangeDelegate(KVP.Key).Remove(KVP.Value);
@@ -92,29 +97,28 @@ void UInventoryWidgetController::BindAllAttributeCallbacks(UAbilitySystemCompone
 {
 	for (const FTagAttributeBinding& Binding : AttributeSet->TagsToCombatAttributes)
 	{
-		BindAttributeCallback(ASC, Binding, AttributeSet, bIsParasiteVal);
+		BindAttributeCallback(ASC, Binding, bIsParasiteVal);
 	}
 }
 
 // Bind attribute change callbacks for one binding
 void UInventoryWidgetController::BindAttributeCallback( UAbilitySystemComponent* ASC,
 														const FTagAttributeBinding& Binding,
-														UBaseAttributeSet* AttributeSet,
 														bool bIsParasiteVal)
 {
 	const FGameplayAttribute PrimaryAttribute = Binding.PrimaryAttributeFunc();
 
 	// Bind Primary
 	FDelegateHandle PrimaryHandle = ASC->GetGameplayAttributeValueChangeDelegate(PrimaryAttribute).AddLambda(
-		[this, Binding, AttributeSet, bIsParasiteVal](const FOnAttributeChangeData& Data)
+		[this, ASC, &Binding, bIsParasiteVal](const FOnAttributeChangeData& Data)
 		{
 			if (Binding.HasSecondary())
 			{
-				BroadcastAttributePair(Binding, AttributeSet, bIsParasiteVal);
+				BroadcastAttributePair(ASC, Binding, bIsParasiteVal);
 			}
 			else
 			{
-				BroadcastSingleAttribute(Binding, AttributeSet, bIsParasiteVal);
+				BroadcastSingleAttribute(ASC, Binding, bIsParasiteVal);
 			}
 		}
 	);
@@ -131,9 +135,9 @@ void UInventoryWidgetController::BindAttributeCallback( UAbilitySystemComponent*
 		const FGameplayAttribute SecondaryAttribute = Binding.SecondaryAttributeFunc();
 
 		FDelegateHandle SecondaryHandle = ASC->GetGameplayAttributeValueChangeDelegate(SecondaryAttribute).AddLambda(
-			[this, Binding, AttributeSet, bIsParasiteVal](const FOnAttributeChangeData& Data)
+			[this, ASC, &Binding, bIsParasiteVal](const FOnAttributeChangeData& Data)
 			{
-				BroadcastAttributePair(Binding, AttributeSet, bIsParasiteVal);
+				BroadcastAttributePair(ASC, Binding, bIsParasiteVal);
 			}
 		);
 
@@ -145,26 +149,26 @@ void UInventoryWidgetController::BindAttributeCallback( UAbilitySystemComponent*
 }
 
 // Broadcast a Primary/Secondary attribute pair (Current + Max)
-void UInventoryWidgetController::BroadcastAttributePair(const FTagAttributeBinding& Binding, 
-													    UBaseAttributeSet* AttributeSet,
+void UInventoryWidgetController::BroadcastAttributePair(UAbilitySystemComponent* ASC,
+													    const FTagAttributeBinding& Binding, 
 													    bool bIsParasiteVal) const
 {
 	FTBAttributeInfo CurrentInfo = AttributeInfoLibrary::FindAttributeInfo(Binding.PrimaryTag);
-	CurrentInfo.AttributeValue = Binding.PrimaryAttributeFunc().GetNumericValue(AttributeSet);
+	CurrentInfo.AttributeValue = ASC->GetNumericAttribute(Binding.PrimaryAttributeFunc());
 
 	FTBAttributeInfo MaxInfo = AttributeInfoLibrary::FindAttributeInfo(Binding.SecondaryTag);
-	MaxInfo.AttributeValue = Binding.SecondaryAttributeFunc().GetNumericValue(AttributeSet);
+	MaxInfo.AttributeValue = ASC->GetNumericAttribute(Binding.SecondaryAttributeFunc());
 
 	CurrentAndMax_AttributeInfoDelegate.Broadcast(CurrentInfo, MaxInfo, bIsParasiteVal);
 }
 
 // Broadcast a single attribute (no secondary)
-void UInventoryWidgetController::BroadcastSingleAttribute(const FTagAttributeBinding& Binding, 
-														  UBaseAttributeSet* AttributeSet,
+void UInventoryWidgetController::BroadcastSingleAttribute(UAbilitySystemComponent* ASC,
+														  const FTagAttributeBinding& Binding, 
 														  bool bIsParasiteVal) const
 {
 	FTBAttributeInfo Info = AttributeInfoLibrary::FindAttributeInfo(Binding.PrimaryTag);
-	Info.AttributeValue = Binding.PrimaryAttributeFunc().GetNumericValue(AttributeSet);
+	Info.AttributeValue = ASC->GetNumericAttribute(Binding.PrimaryAttributeFunc());
 
 	Single_AttributeInfoDelegate.Broadcast(Info, bIsParasiteVal);
 }
@@ -176,7 +180,7 @@ void UInventoryWidgetController::UpgradeAttribute(const FGameplayTag& AttributeT
 	if (IsValid(ActiveASC)) ActiveASC->UpgradeAttribute(AttributeTag);
 }
 
-void UInventoryWidgetController::TryUnlockItem(UTBInventoryItem* Item, bool bIsEquippableSlot) const
+void UInventoryWidgetController::UpdateItemStatus(const UTBInventoryItem* Item, bool bIsEquippableSlot) const
 {
 	if (!CachedInventory.IsValid()) return;
 	
@@ -185,12 +189,19 @@ void UInventoryWidgetController::TryUnlockItem(UTBInventoryItem* Item, bool bIsE
 	
 	const UCharacterContextComponent* CharacterContextComp = ActivePI->GetCharacterContextComponent();
 	if (!IsValid(CharacterContextComp)) return;
-	
-	CachedInventory->Server_UpdateItemStatus(Item, bIsEquippableSlot, CharacterContextComp);
+
+	// Illegal Otra Vez
+	CachedInventory->Server_UpdateItemStatus(const_cast<UTBInventoryItem*>(Item), bIsEquippableSlot, CharacterContextComp);
 }
 
 void UInventoryWidgetController::HandleAbilityStatusChanged(const UTBInventoryItem* Item, FGameplayTag SlotInputTag)
 {
 	UBaseAbilitySystemComponent* ActiveASC = GetActiveASC(!bIsParasiteFocusedCharacter);
 	if (IsValid(ActiveASC)) ActiveASC->HandleAbilityStatusChanged(Item, SlotInputTag);
+}
+
+void UInventoryWidgetController::UnEquipAbility(const UTBInventoryItem* Item)
+{
+	UBaseAbilitySystemComponent* ActiveASC = GetActiveASC(!bIsParasiteFocusedCharacter);
+	if (IsValid(ActiveASC)) ActiveASC->Server_DirectUnEquipAbility(Item);
 }

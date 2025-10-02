@@ -15,10 +15,10 @@ class TWOBROTHERSPROJECT_API UBaseProjectileAbility : public UBaseGameplayAbilit
 {
 	GENERATED_BODY()
 
-	protected:
-
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;\
-
+public:
 	UPROPERTY(editAnywhere,BlueprintReadOnly)
 	TSubclassOf<AProjectileActor> ProjectileActor;
+	protected:
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+
 };

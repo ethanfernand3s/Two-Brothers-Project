@@ -30,7 +30,7 @@ public:
 	
 	/* Used to initialize character stats outside the gameplay ability system. */
 	UFUNCTION(BlueprintCallable, Category = "Character Context")
-	 void InitializeCharacterContext();
+	 void InitializeCharacterContext(float ExternalBaseCombatPower = -1);
 
 	// TODO: Move random gen logic to creature factory spawner 
 	/**

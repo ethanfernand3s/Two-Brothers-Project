@@ -100,11 +100,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Energy)
-	FGameplayAttributeData Energy;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Aura)
+	FGameplayAttributeData Aura;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxEnergy)
-	FGameplayAttributeData MaxEnergy;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_MaxAura)
+	FGameplayAttributeData MaxAura;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Oxygen)
 	FGameplayAttributeData Oxygen;
@@ -142,8 +142,8 @@ public:
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Health);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxHealth);
 	
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Energy);
-	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxEnergy);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Aura);
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxAura);
 	
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Oxygen);
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxOxygen);
@@ -166,6 +166,9 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	void AdjustAttributeForMaxChange(const FGameplayAttributeData& AffectedAttribute,
+	                                 const FGameplayAttributeData& MaxAttribute, float NewMaxValue,
+	                                 const FGameplayAttribute& AffectedAttributeProperty);
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 	UFUNCTION()
@@ -173,9 +176,9 @@ protected:
 	UFUNCTION()
 	void OnRep_MaxHealth(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	void OnRep_Energy(const FGameplayAttributeData& OldValue);
+	void OnRep_Aura(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	void OnRep_MaxEnergy(const FGameplayAttributeData& OldValue);
+	void OnRep_MaxAura(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_Oxygen(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
@@ -203,7 +206,7 @@ private:
 	void SendXPEvent(const FEffectProperties& Props);
 
 	bool bTopOffHealth = false;
-	bool bTopOffEnergy = false;
+	bool bTopOffAura = false;
 	bool bTopOffOxygen = false;
 	bool bTopOffDrowsiness = false;
 };
