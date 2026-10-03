@@ -84,20 +84,6 @@ Designing extension points so future item or ability types can plug in without b
 
 Each folder contains module-specific code and internal documentation as needed.
 
-Contributing & Collaboration
-
-While this is primarily a personal/prototype project, contributions are welcome. If you wish to contribute:
-
-Review the coding style and modular architecture before creating changes
-
-Keep changes isolated (e.g. new ability or item modules should not modify core systems)
-
-Document your additions or modifications, especially replication logic or edge cases
-
-License
-
-Include your license of choice (e.g. MIT, Apache 2.0). This section clarifies how others can use, modify, or redistribute your work.
-
 Author & Contact
 
 Dylan Fernandes
